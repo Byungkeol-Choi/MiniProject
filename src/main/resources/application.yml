@@ -30,11 +30,7 @@ spring:
     mode: HTML
 
   # ===== Security =====
-  # 관리자 기본 계정 (SecurityConfig에서 재정의 권장)
-  security:
-    user:
-      name: admin
-      password: admin1234
+  # 관리자 로그인: DB admin 테이블 + AdminUserDetailsService
 
 server:
   port: 8080

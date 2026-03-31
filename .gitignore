@@ -38,3 +38,6 @@ out/
 
 ### Local secrets ###
 src/main/resources/application-secret.yml
+
+### PPT generator (npm) ###
+tools/ppt-gen/node_modules/

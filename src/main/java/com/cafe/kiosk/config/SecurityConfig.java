@@ -48,8 +48,9 @@ public class SecurityConfig {
                 .formLogin((Login) -> Login
                                 .loginPage("/admin/login")    //로그인폼 요청 URL
                                 // loginAction에 대한 인증처리는 시큐리트가 다 한다. 코드 필요없다.
-//                                .loginProcessingUrl("/loginAction") //로그인 액션 요청 URL
-                                .defaultSuccessUrl("/dashboard") //로그인 성공시 리다이렉트 URL
+                                .loginProcessingUrl("/admin/login") //로그인 액션 요청 URL
+//                                .defaultSuccessUrl("/dashboard") //로그인 성공시 리다이렉트 URL
+                                  .defaultSuccessUrl("/admin") //로그인 성공시 리다이렉트 URL
                                 //로그인 성공 커스텀 핸들러
                                 .successHandler((request, response, auth) -> {
                                     System.out.println("로그인 성공했습니다.");
@@ -57,13 +58,13 @@ public class SecurityConfig {
                                     response.sendRedirect("/");
                                 })
                                 //로그인 실패 에러페이지
-                                .failureUrl("/login?error")
+                                .failureUrl("/admin/login?error")
                                 .permitAll()
                 )
                 //로그아웃 URL/세션 설정
                 //LogoutConfigurer<HttpSecurity>
                 .logout((logout) -> logout
-                                .logoutUrl("/logoutAction") //Post방식 추천(보안)
+                                .logoutUrl("/admin/logout") //Post방식 추천(보안)
 //                        .logoutRequestMatcher(  //스프링부트 4.x 업데이트 된 클래수함수
 //                                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/logoutAction"))
                                 .logoutSuccessUrl("/")

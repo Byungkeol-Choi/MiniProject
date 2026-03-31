@@ -83,7 +83,7 @@ INSERT INTO menu (name, price, category, description, available) VALUES
     ('딸기 스무디',       7000, 'DRINK', '신선한 딸기로 만든 진한 스무디', TRUE)
 ON CONFLICT DO NOTHING;
 
--- 샘플 관리자 계정 (비밀번호: admin1234 - BCrypt 해시)
+-- 샘플 관리자 계정 (비밀번호: admin1234, BCrypt strength 10)
 INSERT INTO admin (username, password) VALUES
-    ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy')
-ON CONFLICT DO NOTHING;
+    ('admin', '$2a$10$ofpoqTBeYA4KwGPSnfmGVOEDVxx9xzOed2IqhVM7WiFOaRk98jf0e')
+ON CONFLICT (username) DO NOTHING;

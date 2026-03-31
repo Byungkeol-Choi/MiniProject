@@ -1,0 +1,8 @@
+{
+  "name": "cafe-kiosk-screenflow-ppt",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pptxgenjs": "3.12.0"
+  }
+}
