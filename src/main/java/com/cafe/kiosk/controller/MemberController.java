@@ -17,11 +17,7 @@ public class MemberController {
     private final MemberService memberService;
     private final CouponRepository couponRepository;
 
-    /** GET / — 루트 접속 시 키오스크로 이동 */
-    @GetMapping("/")
-    public String root() {
-        return "redirect:/kiosk";
-    }
+
 
     /**
      * GET /member/login

@@ -28,6 +28,7 @@ public class DataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         // Supabase connection pooler(PgBouncer) 환경에서는 Hibernate ddl-auto: update가
         // DDL을 실행하지 못하는 경우가 있으므로 누락 컬럼을 직접 추가
+        if (true) return;
         entityManager.createNativeQuery(
                 "ALTER TABLE coupon ADD COLUMN IF NOT EXISTS name VARCHAR(100) NOT NULL DEFAULT ''"
         ).executeUpdate();
