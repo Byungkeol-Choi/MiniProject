@@ -353,30 +353,15 @@ const PhoneInput = (() => {
     return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
   }
 
+  /** 11자리 입력 완료 시: 서버 조회 없이 hidden에만 반영 (적립은 POST /member/stamp 에서 처리) */
   function lookup() {
-    /**
-     * [백엔드 연동]
-     * fetch(`/member/lookup?phone=${digits}`)
-     * .then(r => r.json()).then(data => showMemberInfo(data))
-     */
-    // 프론트 목업
-    showMemberInfo({ found: false, name: '', points: 0 });
-  }
-
-  function showMemberInfo(data) {
+    const input = document.getElementById('phone-value-input');
+    if (input) input.value = digits;
     const card = document.getElementById('member-found-card');
     if (!card) return;
     card.style.display = 'block';
-    if (data.found) {
-      document.getElementById('member-found-name').textContent   = data.name + ' 고객님';
-      document.getElementById('member-found-points').innerHTML   =
-        `보유 포인트: <span class="points-num">${data.points.toLocaleString()}</span> P`;
-    } else {
-      document.getElementById('member-found-name').textContent   = '신규 회원으로 등록됩니다';
-      document.getElementById('member-found-points').textContent = '가입 후 포인트가 적립됩니다.';
-    }
-    const input = document.getElementById('phone-value-input');
-    if (input) input.value = digits;
+    document.getElementById('member-found-name').textContent = '전화번호 입력 완료';
+    document.getElementById('member-found-points').textContent = '적립하기를 눌러주세요.';
   }
 
   function hideMemberInfo() {
