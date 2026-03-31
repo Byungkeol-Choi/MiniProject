@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Outer circle shadow -->
+  <circle cx="60" cy="62" r="56" fill="#BBF7D0" opacity="0.5"/>
+  <!-- Main circle -->
+  <circle cx="60" cy="60" r="56" fill="#DCFCE7" stroke="#22C55E" stroke-width="4"/>
+  <!-- Checkmark -->
+  <path d="M30 60 L50 82 L90 36"
+        stroke="#16A34A" stroke-width="9"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포인트 적립 - 브런치 카페</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/css/kiosk.css}">
+</head>
+<body>
+
+<!--
+  [백엔드 연동] Controller 필요 변수
+  - orderNo     : Long (적립 대상 주문 번호, optional)
+  - earnedPoints: int  (적립될 포인트)
+  - message     : String (성공/오류 메시지, optional)
+  - success     : boolean (적립 완료 여부)
+
+  POST /member/stamp  →  phone, orderNo 전송
+  → 회원 조회(없으면 신규 등록) → 포인트 적립 → 완료 메시지
+-->
+
+<header class="kiosk-header">
+  <div class="cafe-branding">
+    <div class="cafe-logo-circle">☕</div>
+    <div class="cafe-name-block">
+      <div class="name">브런치 카페</div>
+      <div class="sub">BRUNCH CAFE KIOSK</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-time" id="header-clock">00:00</span>
+  </div>
+</header>
+
+<div class="subpage-body">
+  <div class="stamp-wrapper">
+
+    <!-- ─── 적립 완료 화면 ─────────────────────── -->
+    <div th:if="${success}" class="stamp-card" style="text-align:center;">
+      <div style="font-size:70px; margin-bottom:16px;">🌟</div>
+      <h2 class="stamp-card-title">포인트 적립 완료!</h2>
+      <p class="stamp-card-sub">
+        <strong th:text="${memberName ?: '고객'}">홍길동</strong> 고객님,
+        포인트가 적립되었습니다.
+      </p>
+
+      <div class="member-found-card" style="margin-bottom:20px;">
+        <div class="member-found-name" th:text="${memberName ?: ''}">홍길동 고객님</div>
+        <div class="member-found-points" style="margin-top:8px;">
+          적립된 포인트: <span class="points-num" style="color:#28a745;"
+                             th:text="'+' + (earnedPoints ?: 0) + ' P'">+275 P</span>
+        </div>
+        <div class="member-found-points">
+          누적 포인트: <span class="points-num"
+                            th:text="${#numbers.formatInteger(totalPoints ?: 0, 1, 'COMMA') + ' P'}">1,475 P</span>
+        </div>
+      </div>
+
+      <a th:href="@{/}" href="/" class="btn-home" style="width:100%; justify-content:center;">
+        <i class="bi bi-house"></i> 처음으로
+      </a>
+    </div>
+
+    <!-- ─── 전화번호 입력 화면 ─────────────────── -->
+    <div th:unless="${success}" class="stamp-card">
+      <h2 class="stamp-card-title">
+        <i class="bi bi-phone" style="color:#D4A96A;"></i> 포인트 적립
+      </h2>
+      <p class="stamp-card-sub">전화번호를 입력하시면 포인트가 적립됩니다.<br>신규 고객은 자동으로 가입됩니다.</p>
+
+      <!-- 적립 예정 포인트 안내 -->
+      <div th:if="${(earnedPoints ?: 0) > 0}"
+           style="background:#FEF3E8; border-radius:10px; padding:12px; margin-bottom:16px; font-size:14px; color:#6B4226; font-weight:600;">
+        <i class="bi bi-star-fill" style="color:#F59E0B;"></i>
+        이번 주문 적립 예정: <strong th:text="(earnedPoints ?: 0) + ' P'">275 P</strong>
+      </div>
+
+      <!-- 오류 메시지 -->
+      <div th:if="${message}" style="background:#FEE2E2; border-radius:10px; padding:12px; margin-bottom:12px; font-size:14px; color:#DC2626;">
+        <i class="bi bi-exclamation-circle"></i>
+        <span th:text="${message}">오류가 발생했습니다.</span>
+      </div>
+
+      <!-- 전화번호 디스플레이 -->
+      <div class="phone-display placeholder" id="phone-display">전화번호를 입력하세요</div>
+
+      <!-- 숫자 키패드 -->
+      <div class="numpad">
+        <button class="numpad-key" onclick="PhoneInput.push('1')">1</button>
+        <button class="numpad-key" onclick="PhoneInput.push('2')">2</button>
+        <button class="numpad-key" onclick="PhoneInput.push('3')">3</button>
+        <button class="numpad-key" onclick="PhoneInput.push('4')">4</button>
+        <button class="numpad-key" onclick="PhoneInput.push('5')">5</button>
+        <button class="numpad-key" onclick="PhoneInput.push('6')">6</button>
+        <button class="numpad-key" onclick="PhoneInput.push('7')">7</button>
+        <button class="numpad-key" onclick="PhoneInput.push('8')">8</button>
+        <button class="numpad-key" onclick="PhoneInput.push('9')">9</button>
+        <button class="numpad-key key-clear" onclick="PhoneInput.clearAll()">전체삭제</button>
+        <button class="numpad-key" onclick="PhoneInput.push('0')">0</button>
+        <button class="numpad-key key-del" onclick="PhoneInput.del()">
+          <i class="bi bi-backspace"></i>
+        </button>
+      </div>
+
+      <!-- 회원 정보 카드 (조회 후 표시) -->
+      <div class="member-found-card" id="member-found-card" style="display:none;">
+        <div class="member-found-name" id="member-found-name"></div>
+        <div class="member-found-points" id="member-found-points"></div>
+      </div>
+
+      <!-- 폼 제출 -->
+      <form id="stamp-form" method="post" th:action="@{/member/stamp}" action="/member/stamp">
+        <input type="hidden" id="phone-value-input" name="phone" value="">
+        <input type="hidden" name="orderNo" th:value="${orderNo}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <button type="submit" class="btn-stamp-confirm" id="btn-stamp-confirm">
+          <i class="bi bi-check-circle"></i> 적립하기
+        </button>
+      </form>
+
+      <a th:href="@{/}" href="/" class="btn-skip-stamp">
+        <i class="bi bi-skip-forward"></i> 건너뛰기 (적립 안 함)
+      </a>
+    </div>
+
+  </div><!-- /stamp-wrapper -->
+
+  <footer class="kiosk-sub-footer">
+      <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">관리자</a>
+    </footer>
+
+</div><!-- /subpage-body -->
+
+<div class="toast-notification" id="toast"></div>
+
+<script th:src="@{/js/kiosk.js}"></script>
+<script>
+  // 폼 제출 전 유효성 검사
+  document.getElementById('stamp-form')?.addEventListener('submit', function(e) {
+    const phoneVal = document.getElementById('phone-value-input')?.value;
+    if (!phoneVal || phoneVal.replace(/\D/g,'').length < 10) {
+      e.preventDefault();
+      showToast('전화번호를 올바르게 입력해주세요. (10~11자리)');
+    }
+  });
+</script>
+</body>
+</html>
