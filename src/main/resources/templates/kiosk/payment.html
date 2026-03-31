@@ -17,10 +17,17 @@
 
 <header class="kiosk-header">
   <div class="cafe-branding">
-    <div class="cafe-logo-circle">☕</div>
+    <div class="cafe-logo-circle">
+      <img
+              src="/images/logo.png"
+              alt="브런치 카페 로고"
+              width="26"
+              height="26"
+      />
+    </div>
     <div class="cafe-name-block">
-      <div class="name">브런치 카페</div>
-      <div class="sub">BRUNCH CAFE KIOSK</div>
+      <div class="name">버터벨</div>
+      <div class="sub">BRUNCH & COFFEE</div>
     </div>
   </div>
   <div class="header-right">
@@ -32,19 +39,18 @@
   <div class="subpage-container" style="max-width:700px;">
 
     <div class="page-title">
-      <i class="bi bi-credit-card"></i> 결제
+      결제
     </div>
 
     <!-- ─── 주문 요약 ──────────────────────────── -->
     <div class="section-card">
       <div class="section-title">
-        <i class="bi bi-receipt"></i> 주문 요약
+        <i class="bi bi-pass"></i> 주문 요약
       </div>
 
       <!-- 주문 아이템 미니 목록 -->
       <div th:each="item : ${cartItems}" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F5ECD7;">
         <span>
-          <span th:text="${item.emoji ?: '🍽️'}">🍳</span>
           <span th:text="${item.menuName}">에그 베네딕트</span>
           <span style="color:#9E8B7B;" th:text="'×' + item.quantity">×1</span>
         </span>
@@ -54,11 +60,11 @@
 
       <!-- 디자인 샘플 -->
       <div th:if="${cartItems == null}" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #F5ECD7;">
-        <span>🍳 에그 베네딕트 ×1</span>
-        <span style="font-weight:600;">16,500원</span>
+        <span>에그 베네딕트 ×2</span>
+        <span style="font-weight:600;">11,000원</span>
       </div>
       <div th:if="${cartItems == null}" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #F5ECD7;">
-        <span>☕ 카페 라떼 ×2</span>
+        <span>카페 라떼 ×2</span>
         <span style="font-weight:600;">11,000원</span>
       </div>
 
@@ -84,7 +90,7 @@
     <!-- ─── 결제 수단 선택 ────────────────────── -->
     <div class="section-card">
       <div class="section-title">
-        <i class="bi bi-wallet2"></i> 결제 수단 선택
+        <i class="bi bi-credit-card"></i> 결제 수단 선택
       </div>
 
       <div class="payment-methods-grid">
@@ -141,17 +147,24 @@
         <input type="hidden" name="finalAmount"
                th:value="${orderSummary?.finalAmount ?: 27500}" value="27500">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button type="button" class="btn-confirm-pay" id="btn-confirm-pay"
+        <button type="button" class="btn-go-pay" id="btn-confirm-pay"
                 disabled onclick="confirmPayment()" style="width:100%;">
-          <i class="bi bi-lock-fill"></i> 결제하기
+          결제하기
         </button>
       </form>
     </div>
 
-    <footer class="kiosk-sub-footer">
-      <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">관리자</a>
-    </footer>
+<!--    <footer class="kiosk-sub-footer">-->
+<!--      <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">관리자</a>-->
+<!--    </footer>-->
   </div><!-- /subpage-container -->
+
+  <footer class="kiosk-page-footer">
+    <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">
+      <i class="bi bi-person-gear"></i>관리자
+    </a>
+  </footer>
+
 </div><!-- /subpage-body -->
 
 <!-- 결제 처리 중 오버레이 -->

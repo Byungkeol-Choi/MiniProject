@@ -10,7 +10,7 @@ spring:
   # Supabase 프로젝트 설정에서 확인: Settings > Database > Connection string (JDBC)
   # username/password는 application-secret.yml 참고
   datasource:
-    url: jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?prepareThreshold=0
+    url: jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres
     driver-class-name: org.postgresql.Driver
 
   # ===== JPA / Hibernate =====
@@ -30,7 +30,11 @@ spring:
     mode: HTML
 
   # ===== Security =====
-  # 관리자 로그인: DB admin 테이블 + AdminUserDetailsService
+  # 관리자 기본 계정 (SecurityConfig에서 재정의 권장)
+  security:
+    user:
+      name: admin
+      password: admin1234
 
 server:
   port: 8080

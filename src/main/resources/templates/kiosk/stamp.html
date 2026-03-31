@@ -22,10 +22,17 @@
 
 <header class="kiosk-header">
   <div class="cafe-branding">
-    <div class="cafe-logo-circle">☕</div>
+    <div class="cafe-logo-circle">
+      <img
+              src="../../static/images/logo.png"
+              alt="브런치 카페 로고"
+              width="26"
+              height="26"
+      />
+    </div>
     <div class="cafe-name-block">
-      <div class="name">브런치 카페</div>
-      <div class="sub">BRUNCH CAFE KIOSK</div>
+      <div class="name">버터벨</div>
+      <div class="sub">BRUNCH & COFFEE</div>
     </div>
   </div>
   <div class="header-right">
@@ -152,9 +159,11 @@
 
   </div><!-- /stamp-wrapper -->
 
-  <footer class="kiosk-sub-footer">
-      <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">관리자</a>
-    </footer>
+  <footer class="kiosk-page-footer">
+    <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">
+      <i class="bi bi-person-gear"></i>관리자
+    </a>
+  </footer>
 
 </div><!-- /subpage-body -->
 

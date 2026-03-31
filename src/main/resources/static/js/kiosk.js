@@ -170,6 +170,7 @@ const Cart = (() => {
       usePoints:      state.usePoints,
       memberId:       state.memberId
     });
+
     form.submit();
   }
 
