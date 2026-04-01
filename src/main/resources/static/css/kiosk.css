@@ -575,6 +575,106 @@ html, body {
 }
 .discount-result.visible { display: block; }
 
+/* 쿠폰·포인트 체크 행 (cart) */
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--cafe-dark);
+  line-height: 1.45;
+}
+.form-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--cafe-primary);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* 쿠폰 조회 결과 목록 (체크박스 + 내용) */
+.lookup-coupon-check-row {
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cafe-cream);
+  margin: 0;
+}
+.lookup-coupon-check-row:last-of-type { border-bottom: none; }
+
+.lookup-coupon-check-body {
+  flex: 1;
+  min-width: 0;
+}
+.lookup-coupon-code {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cafe-secondary);
+  letter-spacing: 0.02em;
+}
+.lookup-coupon-title { font-size: 15px; font-weight: 600; color: var(--cafe-primary); margin-top: 4px; }
+.lookup-coupon-benefit {
+  font-size: 15px;
+  font-weight: 800;
+  color: #C2692A;
+  flex-shrink: 0;
+}
+
+.lookup-error-box {
+  background: #fff5f5;
+  border: 1.5px solid #f5c6cb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #842029;
+}
+
+.lookup-result-panel {
+  background: #FEF9F3;
+  border: 1.5px solid var(--cafe-cream);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 4px;
+}
+
+.lookup-result-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cafe-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lookup-result-heading i { color: #16a34a; }
+
+.lookup-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(92, 51, 23, 0.08);
+  font-size: 14px;
+}
+.lookup-result-row:last-of-type { border-bottom: none; }
+
+.lookup-result-label { color: var(--cafe-gray); font-weight: 500; }
+.lookup-result-value { font-weight: 700; color: var(--cafe-primary); text-align: right; }
+.lookup-points-strong { font-size: 17px; color: #C2692A; }
+
+.lookup-empty-coupons {
+  text-align: center;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--cafe-gray);
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+}
+
 /* Summary */
 .summary-row {
   display: flex;

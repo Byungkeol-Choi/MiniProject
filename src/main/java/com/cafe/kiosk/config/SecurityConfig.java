@@ -49,13 +49,12 @@ public class SecurityConfig {
                                 .loginPage("/admin/login")    //로그인폼 요청 URL
                                 // loginAction에 대한 인증처리는 시큐리트가 다 한다. 코드 필요없다.
                                 .loginProcessingUrl("/admin/login") //로그인 액션 요청 URL
-//                                .defaultSuccessUrl("/dashboard") //로그인 성공시 리다이렉트 URL
-                                  .defaultSuccessUrl("/admin") //로그인 성공시 리다이렉트 URL
+                                  .defaultSuccessUrl("/admin/dashboard") //로그인 성공시 리다이렉트 URL
                                 //로그인 성공 커스텀 핸들러
                                 .successHandler((request, response, auth) -> {
                                     System.out.println("로그인 성공했습니다.");
 //                            System.out.println("request = " + request);
-                                    response.sendRedirect("/");
+                                    response.sendRedirect("/admin/dashboard");
                                 })
                                 //로그인 실패 에러페이지
                                 .failureUrl("/admin/login?error")

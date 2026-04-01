@@ -131,41 +131,88 @@
 
     </div><!-- /section-card -->
 
-    <!-- ─── 쿠폰 & 포인트 ─────────────────────── -->
+    <!-- ─── 쿠폰 & 포인트 조회 ─────────────────────── -->
     <div class="section-card">
       <div class="section-title">
         <i class="bi bi-p-circle"></i> 쿠폰 / 포인트
       </div>
 
-      <!-- 쿠폰 입력 -->
-      <div style="margin-bottom: 18px;">
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">쿠폰 번호</div>
-        <div class="input-row">
-          <input type="text" class="form-input" id="coupon-input"
-                 placeholder="쿠폰 번호를 입력하세요 (예: CAFE10)" maxlength="20"
-                 style="text-transform:uppercase;">
-          <button class="btn-apply" onclick="applyCoupon()">적용</button>
+      <div style="margin-bottom: 14px;">
+        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">
+          <i class="bi bi-search"></i> 쿠폰 / 포인트 조회
         </div>
-        <div class="discount-result" id="coupon-result"></div>
+        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px; opacity:0.92;">휴대폰 번호</div>
+        <form method="get" th:action="@{/order/cart}" action="/order/cart">
+          <div class="input-row">
+            <input type="tel" name="phone" id="lookup-phone-input" class="form-input"
+                   inputmode="numeric" autocomplete="tel"
+                   th:value="${prefillPhone}"
+                   placeholder="휴대폰 번호를 입력하세요 (예: 01012345678)" maxlength="13">
+            <button type="submit" class="btn-apply">조회</button>
+          </div>
+        </form>
       </div>
 
-      <!-- 포인트 사용 -->
-      <!--
-        [백엔드 연동] member가 로그인 상태일 때만 표시
-        th:if="${member != null}"
-      -->
-      <div th:if="${member != null}">
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">포인트 사용</div>
-        <label class="form-check">
-          <input type="checkbox" id="use-points-check" onchange="applyPoints()">
-          <span>
-            보유 포인트
-            <strong th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}">1,200 P</strong>
-            전액 사용
-          </span>
-        </label>
-        <div id="points-discount" th:data-points="${member.points}" data-points="0" style="display:none;"></div>
+      <div th:if="${lookupError != null}" class="lookup-error-box" th:text="${lookupError}">
+        오류 메시지
       </div>
+
+      <!-- 조회 성공: 같은 페이지에 포인트·쿠폰 목록 -->
+      <th:block th:if="${lookupPhone != null}">
+        <div class="lookup-result-panel">
+          <div class="lookup-result-heading">
+            <i class="bi bi-check-circle-fill"></i> 조회 결과
+          </div>
+          <div class="lookup-result-row">
+            <span class="lookup-result-label">조회 번호</span>
+            <span class="lookup-result-value" th:text="${lookupPhone}">010-1234-5678</span>
+          </div>
+          <div class="lookup-result-row">
+            <span class="lookup-result-label">회원</span>
+            <span class="lookup-result-value" th:text="${lookupMemberName + ' 님'}">홍길동 님</span>
+          </div>
+          <div class="lookup-result-row">
+            <span class="lookup-result-label">보유 포인트</span>
+            <span class="lookup-result-value lookup-points-strong"
+                  th:text="${#numbers.formatInteger(lookupPoints, 1, 'COMMA') + ' P'}">1,000 P</span>
+          </div>
+
+          <div style="font-size:14px; font-weight:600; color:#5C3317; margin: 18px 0 10px;">
+            <i class="bi bi-ticket-perforated"></i> 사용 가능 쿠폰
+          </div>
+          <p style="font-size:12px; color:#9E8B7B; margin:0 0 10px;">하나만 선택할 수 있습니다.</p>
+          <div th:if="${lookupCoupons == null or #lists.isEmpty(lookupCoupons)}"
+               class="lookup-empty-coupons">
+            사용 가능한 쿠폰이 없습니다.
+          </div>
+          <label th:each="c : ${lookupCoupons}" class="form-check lookup-coupon-check-row">
+            <input type="checkbox" class="cart-coupon-check"
+                   th:data-code="${c.code}"
+                   th:data-type="${c.discountType}"
+                   th:data-value="${c.discountValue}"
+                   onchange="onCartCouponCheck(this)">
+            <div class="lookup-coupon-check-body">
+              <div class="lookup-coupon-code" th:text="${c.code}">CODE</div>
+              <div class="lookup-coupon-title" th:text="${c.title}">쿠폰명</div>
+            </div>
+            <div class="lookup-coupon-benefit" th:text="${c.benefit}">할인</div>
+          </label>
+        </div>
+
+        <!-- 조회된 포인트로 결제 시 사용 (전액 가능 범위 내) -->
+        <div th:if="${lookupPoints != null and lookupPoints > 0}" style="margin-top: 18px;">
+          <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">포인트 사용</div>
+          <label class="form-check">
+            <input type="checkbox" id="use-points-check" onchange="applyPoints()">
+            <span>
+              보유 포인트
+              <strong th:text="${#numbers.formatInteger(lookupPoints, 1, 'COMMA') + ' P'}">1,000 P</strong>
+              전액 사용
+            </span>
+          </label>
+          <div id="points-discount" th:data-points="${lookupPoints}" style="display:none;"></div>
+        </div>
+      </th:block>
 
     </div><!-- /section-card -->
 
@@ -235,6 +282,40 @@
    * [백엔드 연동 시] 수량 변경/삭제는 AJAX 또는 폼 서브밋으로 처리하세요.
    */
 
+  /** 선택 쿠폰 1개만 — 할인액을 쿠폰 할인 행에 반영 */
+  function onCartCouponCheck(changed) {
+    if (changed.checked) {
+      document.querySelectorAll('.cart-coupon-check').forEach(function (cb) {
+        if (cb !== changed) cb.checked = false;
+      });
+    }
+    applyCartCouponSelection();
+  }
+
+  function applyCartCouponSelection() {
+    const discountEl = document.getElementById('coupon-discount-value');
+    const subtotal = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
+    const checked = document.querySelector('.cart-coupon-check:checked');
+
+    if (!discountEl) return;
+
+    if (!checked) {
+      discountEl.textContent = '-';
+      discountEl.dataset.amount = '0';
+      recalcTotal();
+      return;
+    }
+
+    const type = checked.dataset.type;
+    const val = Number(checked.dataset.value || 0);
+    let discount = type === 'PERCENT' ? Math.round(subtotal * val / 100) : val;
+    discount = Math.min(Math.max(0, discount), subtotal);
+
+    discountEl.textContent = discount > 0 ? '-' + fmtPrice(discount) : '-';
+    discountEl.dataset.amount = String(discount);
+    recalcTotal();
+  }
+
   // 수량 변경 (서버 세션 기반 예시)
   function updateCartQty(menuId, delta) {
     const qtyEl     = document.getElementById('qty-' + menuId) ||
@@ -259,30 +340,39 @@
   }
 
   function recalcSummary() {
-    // 결제 전 페이지이므로 클라이언트 합산 (백엔드 연동 시 서버 계산으로 대체)
-    recalcTotal();
+    applyCartCouponSelection();
   }
 
   // 결제하기 클릭 시 할인 정보 폼에 반영
   document.getElementById('payment-redirect-form')?.addEventListener('submit', function() {
-    const couponInput = document.getElementById('coupon-input');
     const couponDisc  = document.getElementById('coupon-discount-value');
     const usePointsChk = document.getElementById('use-points-check');
     const pointsEl    = document.getElementById('points-discount');
     const finalEl     = document.getElementById('final-total-value');
 
-    if (couponInput?.value) document.getElementById('hidden-coupon-code').value = couponInput.value;
-    if (couponDisc)  document.getElementById('hidden-coupon-discount').value = couponDisc.dataset.amount || 0;
+    if (couponDisc) {
+      document.getElementById('hidden-coupon-discount').value = couponDisc.dataset.amount || 0;
+    }
+
+    const pickedCoupon = document.querySelector('.cart-coupon-check:checked');
+    document.getElementById('hidden-coupon-code').value = pickedCoupon ? pickedCoupon.dataset.code : '';
 
     const available = Number(pointsEl?.dataset.points || 0);
     const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
     if (usePointsChk?.checked) {
       document.getElementById('hidden-use-points').value = Math.min(available, subtotal);
+    } else {
+      document.getElementById('hidden-use-points').value = 0;
     }
 
-    // 최종 금액 문자열에서 숫자 추출
     const finalText = finalEl?.textContent?.replace(/[^0-9]/g, '') || '0';
     document.getElementById('hidden-final-amount').value = finalText;
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.querySelector('.cart-coupon-check') || document.getElementById('points-discount')) {
+      applyCartCouponSelection();
+    }
   });
 </script>
 </body>
