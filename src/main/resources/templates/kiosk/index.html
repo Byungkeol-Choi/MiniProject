@@ -73,10 +73,11 @@
              th:data-id="${menu.id}"
              th:data-name="${menu.name}"
              th:data-price="${menu.price}"
-             th:onclick="${menu.available} ? 'Cart.add(' + menu.id + ', \'' + menu.name + '\', ' + menu.price + ', \'' + (menu.imageUrl ?: '/images/menu/eggs-benedict.png') + '\')' : ''">
+             th:data-image="${menu.imageUrl != null ? menu.imageUrl : '/images/menu/hot-americano.png'}"
+             th:onclick="${menu.available} ? 'addToCart(this)' : ''">
 
           <div class="menu-card-img-wrap">
-            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/eggs-benedict.png'}"
+            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
                  th:alt="${menu.name}" class="menu-card-img">
           </div>
           <div class="menu-card-body">
@@ -185,7 +186,7 @@
              th:onclick="${menu.available} ? 'Cart.add(' + menu.id + ', \'' + menu.name + '\', ' + menu.price + ', \'' + (menu.imageUrl ?: '/images/menu/hot-americano.png') + '\')' : ''">
 
           <div class="menu-card-img-wrap">
-            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/hot-americano.png'}"
+            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
                  th:alt="${menu.name}" class="menu-card-img">
           </div>
           <div class="menu-card-body">
