@@ -200,14 +200,18 @@
 
 <script th:src="@{/js/kiosk.js}"></script>
 <script>
-  // 결제하기 버튼 오버라이드: 오버레이 표시 후 폼 제출
   function confirmPayment() {
     const method = document.getElementById('payment-method-input')?.value;
     if (!method) { showToast('결제 수단을 선택해주세요.'); return; }
 
+    // Cart state(sessionStorage)에서 실제 결제 금액 계산
+    const state = Cart.getState();
+    const subtotal = state.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const finalAmount = Math.max(0, subtotal - (state.couponDiscount || 0) - (state.usePoints || 0));
+    document.querySelector('input[name="finalAmount"]').value = finalAmount;
+
     document.getElementById('paying-overlay').style.display = 'flex';
 
-    // 모의 결제 딜레이 2초 후 폼 제출
     setTimeout(() => {
       document.getElementById('payment-form')?.submit();
     }, 2000);

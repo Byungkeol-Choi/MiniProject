@@ -56,8 +56,12 @@ public class OrderController {
         return "/kiosk/payment";
     }
 
+    // OrderController.java — pay() 메서드가 finalAmount를 받아 세션과 모델에 저장
     @PostMapping("/order/pay")
-    public String pay() {
+    public String pay(@RequestParam(defaultValue = "0") int finalAmount,
+                      HttpSession session, Model model) {
+        session.setAttribute("finalAmount", finalAmount);
+        model.addAttribute("finalAmount", finalAmount);
         return "/kiosk/complete";
     }
 }

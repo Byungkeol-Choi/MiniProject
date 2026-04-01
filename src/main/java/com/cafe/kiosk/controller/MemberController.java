@@ -3,6 +3,7 @@ package com.cafe.kiosk.controller;
 import com.cafe.kiosk.domain.Member;
 import com.cafe.kiosk.repository.CouponRepository;
 import com.cafe.kiosk.service.MemberService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -18,16 +19,15 @@ public class MemberController {
     private final CouponRepository couponRepository;
 
     /**
-     * GET /member/login
-     * 포인트 적립 화면 (kiosk/stamp.html)
-     * 필요 변수: earnedPoints
+     * GET /member/stamp
+     * complete.html 포인트 적립 버튼에서 진입
+     * 세션의 finalAmount를 읽어 5% 포인트 계산 후 전달
      */
-    @GetMapping("/member/login")
-    public String stampForm(@RequestParam(required = false, defaultValue = "0") int earnedPoints,
-                            Model model) {
+    @GetMapping("/member/stamp")
+    public String stampForm(HttpSession session, Model model) {
+        Integer finalAmount = (Integer) session.getAttribute("finalAmount");
+        int earnedPoints = (finalAmount != null) ? (int) (finalAmount * 0.05) : 0;
         model.addAttribute("earnedPoints", earnedPoints);
-        // GET /member/login으로 들어올 때는 stampForm이 success를 model에 안 넣음 → ${success}는 사실상 없음/거짓
-
         return "kiosk/stamp";
     }
 
