@@ -49,12 +49,12 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    @PostMapping("/payment")
+    @PostMapping("/order/payment")
     public String payment() {
         return "/kiosk/payment";
     }
 
-    @PostMapping("/pay")
+    @PostMapping("/order/pay")
     public String pay() {
         return "/kiosk/complete";
     }
