@@ -47,13 +47,6 @@ public class MemberService {
     }
 
     /**
-     * PK로 회원을 조회한다. 존재하지 않으면 {@link Optional#empty()}.
-     */
-    public Optional<Member> findById(Long id) {
-        return memberRepository.findById(id);
-    }
-
-    /**
      * 전화번호로 가입 회원의 누적 포인트·쿠폰 목록을 조회한다. DB 갱신 없음(조회 전용).
      *
      * @return 미가입이면 {@link Optional#empty()}
