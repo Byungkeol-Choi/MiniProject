@@ -1,379 +1,512 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>주문 확인 - 브런치 카페</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" th:href="@{/css/kiosk.css}">
-</head>
-<body>
-
-<!--
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <title>주문 확인 - 브런치 카페</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/kiosk.css}" />
+  </head>
+  <body>
+    <!--
   [백엔드 연동] Controller 필요 변수
-  - cartItems : List<CartItemDto>  (필드: menuId, menuName, quantity, unitPrice, emoji)
+  - cartItem : List<CartItemDto>  (필드: menuId, menuName, quantity, unitPrice, imageUrl)
   - subtotal  : int  (합계 금액)
   - member    : Member (로그인 회원, nullable)
   - couponApplied : boolean
   - couponDiscount: int
--->
+    -->
 
-<header class="kiosk-header">
-  <div class="cafe-branding">
-    <div class="cafe-logo-circle">
-      <img
-              src="/images/logo.png"
-              alt="브런치 카페 로고"
-              width="26"
-              height="26"
-      />
-    </div>
-    <div class="cafe-name-block">
-      <div class="name">버터벨</div>
-      <div class="sub">BRUNCH & COFFEE</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <span class="header-time" id="header-clock">00:00</span>
-  </div>
-</header>
-
-<div class="subpage-body">
-  <div class="subpage-container">
-
-    <div class="page-title">
-      주문 확인
-    </div>
-
-    <!-- ─── 주문 목록 ──────────────────────────── -->
-    <div class="section-card">
-      <div class="section-title">
-        <i class="bi bi-clipboard-check"></i> 선택하신 메뉴
-      </div>
-
-      <!-- Thymeleaf 반복 출력 -->
-      <div th:each="item : ${cartItems}" class="order-item-row">
-        <img class="order-item-icon"
-             th:src="${item.imageUrl != null ? item.imageUrl : '/images/menu/eggs-benedict.png'}"
-             onerror="this.src='/images/menu/eggs-benedict.png'"
-             alt="메뉴 이미지">
-        <div class="order-item-info">
-          <div class="order-item-name" th:text="${item.menuName}">에그 베네딕트</div>
-          <div class="order-item-unit"
-               th:text="${#numbers.formatInteger(item.unitPrice,1,'COMMA') + '원 / 1개'}">16,500원 / 1개</div>
+    <header class="kiosk-header">
+      <div class="cafe-branding">
+        <div class="cafe-logo-circle">
+          <img
+            src="/images/logo.png"
+            alt="브런치 카페 로고"
+            width="26"
+            height="26"
+          />
         </div>
-        <div class="order-qty-ctrl">
-          <!--
+        <div class="cafe-name-block">
+          <div class="name">버터벨</div>
+          <div class="sub">BRUNCH & COFFEE</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="header-time" id="header-clock">00:00</span>
+      </div>
+    </header>
+
+    <div class="subpage-body">
+      <div class="subpage-container">
+        <div class="page-title">주문 확인</div>
+
+        <!-- ─── 주문 목록 ──────────────────────────── -->
+        <div class="section-card">
+          <div class="section-title">
+            <i class="bi bi-clipboard-check"></i> 선택하신 메뉴
+          </div>
+
+          <!-- Thymeleaf 반복 출력 -->
+          <div th:each="item : ${cartItems}" class="order-item-row">
+            <img
+              class="order-item-icon"
+              th:src="${item.imgUrl != null ? item.imgUrl : '/images/menu/empty.png'}"
+              onerror="this.src = '/images/menu/empty.png'"
+              alt="메뉴 이미지"
+            />
+            <div class="order-item-info">
+              <div class="order-item-name" th:text="${item.name}">
+                에그 베네딕트
+              </div>
+              <div
+                class="order-item-unit"
+                th:text="${#numbers.formatInteger(item.price,1,'COMMA') + '원 / 1개'}"
+              >
+                16,500원 / 1개
+              </div>
+            </div>
+            <div class="order-qty-ctrl">
+              <!--
             [백엔드 연동] 수량 변경: POST /order/cart/update
             또는 JS로 처리 후 폼 재제출
-          -->
-          <button class="order-qty-btn"
-                  th:onclick="'updateCartQty(' + item.menuId + ', -1)'"
-                  onclick="updateCartQty(1, -1)">−</button>
-          <span class="order-qty-num" th:text="${item.quantity}"
-                th:id="'qty-' + item.menuId">1</span>
-          <button class="order-qty-btn"
-                  th:onclick="'updateCartQty(' + item.menuId + ', 1)'"
-                  onclick="updateCartQty(1, 1)">+</button>
-        </div>
-        <div class="order-item-subtotal"
-             th:text="${#numbers.formatInteger(item.unitPrice * item.quantity, 1, 'COMMA') + '원'}"
-             th:id="'subtotal-' + item.menuId">16,500원</div>
-        <button class="btn-remove-item"
-                th:onclick="'removeCartItem(' + item.menuId + ')'"
-                onclick="removeCartItem(1)"
-                title="삭제">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <!-- 장바구니 비어있을 때 (백엔드 redirected) -->
-      <div th:if="${cartItems == null or #lists.isEmpty(cartItems)}"
-           style="text-align:center; padding:30px; color:#9E8B7B;">
-        <i class="bi bi-cart-x" style="font-size:40px; display:block; margin-bottom:10px;"></i>
-        장바구니가 비어있습니다.
-        <div style="margin-top:16px;">
-          <a th:href="@{/}" href="/" class="btn-back-page">
-            메뉴 담기
-          </a>
-        </div>
-      </div>
-
-      <!-- 디자인 샘플 데이터 (cartItems가 null인 경우에만 표시) -->
-      <div th:if="${cartItems == null}" class="order-item-row">
-        <img class="order-item-icon" src="/images/menu/eggs-benedict.png" alt="음식 이미지">
-        <div class="order-item-info">
-          <div class="order-item-name">에그 베네딕트</div>
-          <div class="order-item-unit">16,500원 / 1개</div>
-        </div>
-        <div class="order-qty-ctrl">
-          <button class="order-qty-btn" onclick="updateCartQty(1, -1)">−</button>
-          <span class="order-qty-num" id="qty-sample1">1</span>
-          <button class="order-qty-btn" onclick="updateCartQty(1, 1)">+</button>
-        </div>
-        <div class="order-item-subtotal" id="subtotal-sample1">16,500원</div>
-        <button class="btn-remove-item" onclick="removeCartItem(1)"><i class="bi bi-x-lg"></i></button>
-      </div>
-      <div th:if="${cartItems == null}" class="order-item-row">
-        <img class="order-item-icon" src="/images/menu/ice-cafelatte.png" alt="음료 이미지">
-        <div class="order-item-info">
-          <div class="order-item-name">카페 라떼</div>
-          <div class="order-item-unit">5,500원 / 1개</div>
-        </div>
-        <div class="order-qty-ctrl">
-          <button class="order-qty-btn" onclick="updateCartQty(8, -1)">−</button>
-          <span class="order-qty-num" id="qty-sample2">2</span>
-          <button class="order-qty-btn" onclick="updateCartQty(8, 1)">+</button>
-        </div>
-        <div class="order-item-subtotal" id="subtotal-sample2">11,000원</div>
-        <button class="btn-remove-item" onclick="removeCartItem(8)"><i class="bi bi-x-lg"></i></button>
-      </div>
-
-    </div><!-- /section-card -->
-
-    <!-- ─── 쿠폰 & 포인트 조회 ─────────────────────── -->
-    <div class="section-card">
-      <div class="section-title">
-        <i class="bi bi-p-circle"></i> 쿠폰 / 포인트
-      </div>
-
-      <div style="margin-bottom: 14px;">
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">
-          <i class="bi bi-search"></i> 쿠폰 / 포인트 조회
-        </div>
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px; opacity:0.92;">휴대폰 번호</div>
-        <form method="get" th:action="@{/order/cart}" action="/order/cart">
-          <div class="input-row">
-            <input type="tel" name="phone" id="lookup-phone-input" class="form-input"
-                   inputmode="numeric" autocomplete="tel"
-                   th:value="${prefillPhone}"
-                   placeholder="휴대폰 번호를 입력하세요 (예: 01012345678)" maxlength="13">
-            <button type="submit" class="btn-apply">조회</button>
-          </div>
-        </form>
-      </div>
-
-      <div th:if="${lookupError != null}" class="lookup-error-box" th:text="${lookupError}">
-        오류 메시지
-      </div>
-
-      <!-- 조회 성공: 같은 페이지에 포인트·쿠폰 목록 -->
-      <th:block th:if="${lookupPhone != null}">
-        <div class="lookup-result-panel">
-          <div class="lookup-result-heading">
-            <i class="bi bi-check-circle-fill"></i> 조회 결과
-          </div>
-          <div class="lookup-result-row">
-            <span class="lookup-result-label">조회 번호</span>
-            <span class="lookup-result-value" th:text="${lookupPhone}">010-1234-5678</span>
-          </div>
-          <div class="lookup-result-row">
-            <span class="lookup-result-label">회원</span>
-            <span class="lookup-result-value" th:text="${lookupMemberName + ' 님'}">홍길동 님</span>
-          </div>
-          <div class="lookup-result-row">
-            <span class="lookup-result-label">보유 포인트</span>
-            <span class="lookup-result-value lookup-points-strong"
-                  th:text="${#numbers.formatInteger(lookupPoints, 1, 'COMMA') + ' P'}">1,000 P</span>
-          </div>
-
-          <div style="font-size:14px; font-weight:600; color:#5C3317; margin: 18px 0 10px;">
-            <i class="bi bi-ticket-perforated"></i> 사용 가능 쿠폰
-          </div>
-          <p style="font-size:12px; color:#9E8B7B; margin:0 0 10px;">하나만 선택할 수 있습니다.</p>
-          <div th:if="${lookupCoupons == null or #lists.isEmpty(lookupCoupons)}"
-               class="lookup-empty-coupons">
-            사용 가능한 쿠폰이 없습니다.
-          </div>
-          <label th:each="c : ${lookupCoupons}" class="form-check lookup-coupon-check-row">
-            <input type="checkbox" class="cart-coupon-check"
-                   th:data-code="${c.code}"
-                   th:data-type="${c.discountType}"
-                   th:data-value="${c.discountValue}"
-                   onchange="onCartCouponCheck(this)">
-            <div class="lookup-coupon-check-body">
-              <div class="lookup-coupon-code" th:text="${c.code}">CODE</div>
-              <div class="lookup-coupon-title" th:text="${c.title}">쿠폰명</div>
+              -->
+              <button
+                class="order-qty-btn"
+                th:onclick="|updateCartQty(${item.id}, -1)|"
+              >
+                −
+              </button>
+              <span
+                class="order-qty-num"
+                th:text="${item.quantity}"
+                th:id="|qty-${item.id}|"
+                >1</span
+              >
+              <button
+                class="order-qty-btn"
+                th:onclick="|updateCartQty(${item.id}, 1)|"
+              >
+                +
+              </button>
             </div>
-            <div class="lookup-coupon-benefit" th:text="${c.benefit}">할인</div>
-          </label>
+            <div
+              class="order-item-subtotal"
+              th:text="${#numbers.formatInteger(item.price * item.quantity, 1, 'COMMA') + '원'}"
+              th:id="|subtotal-${item.id}|"
+            >
+              16,500원
+            </div>
+            <button
+              class="btn-remove-item"
+              th:onclick="|removeCartItem(${item.id})|"
+              title="삭제"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          <!-- 장바구니 비어있을 때 (백엔드 redirected) -->
+          <div
+            th:if="${cartItems == null or #lists.isEmpty(cartItems)}"
+            style="text-align: center; padding: 30px; color: #9e8b7b"
+          >
+            <i
+              class="bi bi-cart-x"
+              style="font-size: 40px; display: block; margin-bottom: 10px"
+            ></i>
+            장바구니가 비어있습니다.
+            <div style="margin-top: 16px">
+              <a th:href="@{/}" href="/" class="btn-back-page"> 메뉴 담기 </a>
+            </div>
+          </div>
+
+          <!-- 디자인 샘플 데이터 (cartItems가 null인 경우에만 표시) -->
+          <div th:if="${cartItems == null}" class="order-item-row">
+            <img
+              class="order-item-icon"
+              src="/images/menu/eggs-benedict.png"
+              alt="음식 이미지"
+            />
+            <div class="order-item-info">
+              <div class="order-item-name">에그 베네딕트</div>
+              <div class="order-item-unit">16,500원 / 1개</div>
+            </div>
+            <div class="order-qty-ctrl">
+              <button class="order-qty-btn" onclick="updateCartQty(1, -1)">
+                −
+              </button>
+              <span class="order-qty-num" id="qty-sample1">1</span>
+              <button class="order-qty-btn" onclick="updateCartQty(1, 1)">
+                +
+              </button>
+            </div>
+            <div class="order-item-subtotal" id="subtotal-sample1">
+              16,500원
+            </div>
+            <button class="btn-remove-item" onclick="removeCartItem(1)">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div th:if="${cartItems == null}" class="order-item-row">
+            <img
+              class="order-item-icon"
+              src="/images/menu/ice-cafelatte.png"
+              alt="음료 이미지"
+            />
+            <div class="order-item-info">
+              <div class="order-item-name">카페 라떼</div>
+              <div class="order-item-unit">5,500원 / 1개</div>
+            </div>
+            <div class="order-qty-ctrl">
+              <button class="order-qty-btn" onclick="updateCartQty(8, -1)">
+                −
+              </button>
+              <span class="order-qty-num" id="qty-sample2">2</span>
+              <button class="order-qty-btn" onclick="updateCartQty(8, 1)">
+                +
+              </button>
+            </div>
+            <div class="order-item-subtotal" id="subtotal-sample2">
+              11,000원
+            </div>
+            <button class="btn-remove-item" onclick="removeCartItem(8)">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
         </div>
+        <!-- /section-card -->
 
-        <!-- 조회된 포인트로 결제 시 사용 (전액 가능 범위 내) -->
-        <div th:if="${lookupPoints != null and lookupPoints > 0}" style="margin-top: 18px;">
-          <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">포인트 사용</div>
-          <label class="form-check">
-            <input type="checkbox" id="use-points-check" onchange="applyPoints()">
-            <span>
-              보유 포인트
-              <strong th:text="${#numbers.formatInteger(lookupPoints, 1, 'COMMA') + ' P'}">1,000 P</strong>
-              전액 사용
-            </span>
-          </label>
-          <div id="points-discount" th:data-points="${lookupPoints}" style="display:none;"></div>
+        <!-- ─── 쿠폰 & 포인트 ─────────────────────── -->
+        <div class="section-card">
+          <div class="section-title">
+            <i class="bi bi-p-circle"></i> 쿠폰 / 포인트
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; justify-content: center">
+            <!-- 포인트 적립 (전화번호 입력) -->
+            <a
+              th:href="@{/member/login}"
+              href="/member/login"
+              class="btn-stamp"
+            >
+              포인트 확인
+            </a>
+          </div>
+
+          <!--
+        [백엔드 연동] member가 로그인 상태일 때만 표시
+        th:if="${member != null}"
+      -->
+          <div th:if="${member != null}">
+            <!-- 쿠폰 입력 -->
+            <div style="margin-bottom: 18px">
+              <div
+                style="
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #5c3317;
+                  margin-bottom: 8px;
+                "
+              >
+                쿠폰 번호
+              </div>
+              <div class="input-row">
+                <input
+                  type="text"
+                  class="form-input"
+                  id="coupon-input"
+                  placeholder="쿠폰 번호를 입력하세요 (예: CAFE10)"
+                  maxlength="20"
+                  style="text-transform: uppercase"
+                />
+                <button class="btn-apply" onclick="applyCoupon()">적용</button>
+              </div>
+              <div class="discount-result" id="coupon-result"></div>
+            </div>
+
+            <!-- 포인트 사용 -->
+            <div
+              style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #5c3317;
+                margin-bottom: 8px;
+              "
+            >
+              포인트 사용
+            </div>
+            <label class="form-check">
+              <input
+                type="checkbox"
+                id="use-points-check"
+                onchange="applyPoints()"
+              />
+              <span>
+                보유 포인트
+                <strong
+                  th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}"
+                  >1,200 P</strong
+                >
+                전액 사용
+              </span>
+            </label>
+            <div
+              id="points-discount"
+              th:data-points="${member.points}"
+              data-points="0"
+              style="display: none"
+            ></div>
+          </div>
         </div>
-      </th:block>
+        <!-- /section-card -->
 
-    </div><!-- /section-card -->
+        <!-- ─── 결제 금액 요약 ────────────────────── -->
+        <div class="section-card">
+          <div class="section-title">
+            <i class="bi bi-credit-card"></i> 결제 금액
+          </div>
 
-    <!-- ─── 결제 금액 요약 ────────────────────── -->
-    <div class="section-card">
-      <div class="section-title">
-        <i class="bi bi-credit-card"></i> 결제 금액
-      </div>
-
-      <div class="summary-row">
-        <span>상품 금액</span>
-        <span id="subtotal-value"
+          <div class="summary-row">
+            <span>상품 금액</span>
+            <span
+              id="subtotal-value"
               th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
-              th:data-amount="${subtotal ?: 27500}">27,500원</span>
-      </div>
-      <div class="summary-row">
-        <span>쿠폰 할인</span>
-        <span class="discount-tag" id="coupon-discount-value" data-amount="0">-</span>
-      </div>
-      <div class="summary-row">
-        <span>포인트 사용</span>
-        <span class="discount-tag" id="points-use-value">-</span>
-      </div>
-      <div class="summary-total">
-        <span>최종 결제 금액</span>
-        <span id="final-total-value"
-              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}">27,500원</span>
-      </div>
-    </div>
+              th:data-amount="${subtotal ?: 27500}"
+              >27,500원</span
+            >
+          </div>
+          <div class="summary-row">
+            <span>쿠폰 할인</span>
+            <span
+              class="discount-tag"
+              id="coupon-discount-value"
+              data-amount="0"
+              >-</span
+            >
+          </div>
+          <div class="summary-row">
+            <span>포인트 사용</span>
+            <span class="discount-tag" id="points-use-value">-</span>
+          </div>
+          <div class="summary-total">
+            <span>최종 결제 금액</span>
+            <span
+              id="final-total-value"
+              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+              >27,500원</span
+            >
+          </div>
+        </div>
 
-    <!-- ─── 버튼 ──────────────────────────────── -->
-    <div class="action-btn-row">
-      <a th:href="@{/}" href="/" class="btn-back-page">
-        <i class="bi bi-arrow-left"></i> 이전
-      </a>
-      <!--
+        <!-- ─── 버튼 ──────────────────────────────── -->
+        <div class="action-btn-row">
+          <a th:href="@{/}" href="/" class="btn-back-page">
+            <i class="bi bi-arrow-left"></i> 이전
+          </a>
+          <!--
         [백엔드 연동]
         POST /order/payment 로 쿠폰코드, 포인트 사용 여부, 총 금액 전송
       -->
-      <form id="payment-redirect-form" method="post" th:action="@{/order/payment}" action="/order/payment" style="flex:1; display:flex;">
-        <input type="hidden" name="couponCode"      id="hidden-coupon-code">
-        <input type="hidden" name="couponDiscount"  id="hidden-coupon-discount" value="0">
-        <input type="hidden" name="usePoints"       id="hidden-use-points" value="0">
-        <input type="hidden" name="finalAmount"     id="hidden-final-amount"
-               th:value="${subtotal ?: 27500}" value="27500">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button type="submit" class="btn-go-pay" style="width:100%;">
-          결제하기
-        </button>
-      </form>
+          <form
+            id="payment-redirect-form"
+            method="post"
+            th:action="@{/order/payment}"
+            action="/order/payment"
+            style="flex: 1; display: flex"
+          >
+            <input type="hidden" name="couponCode" id="hidden-coupon-code" />
+            <input
+              type="hidden"
+              name="couponDiscount"
+              id="hidden-coupon-discount"
+              value="0"
+            />
+            <input
+              type="hidden"
+              name="usePoints"
+              id="hidden-use-points"
+              value="0"
+            />
+            <input
+              type="hidden"
+              name="finalAmount"
+              id="hidden-final-amount"
+              th:value="${subtotal ?: 27500}"
+              value="27500"
+            />
+            <input
+              type="hidden"
+              th:name="${_csrf.parameterName}"
+              th:value="${_csrf.token}"
+            />
+            <button type="submit" class="btn-go-pay" style="width: 100%">
+              결제하기
+            </button>
+          </form>
+        </div>
+      </div>
+      <!-- /subpage-container -->
+
+      <footer class="kiosk-page-footer">
+        <a
+          th:href="@{/admin/login}"
+          href="/admin/login"
+          class="kiosk-admin-link"
+        >
+          <i class="bi bi-person-gear"></i>관리자
+        </a>
+      </footer>
     </div>
-  </div><!-- /subpage-container -->
+    <!-- /subpage-body -->
 
-  <footer class="kiosk-page-footer">
-    <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">
-      <i class="bi bi-person-gear"></i>관리자
-    </a>
-  </footer>
-</div><!-- /subpage-body -->
+    <div class="toast-notification" id="toast"></div>
 
-<div class="toast-notification" id="toast"></div>
+    <script th:src="@{/js/kiosk.js}"></script>
+    <script>
+      //CSRF 토큰
+      const token = document.querySelector('meta[name="_csrf"]').content;
+      const header = document.querySelector(
+        'meta[name="_csrf_header"]',
+      ).content;
+      /**
+       * 장바구니 페이지 전용 스크립트
+       * [백엔드 연동 시] 수량 변경/삭제는 AJAX 또는 폼 서브밋으로 처리하세요.
+       */
 
-<script th:src="@{/js/kiosk.js}"></script>
-<script>
-  /**
-   * 장바구니 페이지 전용 스크립트
-   * [백엔드 연동 시] 수량 변경/삭제는 AJAX 또는 폼 서브밋으로 처리하세요.
-   */
+      // 수량 변경 (서버 세션 기반 예시)
+      async function updateCartQty(id, delta) {
+        try {
+          const response = await fetch(`/api/cart/${id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              [header]: token,
+            },
+            body: JSON.stringify({ delta: delta }),
+          });
 
-  /** 선택 쿠폰 1개만 — 할인액을 쿠폰 할인 행에 반영 */
-  function onCartCouponCheck(changed) {
-    if (changed.checked) {
-      document.querySelectorAll('.cart-coupon-check').forEach(function (cb) {
-        if (cb !== changed) cb.checked = false;
-      });
-    }
-    applyCartCouponSelection();
-  }
+          if (!response.ok) throw new Error("수량 변경 실패");
 
-  function applyCartCouponSelection() {
-    const discountEl = document.getElementById('coupon-discount-value');
-    const subtotal = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-    const checked = document.querySelector('.cart-coupon-check:checked');
+          const json = await response.json();
 
-    if (!discountEl) return;
+          //console.log("quantity:", json.quantity, typeof json.quantity);
+          console.log("전체 json:", json); // 전체 응답 확인
 
-    if (!checked) {
-      discountEl.textContent = '-';
-      discountEl.dataset.amount = '0';
-      recalcTotal();
-      return;
-    }
+          if (json.removed || json.quantity <= 0) {
+            // removeCartItem 호출 X - 서버에서 이미 삭제됨
+            const row = document
+              .getElementById("qty-" + json.id)
+              ?.closest(".order-item-row");
+            row?.remove();
+            recalcSummary();
+            return;
+          }
 
-    const type = checked.dataset.type;
-    const val = Number(checked.dataset.value || 0);
-    let discount = type === 'PERCENT' ? Math.round(subtotal * val / 100) : val;
-    discount = Math.min(Math.max(0, discount), subtotal);
+          const qtyEl = document.getElementById("qty-" + json.id);
+          const subtotalEl = document.getElementById("subtotal-" + json.id);
 
-    discountEl.textContent = discount > 0 ? '-' + fmtPrice(discount) : '-';
-    discountEl.dataset.amount = String(discount);
-    recalcTotal();
-  }
+          if (qtyEl) qtyEl.textContent = json.quantity;
+          if (subtotalEl)
+            subtotalEl.textContent =
+              (json.quantity * json.price).toLocaleString("ko-KR") + "원";
 
-  // 수량 변경 (서버 세션 기반 예시)
-  function updateCartQty(menuId, delta) {
-    const qtyEl     = document.getElementById('qty-' + menuId) ||
-                      document.getElementById('qty-sample' + menuId);
-    const subtotalEl = document.getElementById('subtotal-' + menuId) ||
-                      document.getElementById('subtotal-sample' + menuId);
-    if (!qtyEl) return;
+          recalcSummary();
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
-    let qty = parseInt(qtyEl.textContent) + delta;
-    if (qty <= 0) { removeCartItem(menuId); return; }
-    qtyEl.textContent = qty;
+      async function removeCartItem(id) {
+        try {
+          const response = await fetch(`/api/cart/${id}`, {
+            method: "DELETE",
+            headers: {
+              [header]: token,
+            },
+          });
 
-    // 단가를 data 속성이나 DOM에서 추출 (백엔드 연동 시 AJAX 대체 권장)
-    recalcSummary();
-  }
+          if (!response.ok) throw new Error("삭제 실패");
 
-  function removeCartItem(menuId) {
-    const row = document.getElementById('qty-' + menuId)?.closest('.order-item-row') ||
-                document.getElementById('qty-sample' + menuId)?.closest('.order-item-row');
-    row?.remove();
-    recalcSummary();
-  }
+          const json = await response.json();
 
-  function recalcSummary() {
-    applyCartCouponSelection();
-  }
+          const row = document
+            .getElementById("qty-" + json.id)
+            ?.closest(".order-item-row");
 
-  // 결제하기 클릭 시 할인 정보 폼에 반영
-  document.getElementById('payment-redirect-form')?.addEventListener('submit', function() {
-    const couponDisc  = document.getElementById('coupon-discount-value');
-    const usePointsChk = document.getElementById('use-points-check');
-    const pointsEl    = document.getElementById('points-discount');
-    const finalEl     = document.getElementById('final-total-value');
+          row?.remove();
+          recalcSummary();
+        } catch (error) {
+          console.error(error);
+        }
+      }
 
-    if (couponDisc) {
-      document.getElementById('hidden-coupon-discount').value = couponDisc.dataset.amount || 0;
-    }
+      function recalcSummary() {
+        // 결제 전 페이지이므로 클라이언트 합산 (백엔드 연동 시 서버 계산으로 대체)
+        let subtotal = 0;
 
-    const pickedCoupon = document.querySelector('.cart-coupon-check:checked');
-    document.getElementById('hidden-coupon-code').value = pickedCoupon ? pickedCoupon.dataset.code : '';
+        document.querySelectorAll(".order-item-row").forEach((row) => {
+          const idMatch = row.querySelector("[id^='qty-']");
+          if (!idMatch) return;
 
-    const available = Number(pointsEl?.dataset.points || 0);
-    const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-    if (usePointsChk?.checked) {
-      document.getElementById('hidden-use-points').value = Math.min(available, subtotal);
-    } else {
-      document.getElementById('hidden-use-points').value = 0;
-    }
+          const id = idMatch.id.replace("qty-", "");
+          const qty = parseInt(idMatch.textContent || "0");
+          const subtotalEl = document.getElementById("subtotal-" + id);
+          if (!subtotalEl) return;
 
-    const finalText = finalEl?.textContent?.replace(/[^0-9]/g, '') || '0';
-    document.getElementById('hidden-final-amount').value = finalText;
-  });
+          // "16,500원" → 16500
+          const itemSubtotal = parseInt(
+            subtotalEl.textContent.replace(/[^0-9]/g, ""),
+          );
+          subtotal += itemSubtotal;
+        });
 
-  document.addEventListener('DOMContentLoaded', function() {
-    if (document.querySelector('.cart-coupon-check') || document.getElementById('points-discount')) {
-      applyCartCouponSelection();
-    }
-  });
-</script>
-</body>
+        const subtotalEl = document.getElementById("subtotal-value");
+        if (subtotalEl) {
+          subtotalEl.textContent = subtotal.toLocaleString("ko-KR") + "원";
+          subtotalEl.dataset.amount = subtotal;
+        }
+
+        recalcTotal();
+      }
+
+      // 결제하기 클릭 시 할인 정보 폼에 반영
+      document
+        .getElementById("payment-redirect-form")
+        ?.addEventListener("submit", function () {
+          const couponInput = document.getElementById("coupon-input");
+          const couponDisc = document.getElementById("coupon-discount-value");
+          const usePointsChk = document.getElementById("use-points-check");
+          const pointsEl = document.getElementById("points-discount");
+          const finalEl = document.getElementById("final-total-value");
+
+          if (couponInput?.value)
+            document.getElementById("hidden-coupon-code").value =
+              couponInput.value;
+          if (couponDisc)
+            document.getElementById("hidden-coupon-discount").value =
+              couponDisc.dataset.amount || 0;
+
+          const available = Number(pointsEl?.dataset.points || 0);
+          const subtotal = Number(
+            document.getElementById("subtotal-value")?.dataset.amount || 0,
+          );
+          if (usePointsChk?.checked) {
+            document.getElementById("hidden-use-points").value = Math.min(
+              available,
+              subtotal,
+            );
+          }
+
+          // 최종 금액 문자열에서 숫자 추출
+          const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
+          document.getElementById("hidden-final-amount").value = finalText;
+        });
+    </script>
+  </body>
 </html>
