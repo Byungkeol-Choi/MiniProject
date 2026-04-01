@@ -10,7 +10,9 @@ spring:
   # Supabase 프로젝트 설정에서 확인: Settings > Database > Connection string (JDBC)
   # username/password는 application-secret.yml 참고
   datasource:
-    url: jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?prepareThreshold=0
+    # 트랜잭션 풀(6543·PgBouncer)은 연결마다 prepared statement를 유지하지 않음.
+    # Hibernate 기본(server-side PS) 사용 시 "prepared statement does not exist" 등으로 500이 날 수 있어 비활성화.
+    url: jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?prepareThreshold=0&sslmode=require
     driver-class-name: org.postgresql.Driver
 
   # ===== JPA / Hibernate =====

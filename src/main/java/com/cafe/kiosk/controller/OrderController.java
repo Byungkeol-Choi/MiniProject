@@ -2,6 +2,7 @@ package com.cafe.kiosk.controller;
 
 import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
+import com.cafe.kiosk.service.CouponService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
     private final ObjectMapper objectMapper; //json 세션 저장 방법
+    private final CouponService couponService;
 
     @GetMapping("/order/cart")
     public String confrim(HttpSession session, Model model) {
