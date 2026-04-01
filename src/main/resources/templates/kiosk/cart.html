@@ -1,21 +1,25 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
   <title>주문 확인 - 브런치 카페</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" th:href="@{/css/kiosk.css}">
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+  <link rel="stylesheet" th:href="@{/css/kiosk.css}" />
 </head>
 <body>
-
 <!--
-  [백엔드 연동] Controller 필요 변수
-  - cartItems : List<CartItemDto>  (필드: menuId, menuName, quantity, unitPrice, emoji)
-  - subtotal  : int  (합계 금액)
-  - member    : Member (로그인 회원, nullable)
-  - couponApplied : boolean
-  - couponDiscount: int
+[백엔드 연동] Controller 필요 변수
+- cartItem : List<CartItemDto>  (필드: menuId, menuName, quantity, unitPrice, imageUrl)
+- subtotal  : int  (합계 금액)
+- member    : Member (로그인 회원, nullable)
+- couponApplied : boolean
+- couponDiscount: int
 -->
 
 <header class="kiosk-header">
@@ -40,10 +44,7 @@
 
 <div class="subpage-body">
   <div class="subpage-container">
-
-    <div class="page-title">
-      주문 확인
-    </div>
+    <div class="page-title">주문 확인</div>
 
     <!-- ─── 주문 목록 ──────────────────────────── -->
     <div class="section-card">
@@ -53,83 +54,136 @@
 
       <!-- Thymeleaf 반복 출력 -->
       <div th:each="item : ${cartItems}" class="order-item-row">
-        <img class="order-item-icon"
-             th:src="${item.imageUrl != null ? item.imageUrl : '/images/menu/eggs-benedict.png'}"
-             onerror="this.src='/images/menu/eggs-benedict.png'"
-             alt="메뉴 이미지">
+        <img
+                class="order-item-icon"
+                th:src="${item.imgUrl != null ? item.imgUrl : '/images/menu/empty.png'}"
+                onerror="this.src = '/images/menu/empty.png'"
+                alt="메뉴 이미지"
+        />
         <div class="order-item-info">
-          <div class="order-item-name" th:text="${item.menuName}">에그 베네딕트</div>
-          <div class="order-item-unit"
-               th:text="${#numbers.formatInteger(item.unitPrice,1,'COMMA') + '원 / 1개'}">16,500원 / 1개</div>
+          <div class="order-item-name" th:text="${item.name}">
+            에그 베네딕트
+          </div>
+          <div
+                  class="order-item-unit"
+                  th:text="${#numbers.formatInteger(item.price,1,'COMMA') + '원 / 1개'}"
+          >
+            16,500원 / 1개
+          </div>
         </div>
         <div class="order-qty-ctrl">
           <!--
-            [백엔드 연동] 수량 변경: POST /order/cart/update
-            또는 JS로 처리 후 폼 재제출
+        [백엔드 연동] 수량 변경: POST /order/cart/update
+        또는 JS로 처리 후 폼 재제출
           -->
-          <button class="order-qty-btn"
-                  th:onclick="'updateCartQty(' + item.menuId + ', -1)'"
-                  onclick="updateCartQty(1, -1)">−</button>
-          <span class="order-qty-num" th:text="${item.quantity}"
-                th:id="'qty-' + item.menuId">1</span>
-          <button class="order-qty-btn"
-                  th:onclick="'updateCartQty(' + item.menuId + ', 1)'"
-                  onclick="updateCartQty(1, 1)">+</button>
+          <button
+                  class="order-qty-btn"
+                  th:onclick="'updateCartQty(' + item.id + ', -1)'"
+                  onclick="updateCartQty(1, -1)"
+          >
+            −
+          </button>
+          <span
+                  class="order-qty-num"
+                  th:text="${item.quantity}"
+                  th:id="'qty-' + item.id"
+          >1</span
+          >
+          <button
+                  class="order-qty-btn"
+                  th:onclick="'updateCartQty(' + item.id + ', 1)'"
+                  onclick="updateCartQty(1, 1)"
+          >
+            +
+          </button>
         </div>
-        <div class="order-item-subtotal"
-             th:text="${#numbers.formatInteger(item.unitPrice * item.quantity, 1, 'COMMA') + '원'}"
-             th:id="'subtotal-' + item.menuId">16,500원</div>
-        <button class="btn-remove-item"
-                th:onclick="'removeCartItem(' + item.menuId + ')'"
+        <div
+                class="order-item-subtotal"
+                th:text="${#numbers.formatInteger(item.price * item.quantity, 1, 'COMMA') + '원'}"
+                th:id="'subtotal-' + item.id"
+        >
+          16,500원
+        </div>
+        <button
+                class="btn-remove-item"
+                th:onclick="'removeCartItem(' + item.id + ')'"
                 onclick="removeCartItem(1)"
-                title="삭제">
+                title="삭제"
+        >
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
 
       <!-- 장바구니 비어있을 때 (백엔드 redirected) -->
-      <div th:if="${cartItems == null or #lists.isEmpty(cartItems)}"
-           style="text-align:center; padding:30px; color:#9E8B7B;">
-        <i class="bi bi-cart-x" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+      <div
+              th:if="${cartItems == null or #lists.isEmpty(cartItems)}"
+              style="text-align: center; padding: 30px; color: #9e8b7b"
+      >
+        <i
+                class="bi bi-cart-x"
+                style="font-size: 40px; display: block; margin-bottom: 10px"
+        ></i>
         장바구니가 비어있습니다.
-        <div style="margin-top:16px;">
-          <a th:href="@{/}" href="/" class="btn-back-page">
-            메뉴 담기
-          </a>
+        <div style="margin-top: 16px">
+          <a th:href="@{/}" href="/" class="btn-back-page"> 메뉴 담기 </a>
         </div>
       </div>
 
       <!-- 디자인 샘플 데이터 (cartItems가 null인 경우에만 표시) -->
       <div th:if="${cartItems == null}" class="order-item-row">
-        <img class="order-item-icon" src="/images/menu/eggs-benedict.png" alt="음식 이미지">
+        <img
+                class="order-item-icon"
+                src="/images/menu/eggs-benedict.png"
+                alt="음식 이미지"
+        />
         <div class="order-item-info">
           <div class="order-item-name">에그 베네딕트</div>
           <div class="order-item-unit">16,500원 / 1개</div>
         </div>
         <div class="order-qty-ctrl">
-          <button class="order-qty-btn" onclick="updateCartQty(1, -1)">−</button>
+          <button class="order-qty-btn" onclick="updateCartQty(1, -1)">
+            −
+          </button>
           <span class="order-qty-num" id="qty-sample1">1</span>
-          <button class="order-qty-btn" onclick="updateCartQty(1, 1)">+</button>
+          <button class="order-qty-btn" onclick="updateCartQty(1, 1)">
+            +
+          </button>
         </div>
-        <div class="order-item-subtotal" id="subtotal-sample1">16,500원</div>
-        <button class="btn-remove-item" onclick="removeCartItem(1)"><i class="bi bi-x-lg"></i></button>
+        <div class="order-item-subtotal" id="subtotal-sample1">
+          16,500원
+        </div>
+        <button class="btn-remove-item" onclick="removeCartItem(1)">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
       <div th:if="${cartItems == null}" class="order-item-row">
-        <img class="order-item-icon" src="/images/menu/ice-cafelatte.png" alt="음료 이미지">
+        <img
+                class="order-item-icon"
+                src="/images/menu/ice-cafelatte.png"
+                alt="음료 이미지"
+        />
         <div class="order-item-info">
           <div class="order-item-name">카페 라떼</div>
           <div class="order-item-unit">5,500원 / 1개</div>
         </div>
         <div class="order-qty-ctrl">
-          <button class="order-qty-btn" onclick="updateCartQty(8, -1)">−</button>
+          <button class="order-qty-btn" onclick="updateCartQty(8, -1)">
+            −
+          </button>
           <span class="order-qty-num" id="qty-sample2">2</span>
-          <button class="order-qty-btn" onclick="updateCartQty(8, 1)">+</button>
+          <button class="order-qty-btn" onclick="updateCartQty(8, 1)">
+            +
+          </button>
         </div>
-        <div class="order-item-subtotal" id="subtotal-sample2">11,000원</div>
-        <button class="btn-remove-item" onclick="removeCartItem(8)"><i class="bi bi-x-lg"></i></button>
+        <div class="order-item-subtotal" id="subtotal-sample2">
+          11,000원
+        </div>
+        <button class="btn-remove-item" onclick="removeCartItem(8)">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </div>
-
-    </div><!-- /section-card -->
+    </div>
+    <!-- /section-card -->
 
     <!-- ─── 쿠폰 & 포인트 ─────────────────────── -->
     <div class="section-card">
@@ -137,37 +191,75 @@
         <i class="bi bi-p-circle"></i> 쿠폰 / 포인트
       </div>
 
-      <!-- 쿠폰 입력 -->
-      <div style="margin-bottom: 18px;">
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">쿠폰 번호</div>
+      <div style="display: flex; flex-wrap: wrap; justify-content: center">
+        <button type="button" class="btn-stamp" id="btn-open-point-lookup">
+          포인트 확인
+        </button>
+      </div>
+
+      <!-- 쿠폰: 비회원도 입력·모달에서 선택 적용 가능 -->
+      <div style="margin-bottom: 18px">
+        <div
+                style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #5c3317;
+                margin-bottom: 8px;
+              "
+        >
+          쿠폰 번호
+        </div>
         <div class="input-row">
-          <input type="text" class="form-input" id="coupon-input"
-                 placeholder="쿠폰 번호를 입력하세요 (예: CAFE10)" maxlength="20"
-                 style="text-transform:uppercase;">
-          <button class="btn-apply" onclick="applyCoupon()">적용</button>
+          <input
+                  type="text"
+                  class="form-input"
+                  id="coupon-input"
+                  placeholder="쿠폰 번호를 입력하세요 (예: CAFE-XXXX)"
+                  maxlength="30"
+                  style="text-transform: uppercase"
+          />
+          <button type="button" class="btn-apply" onclick="applyCoupon()">적용</button>
         </div>
         <div class="discount-result" id="coupon-result"></div>
       </div>
 
-      <!-- 포인트 사용 -->
-      <!--
-        [백엔드 연동] member가 로그인 상태일 때만 표시
-        th:if="${member != null}"
-      -->
+      <!-- 포인트 사용: 로그인(회원) 시에만 -->
       <div th:if="${member != null}">
-        <div style="font-size:14px; font-weight:600; color:#5C3317; margin-bottom:8px;">포인트 사용</div>
+        <!-- 포인트 사용 -->
+        <div
+                style="
+                font-size: 14px;
+                font-weight: 600;
+                color: #5c3317;
+                margin-bottom: 8px;
+              "
+        >
+          포인트 사용
+        </div>
         <label class="form-check">
-          <input type="checkbox" id="use-points-check" onchange="applyPoints()">
+          <input
+                  type="checkbox"
+                  id="use-points-check"
+                  onchange="applyPoints()"
+          />
           <span>
-            보유 포인트
-            <strong th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}">1,200 P</strong>
-            전액 사용
-          </span>
+                보유 포인트
+                <strong
+                        th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}"
+                >1,200 P</strong
+                >
+                전액 사용
+              </span>
         </label>
-        <div id="points-discount" th:data-points="${member.points}" data-points="0" style="display:none;"></div>
+        <div
+                id="points-discount"
+                th:data-points="${member.points}"
+                data-points="0"
+                style="display: none"
+        ></div>
       </div>
-
-    </div><!-- /section-card -->
+    </div>
+    <!-- /section-card -->
 
     <!-- ─── 결제 금액 요약 ────────────────────── -->
     <div class="section-card">
@@ -177,13 +269,21 @@
 
       <div class="summary-row">
         <span>상품 금액</span>
-        <span id="subtotal-value"
-              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
-              th:data-amount="${subtotal ?: 27500}">27,500원</span>
+        <span
+                id="subtotal-value"
+                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+                th:data-amount="${subtotal ?: 27500}"
+        >27,500원</span
+        >
       </div>
       <div class="summary-row">
         <span>쿠폰 할인</span>
-        <span class="discount-tag" id="coupon-discount-value" data-amount="0">-</span>
+        <span
+                class="discount-tag"
+                id="coupon-discount-value"
+                data-amount="0"
+        >-</span
+        >
       </div>
       <div class="summary-row">
         <span>포인트 사용</span>
@@ -191,8 +291,11 @@
       </div>
       <div class="summary-total">
         <span>최종 결제 금액</span>
-        <span id="final-total-value"
-              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}">27,500원</span>
+        <span
+                id="final-total-value"
+                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+        >27,500원</span
+        >
       </div>
     </div>
 
@@ -202,31 +305,99 @@
         <i class="bi bi-arrow-left"></i> 이전
       </a>
       <!--
-        [백엔드 연동]
-        POST /order/payment 로 쿠폰코드, 포인트 사용 여부, 총 금액 전송
-      -->
-      <form id="payment-redirect-form" method="post" th:action="@{/order/payment}" action="/order/payment" style="flex:1; display:flex;">
-        <input type="hidden" name="couponCode"      id="hidden-coupon-code">
-        <input type="hidden" name="couponDiscount"  id="hidden-coupon-discount" value="0">
-        <input type="hidden" name="usePoints"       id="hidden-use-points" value="0">
-        <input type="hidden" name="finalAmount"     id="hidden-final-amount"
-               th:value="${subtotal ?: 27500}" value="27500">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button type="submit" class="btn-go-pay" style="width:100%;">
+    [백엔드 연동]
+    POST /order/payment 로 쿠폰코드, 포인트 사용 여부, 총 금액 전송
+  -->
+      <form
+              id="payment-redirect-form"
+              method="post"
+              th:action="@{/order/payment}"
+              action="/order/payment"
+              style="flex: 1; display: flex"
+      >
+        <input type="hidden" name="couponCode" id="hidden-coupon-code" />
+        <input
+                type="hidden"
+                name="couponDiscount"
+                id="hidden-coupon-discount"
+                value="0"
+        />
+        <input
+                type="hidden"
+                name="usePoints"
+                id="hidden-use-points"
+                value="0"
+        />
+        <input
+                type="hidden"
+                name="finalAmount"
+                id="hidden-final-amount"
+                th:value="${subtotal ?: 27500}"
+                value="27500"
+        />
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"
+        />
+        <button type="submit" class="btn-go-pay" style="width: 100%">
           결제하기
         </button>
       </form>
     </div>
-  </div><!-- /subpage-container -->
+  </div>
+  <!-- /subpage-container -->
 
   <footer class="kiosk-page-footer">
-    <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">
+    <a
+            th:href="@{/admin/login}"
+            href="/admin/login"
+            class="kiosk-admin-link"
+    >
       <i class="bi bi-person-gear"></i>관리자
     </a>
   </footer>
-</div><!-- /subpage-body -->
+</div>
+<!-- /subpage-body -->
 
 <div class="toast-notification" id="toast"></div>
+
+<!-- 포인트 조회 모달 (전화번호 입력 → API 조회, 적립 없음) -->
+<div id="point-lookup-modal" class="kiosk-modal" aria-hidden="true">
+  <div class="kiosk-modal-backdrop"></div>
+  <div class="kiosk-modal-panel" role="dialog" aria-modal="true" aria-labelledby="point-lookup-title">
+    <button type="button" class="kiosk-modal-close" aria-label="닫기">&times;</button>
+    <h3 id="point-lookup-title" class="kiosk-modal-title">
+      <i class="bi bi-p-circle"></i> 포인트 확인
+    </h3>
+    <p class="kiosk-modal-hint">가입된 전화번호로 누적 포인트와 쿠폰을 조회합니다.</p>
+
+    <div id="cart-lookup-step-input">
+      <div id="cart-lookup-phone-display" class="phone-display placeholder">전화번호를 입력하세요</div>
+      <div class="numpad numpad--compact">
+        <button type="button" class="numpad-key" data-digit="1">1</button>
+        <button type="button" class="numpad-key" data-digit="2">2</button>
+        <button type="button" class="numpad-key" data-digit="3">3</button>
+        <button type="button" class="numpad-key" data-digit="4">4</button>
+        <button type="button" class="numpad-key" data-digit="5">5</button>
+        <button type="button" class="numpad-key" data-digit="6">6</button>
+        <button type="button" class="numpad-key" data-digit="7">7</button>
+        <button type="button" class="numpad-key" data-digit="8">8</button>
+        <button type="button" class="numpad-key" data-digit="9">9</button>
+        <button type="button" class="numpad-key key-clear" data-action="clear">전체삭제</button>
+        <button type="button" class="numpad-key" data-digit="0">0</button>
+        <button type="button" class="numpad-key key-del" data-action="del">
+          <i class="bi bi-backspace"></i>
+        </button>
+      </div>
+      <button type="button" class="btn-stamp-confirm" id="cart-lookup-btn-confirm">
+        <i class="bi bi-search"></i> 조회
+      </button>
+    </div>
+
+    <div id="cart-lookup-step-result" class="cart-lookup-result" style="display: none"></div>
+  </div>
+</div>
 
 <script th:src="@{/js/kiosk.js}"></script>
 <script>
@@ -236,54 +407,136 @@
    */
 
   // 수량 변경 (서버 세션 기반 예시)
-  function updateCartQty(menuId, delta) {
-    const qtyEl     = document.getElementById('qty-' + menuId) ||
-                      document.getElementById('qty-sample' + menuId);
-    const subtotalEl = document.getElementById('subtotal-' + menuId) ||
-                      document.getElementById('subtotal-sample' + menuId);
-    if (!qtyEl) return;
+  async function updateCartQty(id, delta) {
+    try {
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ delta: delta }),
+      });
 
-    let qty = parseInt(qtyEl.textContent) + delta;
-    if (qty <= 0) { removeCartItem(menuId); return; }
-    qtyEl.textContent = qty;
+      if (!response.ok) throw new Error("수량 변경 실패");
 
-    // 단가를 data 속성이나 DOM에서 추출 (백엔드 연동 시 AJAX 대체 권장)
-    recalcSummary();
+      const data = await response.json();
+
+      // 서버에서 내려준 최신 값으로 업데이트
+      const qtyEl =
+        document.getElementById("qty-" + id) ||
+        document.getElementById("qty-sample" + id);
+
+      const subtotalEl =
+        document.getElementById("subtotal-" + id) ||
+        document.getElementById("subtotal-sample" + id);
+
+      if (data.quantity <= 0) {
+        removeCartItem(id);
+        return;
+      }
+
+      qtyEl.textContent = data.quantity;
+      subtotalEl.textContent = data.subtotal;
+
+      recalcSummary();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  function removeCartItem(menuId) {
-    const row = document.getElementById('qty-' + menuId)?.closest('.order-item-row') ||
-                document.getElementById('qty-sample' + menuId)?.closest('.order-item-row');
-    row?.remove();
-    recalcSummary();
+  async function removeCartItem(id) {
+    try {
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("삭제 실패");
+
+      const row =
+        document.getElementById("qty-" + id)?.closest(".order-item-row") ||
+        document
+          .getElementById("qty-sample" + id)
+          ?.closest(".order-item-row");
+
+      row?.remove();
+
+      recalcSummary();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   function recalcSummary() {
-    // 결제 전 페이지이므로 클라이언트 합산 (백엔드 연동 시 서버 계산으로 대체)
+    // 줄 항목 소계 합산 → 상단 상품 금액과 data-amount 동기화 (쿠폰/최종 금액 계산 일치)
+    let sum = 0;
+    document.querySelectorAll(".order-item-row .order-item-subtotal").forEach((el) => {
+      const digits = String(el.textContent || "").replace(/[^0-9]/g, "");
+      const n = digits ? parseInt(digits, 10) : 0;
+      if (Number.isFinite(n)) sum += n;
+    });
+    const subtotalEl = document.getElementById("subtotal-value");
+    if (subtotalEl) {
+      subtotalEl.dataset.amount = String(sum);
+      subtotalEl.textContent =
+        typeof fmtPrice === "function" ? fmtPrice(sum) : sum.toLocaleString("ko-KR") + "원";
+    }
     recalcTotal();
   }
 
-  // 결제하기 클릭 시 할인 정보 폼에 반영
-  document.getElementById('payment-redirect-form')?.addEventListener('submit', function() {
-    const couponInput = document.getElementById('coupon-input');
-    const couponDisc  = document.getElementById('coupon-discount-value');
-    const usePointsChk = document.getElementById('use-points-check');
-    const pointsEl    = document.getElementById('points-discount');
-    const finalEl     = document.getElementById('final-total-value');
+  // 결제하기: hidden 필드 동기화 (서버 int 바인딩·NaN 방지). 예외 시에도 폼 제출은 진행.
+  document.getElementById("payment-redirect-form")?.addEventListener("submit", function () {
+    try {
+      const hiddenCode = document.getElementById("hidden-coupon-code");
+      const hiddenDisc = document.getElementById("hidden-coupon-discount");
+      const hiddenPoints = document.getElementById("hidden-use-points");
+      const hiddenFinal = document.getElementById("hidden-final-amount");
+      const couponInput = document.getElementById("coupon-input");
+      const couponDisc = document.getElementById("coupon-discount-value");
+      const usePointsChk = document.getElementById("use-points-check");
+      const pointsEl = document.getElementById("points-discount");
+      const finalEl = document.getElementById("final-total-value");
 
-    if (couponInput?.value) document.getElementById('hidden-coupon-code').value = couponInput.value;
-    if (couponDisc)  document.getElementById('hidden-coupon-discount').value = couponDisc.dataset.amount || 0;
+      if (hiddenCode) {
+        hiddenCode.value = (couponInput?.value ?? "").trim();
+      }
 
-    const available = Number(pointsEl?.dataset.points || 0);
-    const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-    if (usePointsChk?.checked) {
-      document.getElementById('hidden-use-points').value = Math.min(available, subtotal);
+      if (hiddenDisc && couponDisc) {
+        const raw = Number(couponDisc.dataset.amount);
+        const disc = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
+        hiddenDisc.value = String(disc);
+      }
+
+      const available = Number(pointsEl?.dataset.points || 0);
+      const avail = Number.isFinite(available) ? Math.max(0, Math.floor(available)) : 0;
+      const subRaw = Number(document.getElementById("subtotal-value")?.dataset.amount || 0);
+      const subtotal = Number.isFinite(subRaw) ? Math.max(0, Math.floor(subRaw)) : 0;
+
+      if (hiddenPoints) {
+        if (usePointsChk?.checked) {
+          const use = Math.min(avail, subtotal);
+          const useInt = Number.isFinite(use) ? Math.max(0, Math.floor(use)) : 0;
+          hiddenPoints.value = String(useInt);
+        } else {
+          hiddenPoints.value = "0";
+        }
+      }
+
+      let finalNum = 0;
+      if (finalEl?.textContent) {
+        const digits = finalEl.textContent.replace(/[^0-9]/g, "");
+        finalNum = digits ? parseInt(digits, 10) : 0;
+      }
+      if (!Number.isFinite(finalNum)) finalNum = 0;
+      if (hiddenFinal) {
+        hiddenFinal.value = String(Math.max(0, Math.floor(finalNum)));
+      }
+    } catch (err) {
+      console.error("payment-redirect-form submit sync:", err);
     }
-
-    // 최종 금액 문자열에서 숫자 추출
-    const finalText = finalEl?.textContent?.replace(/[^0-9]/g, '') || '0';
-    document.getElementById('hidden-final-amount').value = finalText;
   });
+
+  // 첫 로드 시 줄 합산으로 상단 상품 금액과 일치
+  recalcSummary();
 </script>
 </body>
 </html>

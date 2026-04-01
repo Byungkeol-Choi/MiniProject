@@ -881,3 +881,183 @@ html, body {
 .kiosk-admin-link {
     font-size:16px;
 }
+
+/* ─── 포인트 조회 모달 (장바구니) ─────────────────── */
+.kiosk-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.kiosk-modal.open {
+  display: flex;
+}
+
+.kiosk-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(44, 24, 16, 0.55);
+}
+
+.kiosk-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--cafe-light);
+  border-radius: var(--radius);
+  padding: 22px 22px 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  border: 1.5px solid var(--cafe-cream);
+}
+
+.kiosk-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--cafe-gray);
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.kiosk-modal-close:hover {
+  background: var(--cafe-cream);
+  color: var(--cafe-primary);
+}
+
+.kiosk-modal-title {
+  margin: 0 40px 8px 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--cafe-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kiosk-modal-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--cafe-secondary);
+  line-height: 1.45;
+}
+
+.numpad--compact {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.numpad--compact .numpad-key {
+  padding: 12px 8px;
+  font-size: 17px;
+}
+
+.cart-lookup-result {
+  font-size: 14px;
+  color: var(--cafe-dark);
+}
+
+.cart-lookup-msg {
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.cart-lookup-msg-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.cart-lookup-summary {
+  background: #fef3e8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  line-height: 1.65;
+}
+
+.cart-lookup-summary p {
+  margin: 0 0 6px;
+}
+
+.cart-lookup-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.cart-lookup-name {
+  font-size: 16px;
+  margin-bottom: 10px !important;
+}
+
+.cart-lookup-coupons-title {
+  font-weight: 700;
+  color: var(--cafe-primary);
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.cart-lookup-coupon-list {
+  margin: 0 0 16px;
+  padding-left: 18px;
+  line-height: 1.55;
+}
+
+.cart-lookup-coupon-list li {
+  margin-bottom: 6px;
+}
+
+.cart-lookup-coupon-used {
+  opacity: 0.75;
+}
+
+button.cart-lookup-coupon-pick {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--cafe-dark);
+  background: #fff;
+  border: 1.5px solid var(--cafe-cream);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+button.cart-lookup-coupon-pick:hover {
+  border-color: var(--cafe-accent);
+  background: #fffdf8;
+}
+
+.cart-lookup-coupon-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cafe-secondary);
+}
+
+.cart-lookup-muted {
+  color: var(--cafe-gray);
+  font-size: 13px;
+  font-weight: 500;
+}

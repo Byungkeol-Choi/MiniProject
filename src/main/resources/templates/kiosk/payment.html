@@ -11,8 +11,8 @@
 
 <!--
   [백엔드 연동] Controller 필요 변수
-  - orderSummary : OrderSummaryDto (totalAmount, discountAmount, finalAmount, itemCount)
-  - cartItems    : List<CartItemDto>
+  - summaryTotalAmount, summaryDiscountAmount, summaryFinalAmount (int)
+  - cartItems    : List<CartItemDto> (선택)
 -->
 
 <header class="kiosk-header">
@@ -42,21 +42,29 @@
       결제
     </div>
 
+    <div th:if="${errorMessage}"
+         style="background:#FEE2E2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:14px;color:#B91C1C;font-weight:600;"
+         th:text="${errorMessage}">
+      오류 메시지
+    </div>
+
     <!-- ─── 주문 요약 ──────────────────────────── -->
     <div class="section-card">
       <div class="section-title">
         <i class="bi bi-pass"></i> 주문 요약
       </div>
 
-      <!-- 주문 아이템 미니 목록 -->
-      <div th:each="item : ${cartItems}" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F5ECD7;">
-        <span>
-          <span th:text="${item.menuName}">에그 베네딕트</span>
-          <span style="color:#9E8B7B;" th:text="'×' + item.quantity">×1</span>
-        </span>
-        <span style="font-weight:600;"
-              th:text="${#numbers.formatInteger(item.unitPrice * item.quantity, 1, 'COMMA') + '원'}">16,500원</span>
-      </div>
+      <!-- 주문 아이템 미니 목록 (cartItems 없으면 null → th:each만으로는 예외) -->
+      <th:block th:if="${cartItems != null}">
+        <div th:each="item : ${cartItems}" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F5ECD7;">
+          <span>
+            <span th:text="${item.menuName}">에그 베네딕트</span>
+            <span style="color:#9E8B7B;" th:text="'×' + item.quantity">×1</span>
+          </span>
+          <span style="font-weight:600;"
+                th:text="${#numbers.formatInteger(item.unitPrice * item.quantity, 1, 'COMMA') + '원'}">16,500원</span>
+        </div>
+      </th:block>
 
       <!-- 디자인 샘플 -->
       <div th:if="${cartItems == null}" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #F5ECD7;">
@@ -72,17 +80,17 @@
       <div style="margin-top:16px;">
         <div class="summary-row">
           <span>상품 금액</span>
-          <span th:text="${#numbers.formatInteger(orderSummary?.totalAmount ?: 27500, 1, 'COMMA') + '원'}">27,500원</span>
+          <span th:text="${#numbers.formatInteger(summaryTotalAmount, 1, 'COMMA') + '원'}">27,500원</span>
         </div>
-        <div class="summary-row" th:if="${(orderSummary?.discountAmount ?: 0) > 0}">
+        <div class="summary-row" th:if="${summaryDiscountAmount > 0}">
           <span>할인 금액</span>
           <span class="discount-tag"
-                th:text="'-' + #numbers.formatInteger(orderSummary.discountAmount, 1, 'COMMA') + '원'">-2,000원</span>
+                th:text="${'-' + #numbers.formatInteger(summaryDiscountAmount, 1, 'COMMA') + '원'}">-2,000원</span>
         </div>
         <div class="summary-total">
           <span>결제 금액</span>
           <span id="payment-final-amount"
-                th:text="${#numbers.formatInteger(orderSummary?.finalAmount ?: 27500, 1, 'COMMA') + '원'}">27,500원</span>
+                th:text="${#numbers.formatInteger(summaryFinalAmount, 1, 'COMMA') + '원'}">27,500원</span>
         </div>
       </div>
     </div><!-- /주문 요약 -->
@@ -144,8 +152,14 @@
       -->
       <form id="payment-form" method="post" th:action="@{/order/pay}" action="/order/pay" style="flex:1; display:flex;">
         <input type="hidden" id="payment-method-input" name="paymentMethod" value="">
+        <input type="hidden" name="couponCode" id="pay-hidden-coupon-code"
+               th:value="${couponCode != null ? couponCode : ''}" value="">
+        <input type="hidden" name="couponDiscount" id="pay-hidden-coupon-discount"
+               th:value="${couponDiscount != null ? couponDiscount : 0}" value="0">
+        <input type="hidden" name="usePoints" id="pay-hidden-use-points"
+               th:value="${usePoints != null ? usePoints : 0}" value="0">
         <input type="hidden" name="finalAmount"
-               th:value="${orderSummary?.finalAmount ?: 27500}" value="27500">
+               th:value="${summaryFinalAmount}" value="27500">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <button type="button" class="btn-go-pay" id="btn-confirm-pay"
                 disabled onclick="confirmPayment()" style="width:100%;">

@@ -60,10 +60,8 @@
                 <th>전화번호</th>
                 <th>이름</th>
                 <th>보유 포인트</th>
-                <th>주문 횟수</th>
                 <th>가입일</th>
-                <th>포인트 수정</th>
-                <th>쿠폰 발급</th>
+                <th>보유 쿠폰</th>
               </tr>
             </thead>
             <tbody>
@@ -78,20 +76,8 @@
                         th:id="'member-points-' + member.id"
                         th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}">1,200 P</span>
                 </td>
-                <td th:text="${member.orderCount ?: 0}">8</td>
                 <td th:text="${#temporals.format(member.createdAt, 'yyyy.MM.dd')}">2025.11.04</td>
-                <td>
-                  <button class="btn-edit btn-sm"
-                          th:onclick="'editMemberPoints(' + member.id + ', ' + member.points + ')'">
-                    <i class="bi bi-pencil"></i> 수정
-                  </button>
-                </td>
-                <td>
-                  <button class="btn-secondary btn-sm"
-                          th:onclick="'issueCoupon(' + member.id + ', \'' + member.phone + '\')'">
-                    <i class="bi bi-ticket-perforated"></i> 발급
-                  </button>
-                </td>
+                <td th:text="${couponCounts[memberStat.index] ?: 0} + '개'">0개</td>
               </tr>
 
               <!-- 샘플 데이터 -->
@@ -100,40 +86,32 @@
                 <td style="font-weight:600;">010-1234-5678</td>
                 <td>홍길동</td>
                 <td><span class="points-tag" id="member-points-1">1,200 P</span></td>
-                <td>12</td>
                 <td>2025.08.15</td>
-                <td><button class="btn-edit btn-sm" onclick="editMemberPoints(1, 1200)"><i class="bi bi-pencil"></i> 수정</button></td>
-                <td><button class="btn-secondary btn-sm" onclick="issueCoupon(1,'010-1234-5678')"><i class="bi bi-ticket-perforated"></i> 발급</button></td>
+                <td>0개</td>
               </tr>
               <tr th:if="${members == null}">
                 <td style="color:#9E8B7B;">2</td>
                 <td style="font-weight:600;">010-9876-5432</td>
                 <td>김민지</td>
                 <td><span class="points-tag" id="member-points-2">3,450 P</span></td>
-                <td>28</td>
                 <td>2025.06.22</td>
-                <td><button class="btn-edit btn-sm" onclick="editMemberPoints(2, 3450)"><i class="bi bi-pencil"></i> 수정</button></td>
-                <td><button class="btn-secondary btn-sm" onclick="issueCoupon(2,'010-9876-5432')"><i class="bi bi-ticket-perforated"></i> 발급</button></td>
+                <td>0개</td>
               </tr>
               <tr th:if="${members == null}">
                 <td style="color:#9E8B7B;">3</td>
                 <td style="font-weight:600;">010-5555-1234</td>
                 <td>이준혁</td>
                 <td><span class="points-tag" id="member-points-3">800 P</span></td>
-                <td>5</td>
                 <td>2026.01.10</td>
-                <td><button class="btn-edit btn-sm" onclick="editMemberPoints(3, 800)"><i class="bi bi-pencil"></i> 수정</button></td>
-                <td><button class="btn-secondary btn-sm" onclick="issueCoupon(3,'010-5555-1234')"><i class="bi bi-ticket-perforated"></i> 발급</button></td>
+                <td>0개</td>
               </tr>
               <tr th:if="${members == null}">
                 <td style="color:#9E8B7B;">4</td>
                 <td style="font-weight:600;">010-7777-8888</td>
                 <td>박서연</td>
                 <td><span class="points-tag" id="member-points-4">5,100 P</span></td>
-                <td>42</td>
                 <td>2025.03.05</td>
-                <td><button class="btn-edit btn-sm" onclick="editMemberPoints(4, 5100)"><i class="bi bi-pencil"></i> 수정</button></td>
-                <td><button class="btn-secondary btn-sm" onclick="issueCoupon(4,'010-7777-8888')"><i class="bi bi-ticket-perforated"></i> 발급</button></td>
+                <td>0개</td>
               </tr>
 
             </tbody>
@@ -170,60 +148,8 @@
   </div><!-- /admin-content -->
 </div><!-- /admin-layout -->
 
-<!-- ─── 쿠폰 발급 모달 ────────────────────────────── -->
-<div class="modal-overlay" id="coupon-modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title"><i class="bi bi-ticket-perforated"></i> 쿠폰 발급</div>
-      <button class="modal-close" onclick="document.getElementById('coupon-modal').classList.remove('open')">✕</button>
-    </div>
-    <form class="modal-body" id="coupon-form" method="post" th:action="@{/admin/coupons/issue}" action="/admin/coupons/issue">
-      <input type="hidden" id="coupon-member-id" name="memberId">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-      <div class="form-group">
-        <label class="form-label">대상 회원</label>
-        <input type="text" class="form-control" id="coupon-member-phone" readonly
-               style="background:#F4F6F9;">
-      </div>
-      <div class="form-group">
-        <label class="form-label">쿠폰 이름</label>
-        <input type="text" class="form-control" name="name" placeholder="예: 신규 회원 할인 쿠폰" maxlength="100" required>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">할인 유형</label>
-          <select class="form-control" name="discountType" id="coupon-type">
-            <option value="FIXED">정액 할인</option>
-            <option value="PERCENT">퍼센트 할인</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">할인 값 (원 또는 %)</label>
-          <input type="number" class="form-control" name="discountValue" placeholder="예: 2000 또는 10" min="1">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">만료일 (선택)</label>
-        <input type="datetime-local" class="form-control" name="expiresAt">
-      </div>
-    </form>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="document.getElementById('coupon-modal').classList.remove('open')">취소</button>
-      <button class="btn-primary" onclick="document.getElementById('coupon-form').submit()">
-        <i class="bi bi-send"></i> 발급하기
-      </button>
-    </div>
-  </div>
-</div>
 
 <script th:src="@{/js/admin.js}"></script>
-<script>
-  function issueCoupon(memberId, phone) {
-    document.getElementById('coupon-member-id').value  = memberId;
-    document.getElementById('coupon-member-phone').value = phone;
-    document.getElementById('coupon-modal').classList.add('open');
-  }
-</script>
 </body>
 </html>

@@ -221,11 +221,11 @@ function applyCoupon() {
     return;
   }
 
-  const subtotal = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const subtotal = safeIntKiosk(document.getElementById('subtotal-value')?.dataset.amount || 0);
   let discount = coupon.type === 'PERCENT'
     ? Math.round(subtotal * coupon.value / 100)
     : coupon.value;
-  discount = Math.min(discount, subtotal);
+  discount = safeIntKiosk(Math.min(discount, subtotal));
 
   updateDiscount(discount, coupon.label);
 }
@@ -236,9 +236,9 @@ function applyPoints() {
   const pointsEl = document.getElementById('points-discount');
   if (!checkbox || !pointsEl) return;
 
-  const available = Number(pointsEl.dataset.points || 0);
-  const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-  const useAmt    = checkbox.checked ? Math.min(available, subtotal) : 0;
+  const available = safeIntKiosk(pointsEl.dataset.points || 0);
+  const subtotal  = safeIntKiosk(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const useAmt    = checkbox.checked ? safeIntKiosk(Math.min(available, subtotal)) : 0;
 
   const useEl = document.getElementById('points-use-value');
   if (useEl) useEl.textContent = useAmt > 0 ? `-${fmtPrice(useAmt)}` : '-';
@@ -257,23 +257,55 @@ function updateDiscount(amount, label) {
     resultEl.style.color = '';
   }
   if (discountEl) {
-    discountEl.textContent = amount > 0 ? `-${fmtPrice(amount)}` : '-';
-    discountEl.dataset.amount = amount;
+    const amt = safeIntKiosk(amount);
+    discountEl.textContent = amt > 0 ? `-${fmtPrice(amt)}` : '-';
+    discountEl.dataset.amount = String(amt);
   }
   recalcTotal();
 }
 
 function recalcTotal() {
-  const subtotal    = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-  const couponAmt   = Number(document.getElementById('coupon-discount-value')?.dataset.amount || 0);
+  const subtotal    = safeIntKiosk(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const couponAmt   = safeIntKiosk(document.getElementById('coupon-discount-value')?.dataset.amount || 0);
   const usePointsEl = document.getElementById('use-points-check');
   const pointsEl    = document.getElementById('points-discount');
-  const available   = Number(pointsEl?.dataset.points || 0);
+  const available   = safeIntKiosk(pointsEl?.dataset.points || 0);
   const usePoints   = (usePointsEl?.checked && available > 0) ? Math.min(available, subtotal) : 0;
+  const usePtsSafe  = safeIntKiosk(usePoints);
 
-  const total = Math.max(0, subtotal - couponAmt - usePoints);
+  const total = Math.max(0, subtotal - couponAmt - usePtsSafe);
   const totalEl = document.getElementById('final-total-value');
   if (totalEl) totalEl.textContent = fmtPrice(total);
+}
+
+/**
+ * 포인트 조회 모달에서 쿠폰 한 건을 탭했을 때: 주문에 반영(입력란 채우기 + 할인 합산).
+ * discountType: FIXED | PERCENT (서버 조회 API와 동일)
+ */
+function applyCouponFromLookup(code, discountType, discountValue, couponName) {
+  const input = document.getElementById('coupon-input');
+  if (!input) {
+    showToast('쿠폰 입력란을 찾을 수 없습니다.');
+    return;
+  }
+  input.value = String(code || '').trim();
+
+  const subtotal = safeIntKiosk(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const dv = safeIntKiosk(discountValue);
+  let discount = 0;
+  if (discountType === 'PERCENT') {
+    discount = Math.round((subtotal * dv) / 100);
+  } else {
+    discount = dv;
+  }
+  discount = safeIntKiosk(Math.min(discount, subtotal));
+
+  const label = couponName ? `${couponName} 적용` : '쿠폰 적용';
+  updateDiscount(discount, label);
+  showToast('쿠폰이 주문에 적용되었습니다.');
+  if (window.CartPointLookup && typeof window.CartPointLookup.closeModal === 'function') {
+    window.CartPointLookup.closeModal();
+  }
 }
 
 /* ─── 결제 수단 선택 ──────────────────────────────── */
@@ -390,6 +422,12 @@ function fmtPrice(n) {
   return Number(n).toLocaleString('ko-KR') + '원';
 }
 
+/** NaN 방지: 서버 int 바인딩·dataset과 호환되는 비음 정수 */
+function safeIntKiosk(n) {
+  const x = Number(n);
+  return Number.isFinite(x) ? Math.max(0, Math.floor(x)) : 0;
+}
+
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -412,6 +450,193 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 2400);
 }
 
+/** CSRF: Thymeleaf meta 우선, 없으면 XSRF-TOKEN 쿠키 (Spring Security CookieCsrfTokenRepository) */
+function readXsrfToken() {
+  const meta = document.querySelector('meta[name="_csrf"]');
+  const fromMeta = meta?.getAttribute('content');
+  if (fromMeta && fromMeta.length > 0) return fromMeta;
+  const m = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+function csrfHeaderName() {
+  const meta = document.querySelector('meta[name="_csrf_header"]');
+  return meta?.getAttribute('content') || 'X-XSRF-TOKEN';
+}
+
+/* ─── 장바구니: 포인트 조회 모달 (조회 전용 API) ───── */
+const CartPointLookup = (() => {
+  let digits = '';
+  const MAX = 11;
+
+  function formatPhoneDisplay(d) {
+    if (d.length <= 3) return d;
+    if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  }
+
+  function render() {
+    const el = document.getElementById('cart-lookup-phone-display');
+    if (!el) return;
+    if (digits.length === 0) {
+      el.textContent = '전화번호를 입력하세요';
+      el.classList.add('placeholder');
+      return;
+    }
+    el.classList.remove('placeholder');
+    el.textContent = formatPhoneDisplay(digits);
+  }
+
+  function push(d) {
+    if (digits.length >= MAX) return;
+    digits += d;
+    render();
+  }
+
+  function del() {
+    digits = digits.slice(0, -1);
+    render();
+  }
+
+  function clearAll() {
+    digits = '';
+    render();
+  }
+
+  function showInputStep() {
+    const inp = document.getElementById('cart-lookup-step-input');
+    const res = document.getElementById('cart-lookup-step-result');
+    if (inp) inp.style.display = '';
+    if (res) {
+      res.style.display = 'none';
+      res.innerHTML = '';
+    }
+  }
+
+  function openModal() {
+    const modal = document.getElementById('point-lookup-modal');
+    if (!modal) return;
+    digits = '';
+    render();
+    showInputStep();
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('point-lookup-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function showResultError(msg) {
+    const inp = document.getElementById('cart-lookup-step-input');
+    const box = document.getElementById('cart-lookup-step-result');
+    if (inp) inp.style.display = 'none';
+    if (!box) return;
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="cart-lookup-msg cart-lookup-msg-error">${escHtml(msg)}</div>
+      <button type="button" class="btn-stamp-confirm" id="cart-lookup-back">다시 입력</button>`;
+    document.getElementById('cart-lookup-back')?.addEventListener('click', () => {
+      digits = '';
+      render();
+      showInputStep();
+    });
+  }
+
+  function showResultOk(data) {
+    const inp = document.getElementById('cart-lookup-step-input');
+    const box = document.getElementById('cart-lookup-step-result');
+    if (inp) inp.style.display = 'none';
+    if (!box) return;
+    box.style.display = 'block';
+    const pts = Number(data.points ?? 0).toLocaleString('ko-KR');
+    const unused = data.unusedCouponCount ?? 0;
+    let couponsHtml = '';
+    if (data.coupons && data.coupons.length) {
+      couponsHtml = '<ul class="cart-lookup-coupon-list">';
+      data.coupons.forEach((c) => {
+        const amt =
+          c.discountType === 'FIXED'
+            ? `${Number(c.discountValue).toLocaleString('ko-KR')}원`
+            : `${c.discountValue}%`;
+        if (c.used) {
+          couponsHtml += `<li class="cart-lookup-coupon-used"><strong>${escHtml(c.name)}</strong> <span class="cart-lookup-muted">(${escHtml(c.code)})</span> — ${amt} <span class="cart-lookup-muted">사용완료</span></li>`;
+        } else {
+          couponsHtml += `<li><button type="button" class="cart-lookup-coupon-pick" data-code="${escHtml(c.code)}" data-discount-type="${escHtml(c.discountType)}" data-discount-value="${Number(c.discountValue)}" data-name="${escHtml(c.name)}"><span class="cart-lookup-coupon-pick-inner"><strong>${escHtml(c.name)}</strong> <span class="cart-lookup-muted">(${escHtml(c.code)})</span> — ${amt} <span class="cart-lookup-coupon-hint">탭하여 주문에 적용</span></span></button></li>`;
+        }
+      });
+      couponsHtml += '</ul>';
+    } else {
+      couponsHtml = '<p class="cart-lookup-muted">보유 쿠폰이 없습니다.</p>';
+    }
+    box.innerHTML = `
+      <div class="cart-lookup-summary">
+        <p class="cart-lookup-name"><strong>${escHtml(data.memberName)}</strong> 님</p>
+        <p>누적 포인트 <strong>${pts} P</strong></p>
+        <p>미사용 쿠폰 <strong>${unused}개</strong></p>
+      </div>
+      <div class="cart-lookup-coupons-title">쿠폰 목록</div>
+      ${couponsHtml}
+      <button type="button" class="btn-stamp-confirm" id="cart-lookup-close-ok">닫기</button>`;
+    document.getElementById('cart-lookup-close-ok')?.addEventListener('click', closeModal);
+  }
+
+  async function confirmLookup() {
+    const raw = digits.replace(/\D/g, '');
+    if (raw.length < 10) {
+      showToast('전화번호를 10자리 이상 입력해주세요.');
+      return;
+    }
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const tok = readXsrfToken();
+      if (tok) headers[csrfHeaderName()] = tok;
+
+      const res = await fetch('/api/member/lookup', {
+        method: 'POST',
+        headers,
+        credentials: 'same-origin',
+        body: JSON.stringify({ phone: raw }),
+      });
+
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
+      if (!res.ok) {
+        let msg = data.message;
+        if (!msg) {
+          if (res.status === 403) {
+            msg = '보안 검증에 실패했습니다. 페이지를 새로고침 후 다시 시도해 주세요.';
+          } else if (res.status === 404) {
+            msg = '가입되지 않은 전화번호입니다.';
+          } else {
+            msg = `조회에 실패했습니다. (${res.status})`;
+          }
+        }
+        showResultError(msg);
+        return;
+      }
+      showResultOk(data);
+    } catch (e) {
+      console.error(e);
+      showToast('서버와 통신할 수 없습니다.');
+    }
+  }
+
+  return { push, del, clearAll, openModal, closeModal, confirmLookup };
+})();
+
+window.CartPointLookup = CartPointLookup;
+
 /* ─── 초기화 ──────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   Cart.init();
@@ -426,5 +651,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // 결제 수단 카드 클릭 이벤트 위임
   document.querySelectorAll('.pay-method-card').forEach(card => {
     card.addEventListener('click', () => selectPayMethod(card.dataset.method));
+  });
+
+  document.getElementById('btn-open-point-lookup')?.addEventListener('click', () => CartPointLookup.openModal());
+  document.getElementById('cart-lookup-btn-confirm')?.addEventListener('click', () => CartPointLookup.confirmLookup());
+
+  document.getElementById('point-lookup-modal')?.querySelector('.numpad')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.digit !== undefined) CartPointLookup.push(btn.dataset.digit);
+    else if (btn.dataset.action === 'clear') CartPointLookup.clearAll();
+    else if (btn.dataset.action === 'del') CartPointLookup.del();
+  });
+
+  document.getElementById('point-lookup-modal')?.addEventListener('click', (e) => {
+    if (e.target.classList.contains('kiosk-modal-backdrop') || e.target.closest('.kiosk-modal-close')) {
+      CartPointLookup.closeModal();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#point-lookup-modal .cart-lookup-coupon-pick');
+    if (!btn) return;
+    e.preventDefault();
+    applyCouponFromLookup(
+      btn.dataset.code,
+      btn.dataset.discountType,
+      parseInt(btn.dataset.discountValue, 10),
+      btn.dataset.name || ''
+    );
   });
 });

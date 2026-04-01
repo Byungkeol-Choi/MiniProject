@@ -2,6 +2,8 @@ package com.cafe.kiosk.repository;
 
 import com.cafe.kiosk.domain.Coupon;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +16,16 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     /** 코드 중복 확인 */
     boolean existsByCode(String code);
 
-    /** 회원의 전체 쿠폰 목록 (최신순) */
-    List<Coupon> findByMemberIdOrderByCreatedAtDesc(Long memberId);
+    /**
+     * 회원의 전체 쿠폰 목록 (최신순).
+     * 엔티티는 {@code member} 참조만 있으므로 파생 쿼리 {@code findByMemberId...}는 런타임 오류를 낼 수 있어 JPQL로 고정한다.
+     */
+    @Query("SELECT c FROM Coupon c WHERE c.member.id = :memberId ORDER BY c.createdAt DESC")
+    List<Coupon> findByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId);
 
     /** 회원의 미사용 쿠폰 수 */
-    long countByMemberIdAndUsedFalse(Long memberId);
+    @Query("SELECT COUNT(c) FROM Coupon c WHERE c.member.id = :memberId AND c.used = false")
+    long countByMemberIdAndUsedFalse(@Param("memberId") Long memberId);
 
     /** 전체 미사용 쿠폰 수 */
     long countByUsedFalse();
