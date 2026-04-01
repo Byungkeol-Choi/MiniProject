@@ -42,14 +42,15 @@ public class AdminController {
 
         long totalMembers = memberRepository.count();
         long couponCount = couponRepository.count();
+        long unusedCouponCount = couponRepository.countByUsedFalse();
+
+        model.addAttribute("adminName", authentication.getName());
 
         model.addAttribute("memberCount", totalMembers);
-        model.addAttribute("adminName", authentication.getName());
+
         model.addAttribute("couponCount", couponCount);
-        // List<AdminMembers> list = adminMemberRepo.findAll();
-        // System.out.println("dashboard page");
-        // System.out.println("list size: " + list.size());
-        // System.out.println(list.toString());
+        model.addAttribute("unusedCouponCount", unusedCouponCount);
+
         System.out.println("adminName: " + authentication.getName());
 
         return "/admin/dashboard";

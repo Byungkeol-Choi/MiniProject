@@ -91,3 +91,80 @@ INSERT INTO admin (username, password) VALUES
 -- 임의 회원 추가
 INSERT INTO member (phone, name, points, created_at)
 VALUES ('010-1234-5678', '홍길동', 0, CURRENT_TIMESTAMP);
+
+-- admin/dashboard 페이지에 보여줄 order, order_item 샘플 데이터
+INSERT INTO orders (member_id, total_amount, discount_amount, payment_method, status, created_at)
+VALUES (
+    (SELECT id FROM member ORDER BY id LIMIT 1),
+    21500,
+    0,
+    'CARD',
+    'RECEIVED',
+    NOW() - INTERVAL '2 hours'
+);
+INSERT INTO order_item (order_id, menu_id, quantity, unit_price)
+VALUES
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '에그 베네딕트' LIMIT 1), 1, 16500),
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '아메리카노' LIMIT 1), 1, 5000);
+-- 주문 2: PREPARING — 아보카도 토스트 1 + 카페 라떼 1, 할인 500원 = 18,500
+INSERT INTO orders (member_id, total_amount, discount_amount, payment_method, status, created_at)
+VALUES (
+    (SELECT id FROM member ORDER BY id LIMIT 1),
+    18500,
+    500,
+    'CARD',
+    'PREPARING',
+    NOW() - INTERVAL '45 minutes'
+);
+INSERT INTO order_item (order_id, menu_id, quantity, unit_price)
+VALUES
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '아보카도 토스트' LIMIT 1), 1, 13500),
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '카페 라떼' LIMIT 1), 1, 5500);
+-- 주문 3: COMPLETED — 비회원, 팬케이크 1 + 자몽 에이드 1 = 18,500
+INSERT INTO orders (member_id, total_amount, discount_amount, payment_method, status, created_at)
+VALUES (
+    NULL,
+    18500,
+    0,
+    'CASH',
+    'COMPLETED',
+    NOW() - INTERVAL '1 day'
+);
+INSERT INTO order_item (order_id, menu_id, quantity, unit_price)
+VALUES
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '팬케이크 스택' LIMIT 1), 1, 12000),
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '자몽 에이드' LIMIT 1), 1, 6500);
+-- 주문 4: RECEIVED — 아메리카노 3잔 = 15,000
+INSERT INTO orders (member_id, total_amount, discount_amount, payment_method, status, created_at)
+VALUES (
+    (SELECT id FROM member ORDER BY id LIMIT 1),
+    15000,
+    0,
+    'EASY_PAY',
+    'RECEIVED',
+    NOW() - INTERVAL '10 minutes'
+);
+INSERT INTO order_item (order_id, menu_id, quantity, unit_price)
+VALUES
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '아메리카노' LIMIT 1), 3, 5000);
+-- 주문 5: CANCELLED — 크로크 무슈 1건만 기록 (총액 13,000)
+INSERT INTO orders (member_id, total_amount, discount_amount, payment_method, status, created_at)
+VALUES (
+    (SELECT id FROM member ORDER BY id LIMIT 1),
+    13000,
+    0,
+    'CARD',
+    'CANCELLED',
+    NOW() - INTERVAL '3 hours'
+);
+INSERT INTO order_item (order_id, menu_id, quantity, unit_price)
+VALUES
+    (currval(pg_get_serial_sequence('orders', 'id')),
+     (SELECT id FROM menu WHERE name = '크로크 무슈' LIMIT 1), 1, 13000);

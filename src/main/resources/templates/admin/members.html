@@ -120,7 +120,7 @@
 
         <!-- 페이지네이션 -->
         <div class="pagination-wrap">
-          <span th:if="${members != null}" th:text="'총 ' + members.totalElements + '명'">총 4명</span>
+          <span th:if="${members != null}" th:text="'총 ' + ${members.totalElements} + '명'">총 4명</span>
           <span th:if="${members == null}">총 4명 (샘플)</span>
           <ul class="pagination" th:if="${members != null and members.totalPages > 1}">
             <li>
