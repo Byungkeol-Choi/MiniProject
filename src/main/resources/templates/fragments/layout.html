@@ -161,17 +161,17 @@
       </div>
     </div>
 
-    <!--
-      [백엔드 연동] Spring Security 로그아웃은 POST 방식 권장:
+    
+      <!-- [백엔드 연동] Spring Security 로그아웃은 POST 방식 권장: -->
       <form th:action="@{/admin/logout}" method="post">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
         <button type="submit" class="btn-logout">로그아웃</button>
       </form>
-    -->
-    <a th:href="@{/admin/logout}" href="/admin/logout" class="btn-logout">
+   
+    <!-- <a th:href="@{/admin/logout}" href="/admin/logout" class="btn-logout">
       <i class="bi bi-box-arrow-right"></i>
       <span>로그아웃</span>
-    </a>
+    </a> -->
   </div>
 
 </aside>

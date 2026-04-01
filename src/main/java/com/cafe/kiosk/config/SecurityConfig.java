@@ -36,12 +36,11 @@ public class SecurityConfig {
                                 // authenticated() : 인증된 사용자에게 허용
                                 // hasRole("ADMIN") : ADMIN 권한을 가진 사용자에게 허용
                                 .requestMatchers("/", "/admin/login").permitAll()
-                                .requestMatchers("/kiosk").permitAll()
+                                .requestMatchers("/kiosk/**").permitAll()
                                 // .requestMatchers("/admin").hasAuthority("ROLE_ADMIN")    //403 Forbidden
-                                .requestMatchers("/admin").hasRole("ADMIN")    //403 Forbidden
+                                .requestMatchers("/admin/**").hasRole("ADMIN")    //403 Forbidden
 //                                .anyRequest().authenticated()
                                 .anyRequest().permitAll()       // 개발중 임시로 설정.
-                        // .hasRole("ADMIN") => "ROLE_ADMIN" 문구가 DB에 기록됨.
                 )
                 //로그인 페이지 설정/액션 설정
                 // FormLoginConfigurer<HttpSecurity>
@@ -49,11 +48,10 @@ public class SecurityConfig {
                                 .loginPage("/admin/login")    //로그인폼 요청 URL
                                 // loginAction에 대한 인증처리는 시큐리트가 다 한다. 코드 필요없다.
                                 .loginProcessingUrl("/admin/login") //로그인 액션 요청 URL
-                                  .defaultSuccessUrl("/admin/dashboard") //로그인 성공시 리다이렉트 URL
+                                .defaultSuccessUrl("/admin/dashboard") //로그인 성공시 리다이렉트 URL
                                 //로그인 성공 커스텀 핸들러
                                 .successHandler((request, response, auth) -> {
                                     System.out.println("로그인 성공했습니다.");
-//                            System.out.println("request = " + request);
                                     response.sendRedirect("/admin/dashboard");
                                 })
                                 //로그인 실패 에러페이지
@@ -64,8 +62,6 @@ public class SecurityConfig {
                 //LogoutConfigurer<HttpSecurity>
                 .logout((logout) -> logout
                                 .logoutUrl("/admin/logout") //Post방식 추천(보안)
-//                        .logoutRequestMatcher(  //스프링부트 4.x 업데이트 된 클래수함수
-//                                PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/logoutAction"))
                                 .logoutSuccessUrl("/")
                                 .invalidateHttpSession(true) //세션 객체 해제
                                 .deleteCookies("JSESSIONID")

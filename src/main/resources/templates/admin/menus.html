@@ -163,7 +163,7 @@
         </div>
 
         <div class="pagination-wrap">
-          <span th:text="'총 ' + (menus != null ? #lists.size(menus) : '3') + '개 메뉴'">총 3개 메뉴 (샘플)</span>
+          <span th:text="${'총 ' + (menus != null ? #lists.size(menus) : '3') + '개 메뉴'}">총 3개 메뉴 (샘플)</span>
         </div>
 
       </div><!-- /data-card -->
