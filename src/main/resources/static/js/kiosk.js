@@ -4,7 +4,6 @@
  * [백엔드 연동 포인트]
  * - checkout()       : POST /order/cart  (cartData JSON 전송)
  * - applyCoupon()    : POST /coupon/check (AJAX)
- * - applyPoints()    : 포인트 사용 금액 계산
  */
 
 'use strict';
@@ -19,8 +18,7 @@ const Cart = (() => {
     memberName:    null,
     memberPoints:  0,
     couponCode:    null,
-    couponDiscount: 0,
-    usePoints:     0
+    couponDiscount: 0
   };
 
   /* 저장 & 불러오기 */
@@ -47,7 +45,7 @@ const Cart = (() => {
   }
 
   function getFinalTotal() {
-    return Math.max(0, getSubtotal() - state.couponDiscount - state.usePoints);
+    return Math.max(0, getSubtotal() - state.couponDiscount);
   }
 
   /* 담기 */
@@ -90,7 +88,6 @@ const Cart = (() => {
     state.items = [];
     state.couponDiscount = 0;
     state.couponCode = null;
-    state.usePoints = 0;
     save();
     render();
   }
@@ -167,7 +164,6 @@ const Cart = (() => {
       items:          state.items,
       couponCode:     state.couponCode,
       couponDiscount: state.couponDiscount,
-      usePoints:      state.usePoints,
       memberId:       state.memberId
     });
 
@@ -232,13 +228,7 @@ async function lookupMemberByPhone() {
     const data = await res.json();
 
     document.getElementById('lookup-member-name').textContent = data.memberName || '';
-    document.getElementById('lookup-points').textContent = (data.points || 0).toLocaleString('ko-KR') + ' P';
     document.getElementById('lookup-coupon-count').textContent = (data.unusedCouponCount || 0) + '개';
-    document.getElementById('lookup-points-label').textContent = (data.points || 0).toLocaleString('ko-KR') + ' P';
-
-    // 포인트 사용 체크박스용 data 속성 세팅
-    const pointsEl = document.getElementById('points-discount');
-    if (pointsEl) pointsEl.dataset.points = data.points || 0;
 
     // 미사용 쿠폰 목록 렌더링
     const couponListEl = document.getElementById('lookup-coupon-list');
@@ -292,21 +282,6 @@ function applyLookupCoupon(code, discountType, discountValue, name) {
   if (hiddenCode) hiddenCode.value = code;
 }
 
-/* ─── 포인트 사용 (장바구니 확인 페이지) ────────────── */
-function applyPoints() {
-  const checkbox = document.getElementById('use-points-check');
-  const pointsEl = document.getElementById('points-discount');
-  if (!checkbox || !pointsEl) return;
-
-  const available = Number(pointsEl.dataset.points || 0);
-  const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-  const useAmt    = checkbox.checked ? Math.min(available, subtotal) : 0;
-
-  const useEl = document.getElementById('points-use-value');
-  if (useEl) useEl.textContent = useAmt > 0 ? `-${fmtPrice(useAmt)}` : '-';
-  recalcTotal();
-}
-
 function updateDiscount(amount, label) {
   const resultEl   = document.getElementById('coupon-result');
   const discountEl = document.getElementById('coupon-discount-value');
@@ -326,14 +301,10 @@ function updateDiscount(amount, label) {
 }
 
 function recalcTotal() {
-  const subtotal    = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-  const couponAmt   = Number(document.getElementById('coupon-discount-value')?.dataset.amount || 0);
-  const usePointsEl = document.getElementById('use-points-check');
-  const pointsEl    = document.getElementById('points-discount');
-  const available   = Number(pointsEl?.dataset.points || 0);
-  const usePoints   = (usePointsEl?.checked && available > 0) ? Math.min(available, subtotal) : 0;
+  const subtotal  = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const couponAmt = Number(document.getElementById('coupon-discount-value')?.dataset.amount || 0);
 
-  const total = Math.max(0, subtotal - couponAmt - usePoints);
+  const total = Math.max(0, subtotal - couponAmt);
   const totalEl = document.getElementById('final-total-value');
   if (totalEl) totalEl.textContent = fmtPrice(total);
 }

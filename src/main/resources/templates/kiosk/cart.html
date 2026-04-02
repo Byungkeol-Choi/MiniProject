@@ -191,7 +191,7 @@
     -->
     <div class="section-card">
       <div class="section-title">
-        <i class="bi bi-p-circle"></i> 쿠폰 / 포인트
+        <i class="bi bi-ticket-perforated"></i> 쿠폰
       </div>
 
       <!-- 전화번호 입력 -->
@@ -205,7 +205,7 @@
           inputmode="numeric"
           oninput="this.value=this.value.replace(/\D/g,'')"
         />
-        <button class="btn-apply" onclick="lookupMemberByPhone()">포인트 확인</button>
+        <button class="btn-apply" onclick="lookupMemberByPhone()">회원 조회</button>
       </div>
 
       <!-- 오류 메시지 -->
@@ -218,25 +218,12 @@
           <span id="lookup-member-name"></span> 고객님
         </div>
         <div class="lookup-result-row">
-          <span class="lookup-result-label">보유 포인트</span>
-          <span class="lookup-result-value lookup-points-strong" id="lookup-points"></span>
-        </div>
-        <div class="lookup-result-row">
           <span class="lookup-result-label">사용 가능 쿠폰</span>
           <span class="lookup-result-value" id="lookup-coupon-count"></span>
         </div>
 
         <!-- 미사용 쿠폰 목록 -->
         <div id="lookup-coupon-list" style="margin-top: 12px;"></div>
-
-        <!-- 포인트 사용 -->
-        <div style="margin-top: 14px;">
-          <label class="form-check">
-            <input type="checkbox" id="use-points-check" onchange="applyPoints()" />
-            <span>보유 포인트 <strong id="lookup-points-label">0 P</strong> 전액 사용</span>
-          </label>
-        </div>
-        <div id="points-discount" data-points="0" style="display:none;"></div>
       </div>
 
       <!-- 쿠폰 적용 결과 -->
@@ -267,10 +254,6 @@
                 data-amount="0"
         >-</span
         >
-      </div>
-      <div class="summary-row">
-        <span>포인트 사용</span>
-        <span class="discount-tag" id="points-use-value">-</span>
       </div>
       <div class="summary-total">
         <span>최종 결제 금액</span>
@@ -303,12 +286,6 @@
                 type="hidden"
                 name="couponDiscount"
                 id="hidden-coupon-discount"
-                value="0"
-        />
-        <input
-                type="hidden"
-                name="usePoints"
-                id="hidden-use-points"
                 value="0"
         />
         <input
@@ -459,8 +436,6 @@
     ?.addEventListener("submit", function () {
       const couponInput = document.getElementById("coupon-input");
       const couponDisc = document.getElementById("coupon-discount-value");
-      const usePointsChk = document.getElementById("use-points-check");
-      const pointsEl = document.getElementById("points-discount");
       const finalEl = document.getElementById("final-total-value");
 
       if (couponInput?.value)
@@ -469,17 +444,6 @@
       if (couponDisc)
         document.getElementById("hidden-coupon-discount").value =
           couponDisc.dataset.amount || 0;
-
-      const available = Number(pointsEl?.dataset.points || 0);
-      const subtotal = Number(
-        document.getElementById("subtotal-value")?.dataset.amount || 0,
-      );
-      if (usePointsChk?.checked) {
-        document.getElementById("hidden-use-points").value = Math.min(
-          available,
-          subtotal,
-        );
-      }
 
       // 최종 금액 문자열에서 숫자 추출
       const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
