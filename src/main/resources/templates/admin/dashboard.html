@@ -59,7 +59,7 @@
             <div class="stat-label">오늘 매출</div>
             <div class="stat-value"
                  th:text="${#numbers.formatInteger(todaySales ?: 258000, 1, 'COMMA') + '원'}">258,000원</div>
-            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 전일 대비 +12%</div>
+<!--            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 전일 대비 +12%</div>-->
           </div>
         </div>
 
@@ -68,9 +68,9 @@
           <div>
             <div class="stat-label">오늘 주문</div>
             <div class="stat-value" th:text="${todayOrderCount ?: 24}">24</div>
-            <div class="stat-sub">
-              대기중 <strong th:text="${pendingCount ?: 3}" style="color:#D97706;">3</strong>건
-            </div>
+<!--            <div class="stat-sub">-->
+<!--              대기중 <strong th:text="${pendingCount ?: 3}" style="color:#D97706;">3</strong>건-->
+<!--            </div>-->
           </div>
         </div>
 
@@ -79,7 +79,7 @@
           <div>
             <div class="stat-label">총 회원 수</div>
             <div class="stat-value" th:text="${memberCount ?: 142}">142</div>
-            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 오늘 신규 2명</div>
+            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 오늘 신규 <strong th:text="${todayMemberCount ?: 2}">2</strong>명</div>
           </div>
         </div>
 
@@ -111,15 +111,15 @@
           <div style="padding:0 8px;">
             <!-- Thymeleaf 반복 -->
             <div th:each="order : ${recentOrders}" class="order-quick-item">
-              <div class="order-num-tag" th:text="'#' + order.id">#42</div>
+              <div class="order-num-tag" th:text="'#' + ${order.id}">#42</div>
               <div class="order-quick-info">
                 <div th:text="${order.totalAmount != null ? #numbers.formatInteger(order.totalAmount, 1, 'COMMA') + '원' : '-'}">27,500원</div>
                 <div class="order-quick-time"
                      th:text="${#temporals.format(order.createdAt, 'HH:mm')}">14:32</div>
               </div>
               <span class="badge"
-                    th:classappend="${order.status == 'RECEIVED' ? 'badge-received' : (order.status == 'PREPARING' ? 'badge-preparing' : (order.status == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'))}"
-                    th:text="${order.status == 'RECEIVED' ? '접수' : (order.status == 'PREPARING' ? '준비중' : (order.status == 'COMPLETED' ? '완료' : '취소'))}">접수</span>
+                    th:classappend="${order.status.name() == 'RECEIVED' ? 'badge-received' : (order.status.name() == 'PREPARING' ? 'badge-preparing' : (order.status.name() == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'))}"
+                    th:text="${order.status.name() == 'RECEIVED' ? '접수' : (order.status.name() == 'PREPARING' ? '준비중' : (order.status.name() == 'COMPLETED' ? '완료' : '취소'))}">접수</span>
             </div>
 
             <!-- 샘플 데이터 (recentOrders가 null인 경우) -->

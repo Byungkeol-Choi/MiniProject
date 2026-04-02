@@ -69,7 +69,7 @@
               <!-- Thymeleaf 반복 -->
               <tr th:each="member : ${members}">
                 <td style="color:#9E8B7B;" th:text="${member.id}">#1</td>
-                <td style="font-weight:600;" th:text="${member.phone}">010-1234-5678</td>
+                <td style="font-weight:600;" th:text="${member.displayPhone}">010-1234-5678</td>
                 <td th:text="${member.name ?: '-'}">홍길동</td>
                 <td>
                   <span class="points-tag"

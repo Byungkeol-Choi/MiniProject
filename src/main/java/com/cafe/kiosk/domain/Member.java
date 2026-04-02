@@ -37,4 +37,20 @@ public class Member {
             createdAt = LocalDateTime.now();
         }
     }
+    // 최병걸 추가 시작
+    /** 화면 표시용 (예: 01011112222 → 010-1111-2222). DB 저장 값은 변경하지 않음. */
+    public String getDisplayPhone() {
+        if (phone == null || phone.isBlank()) {
+            return "";
+        }
+        String digits = phone.replaceAll("\\D", "");
+        if (digits.length() == 11) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 7) + "-" + digits.substring(7);
+        }
+        if (digits.length() == 10) {
+            return digits.substring(0, 3) + "-" + digits.substring(3, 6) + "-" + digits.substring(6);
+        }
+        return phone;
+    }
+    // 최병걸 추가 종료
 }
