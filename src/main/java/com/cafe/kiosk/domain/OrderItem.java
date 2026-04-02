@@ -1,6 +1,8 @@
 package com.cafe.kiosk.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +10,8 @@ import lombok.NoArgsConstructor;
 @Table(name="order_item")
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

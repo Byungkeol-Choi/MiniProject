@@ -1,18 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>결제 - 브런치 카페</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" th:href="@{/css/kiosk.css}">
+  <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+  <link rel="stylesheet" th:href="@{/css/kiosk.css}" />
 </head>
 <body>
-
 <!--
-  [백엔드 연동] Controller 필요 변수
-  - summaryTotalAmount, summaryDiscountAmount, summaryFinalAmount (int)
-  - cartItems    : List<CartItemDto> (선택)
+[백엔드 연동] Controller 필요 변수
+- summaryTotalAmount, summaryDiscountAmount, summaryFinalAmount (int)
+- cartItems    : List<CartItemDto> (선택)
 -->
 
 <header class="kiosk-header">
@@ -36,104 +38,197 @@
 </header>
 
 <div class="subpage-body">
-  <div class="subpage-container" style="max-width:700px;">
+  <div class="subpage-container" style="max-width: 700px">
+    <div class="page-title">결제</div>
 
-    <div class="page-title">
-      결제
-    </div>
-
-    <div th:if="${errorMessage}"
-         style="background:#FEE2E2;border:1px solid #FECACA;border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:14px;color:#B91C1C;font-weight:600;"
-         th:text="${errorMessage}">
+    <div
+            th:if="${errorMessage}"
+            style="
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            color: #b91c1c;
+            font-weight: 600;
+          "
+            th:text="${errorMessage}"
+    >
       오류 메시지
     </div>
 
     <!-- ─── 주문 요약 ──────────────────────────── -->
     <div class="section-card">
       <div class="section-title">
-        <i class="bi bi-pass"></i> 주문 요약
+        <i class="bi bi-file-earmark-text"></i>주문 요약
       </div>
 
       <!-- 주문 아이템 미니 목록 (cartItems 없으면 null → th:each만으로는 예외) -->
       <th:block th:if="${cartItems != null}">
-        <div th:each="item : ${cartItems}" style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F5ECD7;">
-          <span>
-            <span th:text="${item.menuName}">에그 베네딕트</span>
-            <span style="color:#9E8B7B;" th:text="'×' + item.quantity">×1</span>
-          </span>
-          <span style="font-weight:600;"
-                th:text="${#numbers.formatInteger(item.unitPrice * item.quantity, 1, 'COMMA') + '원'}">16,500원</span>
+        <div
+                th:each="item : ${cartItems}"
+                style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid #f5ecd7;
+              "
+        >
+              <span>
+                <span th:text="${item.name}">에그 베네딕트</span>
+                <span style="color: #9e8b7b" th:text="'×' + ${item.quantity}"
+                >×1</span
+                >
+              </span>
+          <span
+                  style="font-weight: 600"
+                  th:text="${#numbers.formatInteger(item.price * item.quantity, 1, 'COMMA') + '원'}"
+          >16,500원</span
+          >
         </div>
       </th:block>
 
       <!-- 디자인 샘플 -->
-      <div th:if="${cartItems == null}" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #F5ECD7;">
+      <div
+              th:if="${cartItems == null}"
+              style="
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 0;
+              border-bottom: 1px solid #f5ecd7;
+            "
+      >
         <span>에그 베네딕트 ×2</span>
-        <span style="font-weight:600;">11,000원</span>
+        <span style="font-weight: 600">11,000원</span>
       </div>
-      <div th:if="${cartItems == null}" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #F5ECD7;">
+      <div
+              th:if="${cartItems == null}"
+              style="
+              display: flex;
+              justify-content: space-between;
+              padding: 8px 0;
+              border-bottom: 1px solid #f5ecd7;
+            "
+      >
         <span>카페 라떼 ×2</span>
-        <span style="font-weight:600;">11,000원</span>
+        <span style="font-weight: 600">11,000원</span>
       </div>
 
       <!-- 금액 요약 -->
-      <div style="margin-top:16px;">
+      <div style="margin-top: 16px">
         <div class="summary-row">
           <span>상품 금액</span>
-          <span th:text="${#numbers.formatInteger(summaryTotalAmount, 1, 'COMMA') + '원'}">27,500원</span>
+          <span
+                  th:text="${#numbers.formatInteger(summaryTotalAmount?:0, 1, 'COMMA') + '원'}"
+          >27,500원</span
+          >
         </div>
         <div class="summary-row" th:if="${summaryDiscountAmount > 0}">
           <span>할인 금액</span>
-          <span class="discount-tag"
-                th:text="${'-' + #numbers.formatInteger(summaryDiscountAmount, 1, 'COMMA') + '원'}">-2,000원</span>
+          <span
+                  class="discount-tag"
+                  th:text="${'-' + #numbers.formatInteger(summaryDiscountAmount?:0, 1, 'COMMA') + '원'}"
+          >-2,000원</span
+          >
         </div>
         <div class="summary-total">
           <span>결제 금액</span>
-          <span id="payment-final-amount"
-                th:text="${#numbers.formatInteger(summaryFinalAmount, 1, 'COMMA') + '원'}">27,500원</span>
+          <span
+                  id="payment-final-amount"
+                  th:text="${#numbers.formatInteger(summaryFinalAmount?:0, 1, 'COMMA') + '원'}"
+          >27,500원</span
+          >
         </div>
       </div>
-    </div><!-- /주문 요약 -->
+    </div>
+    <!-- /주문 요약 -->
 
     <!-- ─── 결제 수단 선택 ────────────────────── -->
     <div class="section-card">
       <div class="section-title">
-        <i class="bi bi-credit-card"></i> 결제 수단 선택
+        <i class="bi bi-credit-card"></i>결제 수단 선택
       </div>
 
       <div class="payment-methods-grid">
-
-        <label class="pay-method-card" data-method="CARD" onclick="selectPayMethod('CARD')">
-          <input type="radio" name="paymentMethod" value="CARD">
-          <img class="pay-method-icon" src="/images/payment/card.svg" alt="카드 결제" width="60" height="60">
+        <label
+                class="pay-method-card"
+                data-method="CARD"
+                onclick="selectPayMethod('CARD')"
+        >
+          <!-- <input type="radio" name="paymentMethod" value="CARD" /> -->
+          <img
+                  class="pay-method-icon"
+                  src="/images/payment/card.jpg"
+                  alt="카드 결제"
+                  width="40"
+                  height="40"
+          />
           <div class="pay-method-name">카드 결제</div>
           <div class="pay-method-desc">신용카드 / 체크카드</div>
         </label>
 
-        <label class="pay-method-card" data-method="CASH" onclick="selectPayMethod('CASH')">
-          <input type="radio" name="paymentMethod" value="CASH">
-          <img class="pay-method-icon" src="/images/payment/cash.svg" alt="현금 결제" width="60" height="60">
+        <label
+                class="pay-method-card"
+                data-method="CASH"
+                onclick="selectPayMethod('CASH')"
+        >
+          <!-- <input type="radio" name="paymentMethod" value="CASH" /> -->
+          <img
+                  class="pay-method-icon"
+                  src="/images/payment/cash.svg"
+                  alt="현금 결제"
+                  width="40"
+                  height="40"
+          />
           <div class="pay-method-name">현금 결제</div>
           <div class="pay-method-desc">카운터에서 현금 결제</div>
         </label>
 
-        <label class="pay-method-card" data-method="KAKAO_PAY" onclick="selectPayMethod('KAKAO_PAY')">
-          <input type="radio" name="paymentMethod" value="KAKAO_PAY">
-          <img class="pay-method-icon" src="/images/payment/kakao-pay.svg" alt="카카오페이" width="60" height="60">
+        <label
+                class="pay-method-card"
+                data-method="KAKAO_PAY"
+                onclick="selectPayMethod('KAKAO_PAY')"
+        >
+          <!-- <input type="radio" name="paymentMethod" value="KAKAO_PAY" /> -->
+          <img
+                  class="pay-method-icon"
+                  src="/images/payment/kakao-pay.svg"
+                  alt="카카오페이"
+                  width="60"
+                  height="60"
+          />
           <div class="pay-method-name">카카오페이</div>
           <div class="pay-method-desc">QR코드 / 앱 결제</div>
         </label>
 
-        <label class="pay-method-card" data-method="NAVER_PAY" onclick="selectPayMethod('NAVER_PAY')">
-          <input type="radio" name="paymentMethod" value="NAVER_PAY">
-          <img class="pay-method-icon" src="/images/payment/naver-pay.svg" alt="네이버페이" width="60" height="60">
+        <label
+                class="pay-method-card"
+                data-method="NAVER_PAY"
+                onclick="selectPayMethod('NAVER_PAY')"
+        >
+          <!-- <input type="radio" name="paymentMethod" value="NAVER_PAY" /> -->
+          <img
+                  class="pay-method-icon"
+                  src="/images/payment/naver-pay.svg"
+                  alt="네이버페이"
+                  width="60"
+                  height="60"
+          />
           <div class="pay-method-name">네이버페이</div>
           <div class="pay-method-desc">QR코드 / 앱 결제</div>
         </label>
-
       </div>
 
-      <p style="font-size:13px; color:#9E8B7B; text-align:center; margin-top:4px;">
+      <p
+              style="
+              font-size: 13px;
+              color: #9e8b7b;
+              text-align: center;
+              margin-top: 4px;
+            "
+      >
         <i class="bi bi-info-circle"></i>
         결제 수단을 선택하고 아래 버튼을 눌러주세요.
       </p>
@@ -146,23 +241,63 @@
       </a>
 
       <!--
-        [백엔드 연동]
-        POST /order/pay  →  paymentMethod, finalAmount 전송
-        성공 시 /order/complete?orderNo={번호} 로 redirect
-      -->
-      <form id="payment-form" method="post" th:action="@{/order/pay}" action="/order/pay" style="flex:1; display:flex;">
-        <input type="hidden" id="payment-method-input" name="paymentMethod" value="">
-        <input type="hidden" name="couponCode" id="pay-hidden-coupon-code"
-               th:value="${couponCode != null ? couponCode : ''}" value="">
-        <input type="hidden" name="couponDiscount" id="pay-hidden-coupon-discount"
-               th:value="${couponDiscount != null ? couponDiscount : 0}" value="0">
-        <input type="hidden" name="usePoints" id="pay-hidden-use-points"
-               th:value="${usePoints != null ? usePoints : 0}" value="0">
-        <input type="hidden" name="finalAmount"
-               th:value="${summaryFinalAmount}" value="27500">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button type="button" class="btn-go-pay" id="btn-confirm-pay"
-                disabled onclick="confirmPayment()" style="width:100%;">
+    [백엔드 연동]
+    POST /order/pay  →  paymentMethod, finalAmount 전송
+    성공 시 /order/complete?orderNo={번호} 로 redirect
+  -->
+      <form
+              id="payment-form"
+              method="post"
+              th:action="@{/order/pay}"
+              action="/order/pay"
+              style="flex: 1; display: flex"
+      >
+        <input
+                type="hidden"
+                id="payment-method-input"
+                name="paymentMethod"
+                value=""
+        />
+        <input
+                type="hidden"
+                name="couponCode"
+                id="pay-hidden-coupon-code"
+                th:value="${couponCode != null ? couponCode : ''}"
+                value=""
+        />
+        <input
+                type="hidden"
+                name="couponDiscount"
+                id="pay-hidden-coupon-discount"
+                th:value="${couponDiscount != null ? couponDiscount : 0}"
+                value="0"
+        />
+        <input
+                type="hidden"
+                name="usePoints"
+                id="pay-hidden-use-points"
+                th:value="${usePoints != null ? usePoints : 0}"
+                value="0"
+        />
+        <input
+                type="hidden"
+                name="finalAmount"
+                th:value="${summaryFinalAmount}"
+                value="27500"
+        />
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"
+        />
+        <button
+                type="button"
+                class="btn-go-pay"
+                id="btn-confirm-pay"
+                disabled
+                onclick="confirmPayment()"
+                style="width: 100%"
+        >
           결제하기
         </button>
       </form>
@@ -171,45 +306,67 @@
     <!--    <footer class="kiosk-sub-footer">-->
     <!--      <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">관리자</a>-->
     <!--    </footer>-->
-  </div><!-- /subpage-container -->
+  </div>
+  <!-- /subpage-container -->
 
   <footer class="kiosk-page-footer">
-    <a th:href="@{/admin/login}" href="/admin/login" class="kiosk-admin-link">
+    <a
+            th:href="@{/admin/login}"
+            href="/admin/login"
+            class="kiosk-admin-link"
+    >
       <i class="bi bi-person-gear"></i>관리자
     </a>
   </footer>
-
-</div><!-- /subpage-body -->
+</div>
+<!-- /subpage-body -->
 
 <!-- 결제 처리 중 오버레이 -->
-<div id="paying-overlay" style="
-  display:none; position:fixed; inset:0; z-index:9999;
-  background:rgba(44,24,16,0.7);
-  flex-direction:column; align-items:center; justify-content:center;
-  color:white; gap:20px;">
-  <div style="font-size:52px; animation: spin 1s linear infinite;">⏳</div>
-  <div style="font-size:20px; font-weight:700;">결제 처리 중...</div>
-  <div style="font-size:14px; opacity:0.7;">잠시만 기다려주세요.</div>
+<div
+        id="paying-overlay"
+        style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(44, 24, 16, 0.7);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        gap: 20px;
+      "
+>
+  <div style="font-size: 52px; animation: spin 1s linear infinite">⏳</div>
+  <div style="font-size: 20px; font-weight: 700">결제 처리 중...</div>
+  <div style="font-size: 14px; opacity: 0.7">잠시만 기다려주세요.</div>
 </div>
 
 <div class="toast-notification" id="toast"></div>
 
 <style>
-  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
 </style>
 
 <script th:src="@{/js/kiosk.js}"></script>
 <script>
   // 결제하기 버튼 오버라이드: 오버레이 표시 후 폼 제출
   function confirmPayment() {
-    const method = document.getElementById('payment-method-input')?.value;
-    if (!method) { showToast('결제 수단을 선택해주세요.'); return; }
+    const method = document.getElementById("payment-method-input")?.value;
+    if (!method) {
+      showToast("결제 수단을 선택해주세요.");
+      return;
+    }
 
-    document.getElementById('paying-overlay').style.display = 'flex';
+    document.getElementById("paying-overlay").style.display = "flex";
 
     // 모의 결제 딜레이 2초 후 폼 제출
     setTimeout(() => {
-      document.getElementById('payment-form')?.submit();
+      document.getElementById("payment-form")?.submit();
     }, 2000);
   }
 </script>
