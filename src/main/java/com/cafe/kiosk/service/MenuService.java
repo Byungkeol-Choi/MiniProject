@@ -53,4 +53,35 @@ public class MenuService {
     return menuRepository.findByCategory(category);
   }
 
+//  //메뉴 등록 dto
+//  @Transactional
+//  public Menu saveFromDto(MenuDto dto){
+//    Menu menu = new Menu(
+//            dto.getName(),
+//            dto.getPrice(),
+//            dto.getCategory(),
+//            dto.getDescription(),
+//            dto.getImageUrl(),
+//            dto.isAvailable(),
+//            LocalDateTime.now()
+//    );
+//    return menuRepository.save(menu);
+//  }
+//  // 메뉴 수정 dto
+//  @Transactional
+//  public Menu updateFromDto(Long id, MenuDto dto){
+//    Menu menu = menuRepository.findById(id)
+//            .orElseThrow(()-> new IllegalArgumentException("not found: " + id));
+//    menu.update(dto.getName(), dto.getPrice(), dto.getCategory(),dto.getDescription(), dto.getImageUrl());
+//    return menu;
+//  }
+//  // 판매상태 변경
+//  @Transactional
+//  public void setAvailable(Long id, boolean availble){
+//    Menu menu = menuRepository.findById(id)
+//            .orElseThrow(()-> new IllegalArgumentException("not found: " + id));
+//    menu.setAvailable(availble);
+//  }
+
+
 }

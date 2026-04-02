@@ -47,5 +47,16 @@ public class Menu {
     public void setAvailable(Boolean available){
         this.available = available;
     }
+
+//    public Menu(String name, int price, Category category, String description, String imageUrl,
+//                boolean available, LocalDateTime createdAt){
+//        this.name = name;
+//        this.price = price;
+//        this.category = category;
+//        this.description = description;
+//        this.imageUrl = imageUrl;
+//        this.available = available;
+//        this.createdAt = createdAt;
+//    }
 }
 
