@@ -53,7 +53,7 @@
       </div>
 
       <!-- Thymeleaf 반복 출력 -->
-      <div th:each="item : ${cartItems}" class="order-item-row">
+      <div th:each="item : ${cartItems}" class="order-item-row" th:data-id="${item.id}">
         <img
                 class="order-item-icon"
                 th:src="${item.imgUrl != null ? item.imgUrl : '/images/menu/empty.png'}"
@@ -241,8 +241,8 @@
         <span>상품 금액</span>
         <span
                 id="subtotal-value"
-                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
-                th:data-amount="${subtotal ?: 27500}"
+                th:text="${#numbers.formatInteger(subtotal ?: 0, 1, 'COMMA') + '원'}"
+                th:data-amount="${subtotal ?: 0}"
         >27,500원</span
         >
       </div>
@@ -259,7 +259,7 @@
         <span>최종 결제 금액</span>
         <span
                 id="final-total-value"
-                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+                th:text="${#numbers.formatInteger(subtotal ?: 0, 1, 'COMMA') + '원'}"
         >27,500원</span
         >
       </div>
@@ -267,7 +267,7 @@
 
     <!-- ─── 버튼 ──────────────────────────────── -->
     <div class="action-btn-row">
-      <a th:href="@{/}" href="/" class="btn-back-page">
+      <a href="/" class="btn-back-page" onclick="goBack(event)">
         <i class="bi bi-arrow-left"></i> 이전
       </a>
       <!--
@@ -292,8 +292,8 @@
                 type="hidden"
                 name="finalAmount"
                 id="hidden-final-amount"
-                th:value="${subtotal ?: 27500}"
-                value="27500"
+                th:value="${subtotal ?: 0}"
+                value="0"
         />
         <input
                 type="hidden"
@@ -335,7 +335,7 @@
    */
 
   // 수량 변경 (서버 세션 기반 예시)
-  async function updateCartQty(id, delta) {
+  window.updateCartQty = async function(id, delta) {
     try {
       const response = await fetch(`/api/cart/${id}`, {
         method: "PATCH",
@@ -377,7 +377,7 @@
     }
   }
 
-  async function removeCartItem(id) {
+  window.removeCartItem = async function(id) {
     try {
       const response = await fetch(`/api/cart/${id}`, {
         method: "DELETE",
@@ -449,6 +449,14 @@
       const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
       document.getElementById("hidden-final-amount").value = finalText;
     });
+
+  window.goBack = async function(event){
+    event.preventDefault();
+    const response = await fetch('/api/cart/session');
+    const items = await response.json();
+    sessionStorage.setItem('cafe_cart',JSON.stringify(items));
+    window.location.href = '/';
+  }
 </script>
 </body>
 </html>

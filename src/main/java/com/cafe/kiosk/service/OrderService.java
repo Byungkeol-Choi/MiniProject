@@ -34,8 +34,9 @@ public class OrderService {
 
         cartItemDto.setQuantity(sum);
 
-//        int subtotal = cartItem.stream()
-//                .mapToInt(i -> i.getPrice() * )
+        int subtotal = cartItem.stream()
+                .mapToInt(i -> i.getPrice() * i.getQuantity())
+                .sum();
 
         Map<String, Object> result = new HashMap<>();
         result.put("id", cartItemDto.getId());
