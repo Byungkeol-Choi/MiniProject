@@ -21,19 +21,22 @@ public class OrderController {
     private final ObjectMapper objectMapper; //json 세션 저장 방법
     private final CouponService couponService;
 
-    @GetMapping("/order/cart")
-    public String confrim(HttpSession session, Model model) {
-        List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
-        if (cartItemDto == null) {
-            cartItemDto = new ArrayList<>();
-        }
-
-        // System.out.println(cartItemDto);
-
-        model.addAttribute("cartItems", cartItemDto);
-
-        return "kiosk/cart";
+  @GetMapping("/order/cart")
+  public String confrim(HttpSession session, Model model) {
+    List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
+    if (cartItemDto == null) {
+      cartItemDto = new ArrayList<>();
     }
+
+    int subtotal = cartItemDto.stream()
+            .mapToInt((item)->item.getPrice() * item.getQuantity())
+            .sum();
+
+    model.addAttribute("cartItems", cartItemDto);
+    model.addAttribute("subtotal", subtotal);
+
+    return "kiosk/cart";
+  }
 
     @PostMapping("/order/cart")
     public String order(@RequestParam("cartData") String cartData, HttpSession session) throws Exception {

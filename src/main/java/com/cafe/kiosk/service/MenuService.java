@@ -4,6 +4,7 @@ import com.cafe.kiosk.domain.Menu;
 import com.cafe.kiosk.repository.MenuRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,24 +22,31 @@ public class MenuService {
     return menuRepository.save(menu);
   }
 
-//  // 메뉴 수정 만드는중...
-//  @Transactional
-//  public Menu update(Long id, Menu updateMenu){
-//    Menu menu = menuRepository.findById(id)
-//            .orElseThrow(() -> new IllegalArgumentException("not found: " + id));
-//    menu.update(
-//            updateMenu.getName(),
-//            updateMenu.getPrice(),
-//            updateMenu.getCategory(),
-//            updateMenu.getDescription(),
-//            updateMenu.getImageUrl()
-//    );
-//    return menu;
-//  }
+  // 메뉴 수정 만드는중...
+  @Transactional
+  public Menu update(Long id, Menu updateMenu){
+    Menu menu = menuRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("not found: " + id));
+    menu.update(
+            updateMenu.getName(),
+            updateMenu.getPrice(),
+            updateMenu.getCategory(),
+            updateMenu.getDescription(),
+            updateMenu.getImageUrl()
+    );
+    return menu;
+  }
 
   // 메뉴 삭제
   public void delete(Long id){
     menuRepository.deleteById(id);
+  }
+
+  // 메뉴 품절 처리
+  public void soldOut(Long id){
+    Menu menu = menuRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("not found: " + id));
+    menu.setAvailable(false);
   }
 
   public List<Menu> findByCategory(Menu.Category category) {
