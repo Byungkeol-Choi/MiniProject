@@ -3,6 +3,7 @@ package com.cafe.kiosk.controller;
 import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
 import com.cafe.kiosk.service.CouponService;
+import com.cafe.kiosk.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,7 @@ import java.util.List;
 public class OrderController {
     private final ObjectMapper objectMapper; //json 세션 저장 방법
     private final CouponService couponService;
+    private final OrderService orderService;
 
     @GetMapping("/order/cart")
     public String confrim(HttpSession session, Model model) {
@@ -49,7 +51,8 @@ public class OrderController {
         session.setAttribute("couponDiscount", cart.getCouponDiscount());
         session.setAttribute("usePoints", cart.getUsePoints());
 
-        // System.out.println("items : " + cart.getItems());
+        System.out.println("items : " + cart.getItems());
+        System.out.println("memberId : " + cart.getMemberId());
 
         return "redirect:/order/cart";
     }
@@ -60,38 +63,65 @@ public class OrderController {
         if (cartItemDto == null) {
             cartItemDto = new ArrayList<>();
         }
+
         int totalAmount = cartItemDto.stream()
                 .mapToInt((item)->item.getPrice() * item.getQuantity())
                 .sum();
 
-        int usePoint = (int) session.getAttribute("usePoints");
-        int couponDiscount = (int) session.getAttribute("couponDiscount");
-        int finalAmount = totalAmount - (usePoint > 0 ? usePoint : couponDiscount);
+        String couponCode = (String) session.getAttribute("couponCode");
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isEmpty()) {
+            couponDiscount = (int) session.getAttribute("couponDiscount");
+        }
+
+        int finalAmount = totalAmount - couponDiscount;
 
 
         model.addAttribute("cartItems", cartItemDto);
         model.addAttribute("summaryTotalAmount", totalAmount);
-        model.addAttribute("summaryDiscountAmount", usePoint);
+        model.addAttribute("summaryDiscountAmount", couponDiscount);
         model.addAttribute("summaryFinalAmount", finalAmount);
 
         return "kiosk/payment";
     }
 
     @PostMapping("/order/payment")
-    public String payment(HttpSession session, CartItemSessionDto sessionDto) {
-        session.setAttribute("couponCode", sessionDto.getCouponCode());
-        session.setAttribute("couponDiscount", sessionDto.getCouponDiscount());
-        session.setAttribute("usePoints", sessionDto.getUsePoints());
+    public String payment(@RequestParam(required = false) Long memberId,
+                          @RequestParam(required = false) String memberName,
+                          @RequestParam(required = false) String couponCode,
+                          @RequestParam(defaultValue = "0") int couponDiscount,
+                          HttpSession session) {
+        System.out.println("회원명"+memberName);
+        System.out.println("회원명"+memberId);
+
+        if (memberName != null) session.setAttribute("memberName", memberName);
+        if (memberId != null) session.setAttribute("memberId", memberId);
+        if (couponCode != null && !couponCode.isEmpty()) {
+            session.setAttribute("couponCode", couponCode);
+            session.setAttribute("couponDiscount", couponDiscount);
+        }
 
         return "redirect:/order/payment";
     }
 
+    @GetMapping("/order/complete")
+    public String complete(HttpSession session, Model model) {
+        orderService.complete(session);
+        return "kiosk/complete";
+    }
+
     @PostMapping("/order/pay")
-    public String pay(@RequestParam(required = false) String couponCode,
+    public String pay(@RequestParam(required = false) String paymentMethod,
                       @RequestParam(defaultValue = "0") int finalAmount,
                       HttpSession session) {
-        couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
-        session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
-        return "/kiosk/complete";
+        String couponCode = (String) session.getAttribute("couponCode");
+        if (couponCode != null && !couponCode.isEmpty()) {
+            couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
+        }
+
+        // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
+        orderService.update(paymentMethod, finalAmount, session);
+
+        return "redirect:/order/complete";
     }
 }

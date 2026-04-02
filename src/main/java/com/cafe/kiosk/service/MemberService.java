@@ -80,6 +80,7 @@ public class MemberService {
                 : member.getPhone();
 
         return Optional.of(new MemberLookupResponse(
+                member.getId(),
                 displayName,
                 member.getPoints(),
                 unusedCouponCount,

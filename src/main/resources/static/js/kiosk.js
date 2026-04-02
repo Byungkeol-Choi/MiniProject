@@ -175,8 +175,8 @@ const Cart = (() => {
       items: state.items,
       couponCode: state.couponCode,
       couponDiscount: state.couponDiscount,
-      usePoints:      state.usePoints,
-      memberId:       state.memberId
+      usePoints: state.usePoints,
+      memberId: state.memberId,
     });
 
     form.submit();
@@ -212,44 +212,118 @@ function switchTab(tab) {
 // 요청: MemberLookupRequest { phone }
 // 응답: MemberLookupResponse { memberName, points, unusedCouponCount, coupons[] }
 async function lookupMemberByPhone() {
-  const phone = document.getElementById('lookup-phone-input')?.value.replace(/\D/g, '') || '';
-  const errorBox = document.getElementById('lookup-error-box');
-  const resultPanel = document.getElementById('lookup-result-panel');
+  const phone =
+    document.getElementById("lookup-phone-input")?.value.replace(/\D/g, "") ||
+    "";
+  const errorBox = document.getElementById("lookup-error-box");
+  const resultPanel = document.getElementById("lookup-result-panel");
 
   if (phone.length < 10) {
-    showToast('전화번호를 올바르게 입력해주세요. (10~11자리)');
+    showToast("전화번호를 올바르게 입력해주세요. (10~11자리)");
     return;
   }
 
-  if (errorBox) errorBox.style.display = 'none';
-  if (resultPanel) resultPanel.style.display = 'none';
+  if (errorBox) errorBox.style.display = "none";
+  if (resultPanel) resultPanel.style.display = "none";
 
   try {
-    const res = await fetch('/api/member/lookup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
+    const res = await fetch("/api/member/lookup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
     });
 
     if (res.status === 404) {
       if (errorBox) {
-        errorBox.textContent = '가입되지 않은 전화번호입니다.';
-        errorBox.style.display = 'block';
+        errorBox.textContent = "가입되지 않은 전화번호입니다.";
+        errorBox.style.display = "block";
       }
       return;
     }
 
-  const subtotal = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
-  let discount = coupon.type === 'PERCENT'
-    ? Math.round(subtotal * coupon.value / 100)
-    : coupon.value;
+    if (!res.ok) {
+      if (errorBox) {
+        errorBox.textContent =
+          "조회 중 오류가 발생했습니다. 다시 시도해주세요.";
+        errorBox.style.display = "block";
+      }
+      return;
+    }
+
+    // MemberLookupResponse: { memberName, points, unusedCouponCount, coupons[] }
+    const data = await res.json();
+
+    Cart.getState().memberId = data.memberId;
+    Cart.getState().memberName = data.memberName;
+
+    console.log(data.memberId);
+    console.log(data);
+
+    document.getElementById("hidden-member-name").value = data.memberName || "";
+    document.getElementById("hidden-member-id").value = data.memberId || 0;
+
+    document.getElementById("lookup-coupon-count").textContent =
+      (data.unusedCouponCount || 0) + "개";
+
+    // 미사용 쿠폰 목록 렌더링
+    const couponListEl = document.getElementById("lookup-coupon-list");
+    if (couponListEl) {
+      const unused = (data.coupons || []).filter((c) => !c.used);
+      if (unused.length === 0) {
+        couponListEl.innerHTML =
+          '<div class="lookup-empty-coupons">사용 가능한 쿠폰이 없습니다.</div>';
+      } else {
+        couponListEl.innerHTML = unused
+          .map((c) => {
+            const discount =
+              c.discountType === "FIXED"
+                ? c.discountValue.toLocaleString("ko-KR") + "원 할인"
+                : c.discountValue + "% 할인";
+            return `<div class="lookup-coupon-check-row">
+            <div>
+              <div class="lookup-coupon-title">${c.name || "쿠폰"}</div>
+              <div class="lookup-coupon-benefit">${discount}</div>
+              <div class="lookup-coupon-code">${c.code}</div>
+            </div>
+            <button class="cart-lookup-coupon-pick"
+              onclick="applyLookupCoupon('${c.code}', '${c.discountType}', ${c.discountValue}, '${c.name || "쿠폰"}')">
+              쿠폰 적용
+            </button>
+          </div>`;
+          })
+          .join("");
+      }
+    }
+
+    if (resultPanel) resultPanel.style.display = "block";
+  } catch (e) {
+    if (errorBox) {
+      errorBox.textContent = "네트워크 오류가 발생했습니다.";
+      errorBox.style.display = "block";
+    }
+  }
+}
+
+// 쿠폰 목록에서 "쿠폰 적용" 클릭 시 호출
+// 결제 금액에서 차감하고 hidden-coupon-code에 코드 저장
+function applyLookupCoupon(code, discountType, discountValue, name) {
+  const subtotal = Number(
+    document.getElementById("subtotal-value")?.dataset.amount || 0,
+  );
+  let discount =
+    discountType === "FIXED"
+      ? discountValue
+      : Math.round((subtotal * discountValue) / 100);
   discount = Math.min(discount, subtotal);
 
   updateDiscount(discount, `${name} (${code}) 적용`);
 
   // 결제 폼 hidden input에 쿠폰 코드 세팅 → POST /order/payment 전송
-  const hiddenCode = document.getElementById('hidden-coupon-code');
+  const hiddenCode = document.getElementById("hidden-coupon-code");
   if (hiddenCode) hiddenCode.value = code;
+
+  Cart.getState().couponCode = code;
+  Cart.getState().couponDiscount = discount;
 }
 
 function updateDiscount(amount, label) {
@@ -277,13 +351,8 @@ function recalcTotal() {
   const couponAmt = Number(
     document.getElementById("coupon-discount-value")?.dataset.amount || 0,
   );
-  const usePointsEl = document.getElementById("use-points-check");
-  const pointsEl = document.getElementById("points-discount");
-  const available = Number(pointsEl?.dataset.points || 0);
-  const usePoints =
-    usePointsEl?.checked && available > 0 ? Math.min(available, subtotal) : 0;
 
-  const total = Math.max(0, subtotal - couponAmt - usePoints);
+  const total = Math.max(0, subtotal - couponAmt);
   const totalEl = document.getElementById("final-total-value");
   if (totalEl) totalEl.textContent = fmtPrice(total);
 }
