@@ -28,9 +28,12 @@ public class OrderController {
             cartItemDto = new ArrayList<>();
         }
 
-        // System.out.println(cartItemDto);
+        int subtotal = cartItemDto.stream()
+                        .mapToInt((item)->item.getPrice() * item.getQuantity())
+                                .sum();
 
         model.addAttribute("cartItems", cartItemDto);
+        model.addAttribute("subtotal", subtotal);
 
         return "kiosk/cart";
     }
@@ -51,9 +54,36 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
+    @GetMapping("/order/payment")
+    public String payment(HttpSession session, Model model) {
+        List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
+        if (cartItemDto == null) {
+            cartItemDto = new ArrayList<>();
+        }
+        int totalAmount = cartItemDto.stream()
+                .mapToInt((item)->item.getPrice() * item.getQuantity())
+                .sum();
+
+        int usePoint = (int) session.getAttribute("usePoints");
+        int couponDiscount = (int) session.getAttribute("couponDiscount");
+        int finalAmount = totalAmount - (usePoint > 0 ? usePoint : couponDiscount);
+
+
+        model.addAttribute("cartItems", cartItemDto);
+        model.addAttribute("summaryTotalAmount", totalAmount);
+        model.addAttribute("summaryDiscountAmount", usePoint);
+        model.addAttribute("summaryFinalAmount", finalAmount);
+
+        return "kiosk/payment";
+    }
+
     @PostMapping("/order/payment")
-    public String payment() {
-        return "/kiosk/payment";
+    public String payment(HttpSession session, CartItemSessionDto sessionDto) {
+        session.setAttribute("couponCode", sessionDto.getCouponCode());
+        session.setAttribute("couponDiscount", sessionDto.getCouponDiscount());
+        session.setAttribute("usePoints", sessionDto.getUsePoints());
+
+        return "redirect:/order/payment";
     }
 
     @PostMapping("/order/pay")
