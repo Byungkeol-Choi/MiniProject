@@ -49,7 +49,7 @@
         <!-- ─── 주문 목록 ──────────────────────────── -->
         <div class="section-card">
           <div class="section-title">
-            <i class="bi bi-clipboard-check"></i> 선택하신 메뉴
+            <i class="bi bi-file-earmark-plus"></i> 선택하신 메뉴
           </div>
 
           <!-- Thymeleaf 반복 출력 -->
@@ -337,8 +337,8 @@
               type="hidden"
               name="finalAmount"
               id="hidden-final-amount"
-              th:value="${subtotal ?: 27500}"
-              value="27500"
+              th:value="${subtotal ?: 0}"
+              value="0"
             />
             <input
               type="hidden"

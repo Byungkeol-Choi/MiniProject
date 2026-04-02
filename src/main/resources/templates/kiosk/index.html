@@ -70,38 +70,73 @@
       [백엔드 연동] Controller에서 model.addAttribute("foodMenus", menuService.findByCategory("FOOD")) 필요
       Menu 필드: id, name, price, description, imageUrl, available
     -->
-    <div class="menu-grid-wrapper" data-tab="food">
-      <div class="menu-grid">
-
-        <!-- Thymeleaf 반복 렌더링 -->
-        <div class="menu-card"
-             th:each="menu : ${foodMenus}"
-             th:classappend="${!menu.available} ? 'soldout'"
-             th:data-id="${menu.id}"
-             th:data-name="${menu.name}"
-             th:data-price="${menu.price}"
-             th:data-image="${menu.imageUrl != null ? menu.imageUrl : '/images/menu/hot-americano.png'}"
-             th:onclick="${menu.available} ? 'addToCart(this)' : ''">
-
-          <div class="menu-card-img-wrap">
-            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
-                 th:alt="${menu.name}" class="menu-card-img">
-          </div>
-          <div class="menu-card-body">
-            <div class="menu-card-name" th:text="${menu.name}">에그 베네딕트</div>
-            <div class="menu-card-desc" th:text="${menu.description}">홀란다이즈 소스와 수란이 올라간 브런치의 정석</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price"
-                    th:text="${#numbers.formatInteger(menu.price,1,'COMMA') + '원'}">16,500원</span>
-              <button th:if="${menu.available}" class="btn-add-cart"
-                      th:onclick="'Cart.add(' + menu.id + ', \'' + menu.name + '\', ' + menu.price + ', \'' + (menu.imageUrl ?: '/images/menu/eggs-benedict.png') + '\')'">+</button>
-              <span th:unless="${menu.available}" class="soldout-badge">품절</span>
+        <div class="menu-grid-wrapper" data-tab="food">
+          <div class="menu-grid">
+            <!-- Thymeleaf 반복 렌더링 -->
+            <div
+              class="menu-card"
+              th:each="menu : ${foodMenus}"
+              th:classappend="${!menu.available} ? 'soldout'"
+              th:data-id="${menu.id}"
+              th:data-name="${menu.name}"
+              th:data-price="${menu.price}"
+              th:data-img="${menu.imageUrl ?: '/images/menu/eggs-benedict.png'}"
+              th:data-available="${menu.available}"
+              onclick="
+                if (this.dataset.available === 'true')
+                  Cart.add(
+                    this.dataset.id,
+                    this.dataset.name,
+                    this.dataset.price,
+                    this.dataset.img,
+                  );
+              "
+            >
+              <div class="menu-card-img-wrap">
+                <img
+                  th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
+                  th:alt="${menu.name}"
+                  class="menu-card-img"
+                />
+              </div>
+              <div class="menu-card-body">
+                <div class="menu-card-name" th:text="${menu.name}">
+                  에그 베네딕트
+                </div>
+                <div class="menu-card-desc" th:text="${menu.description}">
+                  홀란다이즈 소스와 수란이 올라간 브런치의 정석
+                </div>
+                <div class="menu-card-footer">
+                  <span
+                    class="menu-card-price"
+                    th:text="${#numbers.formatInteger(menu.price,1,'COMMA') + '원'}"
+                    >16,500원</span
+                  >
+                  <button
+                    th:if="${menu.available}"
+                    class="btn-add-cart"
+                    onclick="
+                      event.stopPropagation();
+                      const food = this.closest('.menu-card');
+                      Cart.add(
+                        food.dataset.id,
+                        food.dataset.name,
+                        food.dataset.price,
+                        food.dataset.img,
+                      );
+                    "
+                  >
+                    +
+                  </button>
+                  <span th:unless="${menu.available}" class="soldout-badge"
+                    >품절</span
+                  >
+                </div>
+              </div>
+              <div th:unless="${menu.available}" class="soldout-overlay">
+                <span class="soldout-badge">품절</span>
+              </div>
             </div>
-          </div>
-          <div th:unless="${menu.available}" class="soldout-overlay">
-            <span class="soldout-badge">품절</span>
-          </div>
-        </div>
 
             <!-- ↓ 디자인 확인용 정적 샘플 (백엔드 연동 후 th:each가 대체) ↓ -->
             <div
@@ -354,33 +389,72 @@
         <!--
       [백엔드 연동] Controller에서 model.addAttribute("drinkMenus", menuService.findByCategory("DRINK")) 필요
     -->
-    <div class="menu-grid-wrapper" data-tab="drink" style="display:none;">
-      <div class="menu-grid">
-
-        <div class="menu-card"
-             th:each="menu : ${drinkMenus}"
-             th:classappend="${!menu.available} ? 'soldout'"
-             th:onclick="${menu.available} ? 'Cart.add(' + menu.id + ', \'' + menu.name + '\', ' + menu.price + ', \'' + (menu.imageUrl ?: '/images/menu/hot-americano.png') + '\')' : ''">
-
-          <div class="menu-card-img-wrap">
-            <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
-                 th:alt="${menu.name}" class="menu-card-img">
-          </div>
-          <div class="menu-card-body">
-            <div class="menu-card-name" th:text="${menu.name}">따뜻한 아메리카노</div>
-            <div class="menu-card-desc" th:text="${menu.description}">진하고 깔끔한 에스프레소 베이스 커피</div>
-            <div class="menu-card-footer">
-              <span class="menu-card-price"
-                    th:text="${#numbers.formatInteger(menu.price,1,'COMMA') + '원'}">5,000원</span>
-              <button th:if="${menu.available}" class="btn-add-cart"
-                      th:onclick="'Cart.add(' + menu.id + ', \'' + menu.name + '\', ' + menu.price + ', \'' + (menu.imageUrl ?: '/images/menu/hot-americano.png') + '\')'">+</button>
-              <span th:unless="${menu.available}" class="soldout-badge">품절</span>
+        <div class="menu-grid-wrapper" data-tab="drink" style="display: none">
+          <div class="menu-grid">
+            <div
+              class="menu-card"
+              th:each="menu : ${drinkMenus}"
+              th:classappend="${!menu.available} ? 'soldout'"
+              th:data-id="${menu.id}"
+              th:data-name="${menu.name}"
+              th:data-price="${menu.price}"
+              th:data-img="${menu.imageUrl ?: '/images/menu/hot-americano.png'}"
+              th:data-available="${menu.available}"
+              onclick="
+                if (this.dataset.available === 'true')
+                  Cart.add(
+                    this.dataset.id,
+                    this.dataset.name,
+                    this.dataset.price,
+                    this.dataset.img,
+                  );
+              "
+            >
+              <div class="menu-card-img-wrap">
+                <img
+                  th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : '/images/menu/empty.png'}"
+                  th:alt="${menu.name}"
+                  class="menu-card-img"
+                />
+              </div>
+              <div class="menu-card-body">
+                <div class="menu-card-name" th:text="${menu.name}">
+                  따뜻한 아메리카노
+                </div>
+                <div class="menu-card-desc" th:text="${menu.description}">
+                  진하고 깔끔한 에스프레소 베이스 커피
+                </div>
+                <div class="menu-card-footer">
+                  <span
+                    class="menu-card-price"
+                    th:text="${#numbers.formatInteger(menu.price,1,'COMMA') + '원'}"
+                    >5,000원</span
+                  >
+                  <button
+                    th:if="${menu.available}"
+                    class="btn-add-cart"
+                    onclick="
+                      event.stopPropagation();
+                      const drink = this.closest('.menu-card');
+                      Cart.add(
+                        drink.dataset.id,
+                        drink.dataset.name,
+                        drink.dataset.price,
+                        drink.dataset.img,
+                      );
+                    "
+                  >
+                    +
+                  </button>
+                  <span th:unless="${menu.available}" class="soldout-badge"
+                    >품절</span
+                  >
+                </div>
+              </div>
+              <div th:unless="${menu.available}" class="soldout-overlay">
+                <span class="soldout-badge">품절</span>
+              </div>
             </div>
-          </div>
-          <div th:unless="${menu.available}" class="soldout-overlay">
-            <span class="soldout-badge">품절</span>
-          </div>
-        </div>
 
             <!-- 디자인 샘플 -->
             <div

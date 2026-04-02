@@ -56,8 +56,8 @@ body {
 }
 
 .cafe-logo-circle {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   background: var(--cafe-accent);
   border-radius: 50%;
   display: flex;
@@ -781,7 +781,9 @@ body {
   border-bottom: 1px solid var(--cafe-cream);
   margin: 0;
 }
-.lookup-coupon-check-row:last-of-type { border-bottom: none; }
+.lookup-coupon-check-row:last-of-type {
+  border-bottom: none;
+}
 
 .lookup-coupon-check-body {
   flex: 1;
@@ -793,11 +795,16 @@ body {
   color: var(--cafe-secondary);
   letter-spacing: 0.02em;
 }
-.lookup-coupon-title { font-size: 15px; font-weight: 600; color: var(--cafe-primary); margin-top: 4px; }
+.lookup-coupon-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cafe-primary);
+  margin-top: 4px;
+}
 .lookup-coupon-benefit {
   font-size: 15px;
   font-weight: 800;
-  color: #C2692A;
+  color: #c2692a;
   flex-shrink: 0;
 }
 
@@ -813,7 +820,7 @@ body {
 }
 
 .lookup-result-panel {
-  background: #FEF9F3;
+  background: #fef9f3;
   border: 1.5px solid var(--cafe-cream);
   border-radius: 12px;
   padding: 16px 18px;
@@ -829,7 +836,9 @@ body {
   align-items: center;
   gap: 8px;
 }
-.lookup-result-heading i { color: #16a34a; }
+.lookup-result-heading i {
+  color: #16a34a;
+}
 
 .lookup-result-row {
   display: flex;
@@ -840,18 +849,30 @@ body {
   border-bottom: 1px solid rgba(92, 51, 23, 0.08);
   font-size: 14px;
 }
-.lookup-result-row:last-of-type { border-bottom: none; }
+.lookup-result-row:last-of-type {
+  border-bottom: none;
+}
 
-.lookup-result-label { color: var(--cafe-gray); font-weight: 500; }
-.lookup-result-value { font-weight: 700; color: var(--cafe-primary); text-align: right; }
-.lookup-points-strong { font-size: 17px; color: #C2692A; }
+.lookup-result-label {
+  color: var(--cafe-gray);
+  font-weight: 500;
+}
+.lookup-result-value {
+  font-weight: 700;
+  color: var(--cafe-primary);
+  text-align: right;
+}
+.lookup-points-strong {
+  font-size: 17px;
+  color: #c2692a;
+}
 
 .lookup-empty-coupons {
   text-align: center;
   padding: 16px;
   font-size: 14px;
   color: var(--cafe-gray);
-  background: rgba(255,255,255,0.6);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 10px;
 }
 
@@ -1445,7 +1466,9 @@ button.cart-lookup-coupon-pick {
   border: 1.5px solid var(--cafe-cream);
   border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 button.cart-lookup-coupon-pick:hover {
