@@ -6,6 +6,7 @@
  * - applyCoupon()    : POST /coupon/check (AJAX)
  */
 
+
 "use strict";
 
 /* ─── Cart State ──────────────────────────────────── */
@@ -19,6 +20,7 @@ const Cart = (() => {
     memberPoints: 0,
     couponCode: null,
     couponDiscount: 0,
+    usePoints: 0,
   };
 
   /* 저장 & 불러오기 */
@@ -130,9 +132,9 @@ const Cart = (() => {
         (item) => `
       <div class="cart-item" data-id="${item.id}">
         <img class="cart-item-thumb"
-             src="${escHtml(item.imgUrl || "/images/menu/default-food.svg")}"
+             src="${escHtml(item.imgUrl || "/images/menu/empty.png")}"
              alt="${escHtml(item.name)}"
-             onerror="this.src='/images/menu/default-food.svg'">
+             onerror="this.src='/images/menu/empty.png'">
         <div class="cart-item-info">
           <div class="cart-item-name">${escHtml(item.name)}</div>
           <div class="cart-item-price">${fmtPrice(item.price * item.quantity)}</div>
@@ -174,6 +176,7 @@ const Cart = (() => {
       items: state.items,
       couponCode: state.couponCode,
       couponDiscount: state.couponDiscount,
+      usePoints: state.usePoints,
       memberId: state.memberId,
     });
 
@@ -251,8 +254,15 @@ async function lookupMemberByPhone() {
     // MemberLookupResponse: { memberName, points, unusedCouponCount, coupons[] }
     const data = await res.json();
 
-    document.getElementById("lookup-member-name").textContent =
-      data.memberName || "";
+    Cart.getState().memberId = data.memberId;
+    Cart.getState().memberName = data.memberName;
+
+    console.log(data.memberId);
+    console.log(data);
+
+    document.getElementById("hidden-member-name").value = data.memberName || "";
+    document.getElementById("hidden-member-id").value = data.memberId || 0;
+
     document.getElementById("lookup-coupon-count").textContent =
       (data.unusedCouponCount || 0) + "개";
 
@@ -312,6 +322,9 @@ function applyLookupCoupon(code, discountType, discountValue, name) {
   // 결제 폼 hidden input에 쿠폰 코드 세팅 → POST /order/payment 전송
   const hiddenCode = document.getElementById("hidden-coupon-code");
   if (hiddenCode) hiddenCode.value = code;
+
+  Cart.getState().couponCode = code;
+  Cart.getState().couponDiscount = discount;
 }
 
 function updateDiscount(amount, label) {
@@ -453,7 +466,7 @@ function startClock() {
     el.textContent = now.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false,
+      hour12: true,
     });
   }
   tick();

@@ -30,7 +30,7 @@ public class CouponService {
      */
     public Coupon validateCoupon(String code) {
         Coupon coupon = couponRepository.findByCodeAndUsedFalse(code)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰 코드입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰 코드입니다.")); // orElseThrow(): 조회 결과가 있으면 Coupon 객체를 반환하고, 없으면(Optional.empty() 이건 기본값) 즉시 예외를 발생시킵니다.
 
         if (coupon.getExpiresAt() != null && coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("만료된 쿠폰입니다.");
@@ -44,22 +44,29 @@ public class CouponService {
      */
     @Transactional
     public void redeemCouponByCode(String rawCode) {
-        if (!StringUtils.hasText(rawCode)) {
+        if (!StringUtils.hasText(rawCode)) { // StringUtils.hasText(rawCode): Spring에서 제공하는 유틸리티 메서드입니다. rawCode가 null이 아니어야 하고, 길이가 0보다 커야 하며, 공백 문자(space)로만 이루어져 있지 않은지를 한 번에 체크합니다.
             return;
         }
-        String code = rawCode.trim();
+        String code = rawCode.trim(); // trim(): 사용자 실수로 입력된 앞뒤 공백을 제거하여 데이터의 정합성을 높입니다.
         Coupon coupon = validateCoupon(code);
         coupon.setUsed(true);
     }
 
     /**
-     * 스탬프 룰에 따라 회원에게 보상 쿠폰 1건을 저장한다.
-     * {@link MemberService#processStamp} 안에서 포인트 3,000P 차감과 짝을 이룰 때 호출된다.
+     * 관리자가 특정 회원에게 수동으로 쿠폰을 발급한다.
      */
     @Transactional
-    public Coupon issueStampRewardCoupon(Member member) {
-        return saveNewCoupon(member, "3,000원 할인 쿠폰", DiscountType.FIXED, 3000,
-                LocalDateTime.now().plusMonths(1));
+    public Coupon issueCouponByAdmin(Member member, String name, DiscountType discountType,
+                                     int discountValue, LocalDateTime expiresAt) {
+        return saveNewCoupon(member, name, discountType, discountValue, expiresAt);
+    }
+
+    /**
+     * 관리자가 쿠폰을 삭제한다.
+     */
+    @Transactional
+    public void deleteCoupon(Long couponId) {
+        couponRepository.deleteById(couponId);
     }
 
     /**
