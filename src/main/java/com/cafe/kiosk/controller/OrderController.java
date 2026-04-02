@@ -57,7 +57,11 @@ public class OrderController {
     }
 
     @PostMapping("/order/pay")
-    public String pay() {
+    public String pay(@RequestParam(required = false) String couponCode,
+                      @RequestParam(defaultValue = "0") int finalAmount,
+                      HttpSession session) {
+        couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
+        session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
         return "/kiosk/complete";
     }
 }

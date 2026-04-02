@@ -47,13 +47,6 @@ public class MemberService {
     }
 
     /**
-     * PK로 회원을 조회한다. 존재하지 않으면 {@link Optional#empty()}.
-     */
-    public Optional<Member> findById(Long id) {
-        return memberRepository.findById(id);
-    }
-
-    /**
      * 전화번호로 가입 회원의 누적 포인트·쿠폰 목록을 조회한다. DB 갱신 없음(조회 전용).
      *
      * @return 미가입이면 {@link Optional#empty()}
@@ -81,6 +74,7 @@ public class MemberService {
             log.warn("회원 쿠폰 목록 조회 실패 memberId={}", member.getId(), e);
         }
 
+        // 이름이 정상적으로 있으면 이름을 보여주고, 이름이 비어있거나 공백이면 전화번호를 대체 표시값으로 사용.
         String displayName = (member.getName() != null && !member.getName().isBlank())
                 ? member.getName()
                 : member.getPhone();

@@ -26,8 +26,8 @@ public class SecurityConfig {
                 // CSRF 설정 : 람다배개변수 타입은 생략 가능함. 타입 추정으로
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        // JSON 조회 전용(포인트/쿠폰). fetch CSRF 누락 시 403 방지 — 변경 작업 아님.
-                        .ignoringRequestMatchers("/api/member/lookup")
+                        // JSON API 엔드포인트. fetch 호출 시 CSRF 토큰 전송 생략을 허용한다.
+                        .ignoringRequestMatchers("/api/member/lookup", "/api/member/stamp", "/api/member/stamp-info")
                 )
                 //HTTP 요청에 대한 보안을 설정한다. Security 6버전.
                 //경로별 인가 설정
