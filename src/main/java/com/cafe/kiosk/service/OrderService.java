@@ -133,10 +133,13 @@ public class OrderService {
         if (updated == 0) {
             throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId);
         }
-    }
-
+    
         Long orderId = orders.getId();
         session.setAttribute("orderId", orderId);
         session.setAttribute("finalAmount", finalAmount);
+    }
+
+    @Transactional
+    public void complete(HttpSession session) {
     }
 }
