@@ -4,6 +4,7 @@ import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
 import com.cafe.kiosk.service.CouponService;
 import com.cafe.kiosk.service.OrderService;
+import com.cafe.kiosk.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -23,12 +24,12 @@ public class OrderController {
     private final CouponService couponService;
     private final OrderService orderService;
 
-    @GetMapping("/order/cart")
-    public String confrim(HttpSession session, Model model) {
-        List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
-        if (cartItemDto == null) {
-            cartItemDto = new ArrayList<>();
-        }
+  @GetMapping("/order/cart")
+  public String confrim(HttpSession session, Model model) {
+    List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
+    if (cartItemDto == null) {
+      cartItemDto = new ArrayList<>();
+    }
 
         int subtotal = cartItemDto.stream()
                 .mapToInt((item)->item.getPrice() * item.getQuantity())
@@ -37,19 +38,19 @@ public class OrderController {
         model.addAttribute("cartItems", cartItemDto);
         model.addAttribute("subtotal", subtotal);
 
-        return "kiosk/cart";
-    }
+    return "kiosk/cart";
+  }
 
-    @PostMapping("/order/cart")
-    public String order(@RequestParam("cartData") String cartData, HttpSession session) throws Exception {
-        CartItemSessionDto cart = objectMapper.readValue(cartData, CartItemSessionDto.class);
+  @PostMapping("/order/cart")
+  public String order(@RequestParam("cartData") String cartData, HttpSession session) throws Exception {
+    CartItemSessionDto cart = objectMapper.readValue(cartData, CartItemSessionDto.class);
 
-        session.setAttribute("items", cart.getItems());
-        session.setAttribute("memberId", cart.getMemberId());
-        session.setAttribute("memberName", cart.getMemberName());
-        session.setAttribute("couponCode", cart.getCouponCode());
-        session.setAttribute("couponDiscount", cart.getCouponDiscount());
-        session.setAttribute("usePoints", cart.getUsePoints());
+    session.setAttribute("items", cart.getItems());
+    session.setAttribute("memberId", cart.getMemberId());
+    session.setAttribute("memberName", cart.getMemberName());
+    session.setAttribute("couponCode", cart.getCouponCode());
+    session.setAttribute("couponDiscount", cart.getCouponDiscount());
+    session.setAttribute("usePoints", cart.getUsePoints());
 
         System.out.println("items : " + cart.getItems());
         System.out.println("memberId : " + cart.getMemberId());

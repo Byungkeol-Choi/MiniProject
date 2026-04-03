@@ -52,27 +52,27 @@
             <i class="bi bi-file-earmark-plus"></i> 선택하신 메뉴
           </div>
 
-          <!-- Thymeleaf 반복 출력 -->
-          <div th:each="item : ${cartItems}" class="order-item-row">
-            <img
-              class="order-item-icon"
-              th:src="${item.imgUrl != null ? item.imgUrl : '/images/menu/empty.png'}"
-              onerror="this.src = '/images/menu/empty.png'"
-              alt="메뉴 이미지"
-            />
-            <div class="order-item-info">
-              <div class="order-item-name" th:text="${item.name}">
-                에그 베네딕트
-              </div>
-              <div
-                class="order-item-unit"
-                th:text="${#numbers.formatInteger(item.price,1,'COMMA') + '원 / 1개'}"
-              >
-                16,500원 / 1개
-              </div>
-            </div>
-            <div class="order-qty-ctrl">
-              <!--
+      <!-- Thymeleaf 반복 출력 -->
+      <div th:each="item : ${cartItems}" class="order-item-row">
+        <img
+                class="order-item-icon"
+                th:src="${item.imgUrl != null ? item.imgUrl : '/images/menu/empty.png'}"
+                onerror="this.src = '/images/menu/empty.png'"
+                alt="메뉴 이미지"
+        />
+        <div class="order-item-info">
+          <div class="order-item-name" th:text="${item.name}">
+            에그 베네딕트
+          </div>
+          <div
+                  class="order-item-unit"
+                  th:text="${#numbers.formatInteger(item.price,1,'COMMA') + '원 / 1개'}"
+          >
+            16,500원 / 1개
+          </div>
+        </div>
+        <div class="order-qty-ctrl">
+          <!--
         [백엔드 연동] 수량 변경: POST /order/cart/update
         또는 JS로 처리 후 폼 재제출
           -->
@@ -251,94 +251,76 @@
             <i class="bi bi-credit-card"></i> 결제 금액
           </div>
 
-          <div class="summary-row">
-            <span>상품 금액</span>
-            <span
-              id="subtotal-value"
-              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
-              th:data-amount="${subtotal ?: 27500}"
-              >27,500원</span
-            >
-          </div>
-          <div class="summary-row">
-            <span>쿠폰 할인</span>
-            <span
-              class="discount-tag"
-              id="coupon-discount-value"
-              data-amount="0"
-              >-</span
-            >
-          </div>
-          <div class="summary-total">
-            <span>최종 결제 금액</span>
-            <span
-              id="final-total-value"
-              th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
-              >27,500원</span
-            >
-          </div>
-        </div>
-
-        <!-- ─── 버튼 ──────────────────────────────── -->
-        <div class="action-btn-row">
-          <a th:href="@{/}" href="/" class="btn-back-page">
-            <i class="bi bi-arrow-left"></i> 이전
-          </a>
-          <!--
-        [백엔드 연동]
-        POST /order/payment 로 쿠폰코드, 포인트 사용 여부, 총 금액 전송
-      -->
-          <form
-            id="payment-redirect-form"
-            method="post"
-            th:action="@{/order/payment}"
-            action="/order/payment"
-            style="flex: 1; display: flex"
-          >
-            <input type="hidden" name="couponCode" id="hidden-coupon-code" />
-            <input
-              type="hidden"
-              name="memberId"
-              id="hidden-member-id"
-              value="0"
-            />
-            <input
-              type="hidden"
-              name="memberName"
-              id="hidden-member-name"
-              value=""
-            />
-            <input
-              type="hidden"
-              name="couponDiscount"
-              id="hidden-coupon-discount"
-              value="0"
-            />
-            <input
-              type="hidden"
-              name="usePoints"
-              id="hidden-use-points"
-              value="0"
-            />
-            <input
-              type="hidden"
-              name="finalAmount"
-              id="hidden-final-amount"
-              th:value="${subtotal ?: 0}"
-              value="0"
-            />
-            <input
-              type="hidden"
-              th:name="${_csrf.parameterName}"
-              th:value="${_csrf.token}"
-            />
-            <button type="submit" class="btn-go-pay" style="width: 100%">
-              결제하기
-            </button>
-          </form>
-        </div>
+      <div class="summary-row">
+        <span>상품 금액</span>
+        <span
+                id="subtotal-value"
+                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+                th:data-amount="${subtotal ?: 27500}"
+        >27,500원</span
+        >
       </div>
-      <!-- /subpage-container -->
+      <div class="summary-row">
+        <span>쿠폰 할인</span>
+        <span
+                class="discount-tag"
+                id="coupon-discount-value"
+                data-amount="0"
+        >-</span
+        >
+      </div>
+      <div class="summary-total">
+        <span>최종 결제 금액</span>
+        <span
+                id="final-total-value"
+                th:text="${#numbers.formatInteger(subtotal ?: 27500, 1, 'COMMA') + '원'}"
+        >27,500원</span
+        >
+      </div>
+    </div>
+
+    <!-- ─── 버튼 ──────────────────────────────── -->
+    <div class="action-btn-row">
+      <a th:href="@{/}" href="/" class="btn-back-page">
+        <i class="bi bi-arrow-left"></i> 이전
+      </a>
+      <!--
+    [백엔드 연동]
+    POST /order/payment 로 쿠폰코드, 포인트 사용 여부, 총 금액 전송
+  -->
+      <form
+              id="payment-redirect-form"
+              method="post"
+              th:action="@{/order/payment}"
+              action="/order/payment"
+              style="flex: 1; display: flex"
+      >
+        <input type="hidden" name="couponCode" id="hidden-coupon-code" />
+        <input
+                type="hidden"
+                name="couponDiscount"
+                id="hidden-coupon-discount"
+                value="0"
+        />
+        <input
+                type="hidden"
+                name="finalAmount"
+                id="hidden-final-amount"
+                th:value="${subtotal ?: 27500}"
+                value="27500"
+        />
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"
+        />
+        <button type="submit" class="btn-go-pay" style="width: 100%">
+          결제하기
+        </button>
+      </form>
+    </div>
+  </div>
+  <!-- /subpage-container -->
 
       <footer class="kiosk-page-footer">
         <a
@@ -366,17 +348,17 @@
        * [백엔드 연동 시] 수량 변경/삭제는 AJAX 또는 폼 서브밋으로 처리하세요.
        */
 
-      // 수량 변경 (서버 세션 기반 예시)
-      async function updateCartQty(id, delta) {
-        try {
-          const response = await fetch(`/api/cart/${id}`, {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              [header]: token,
-            },
-            body: JSON.stringify({ delta: delta }),
-          });
+  // 수량 변경 (서버 세션 기반 예시)
+  async function updateCartQty(id, delta) {
+    try {
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          [header]: token,
+        },
+        body: JSON.stringify({ delta: delta }),
+      });
 
           if (!response.ok) throw new Error("수량 변경 실패");
 
@@ -409,14 +391,14 @@
         }
       }
 
-      async function removeCartItem(id) {
-        try {
-          const response = await fetch(`/api/cart/${id}`, {
-            method: "DELETE",
-            headers: {
-              [header]: token,
-            },
-          });
+  async function removeCartItem(id) {
+    try {
+      const response = await fetch(`/api/cart/${id}`, {
+        method: "DELETE",
+        headers: {
+          [header]: token,
+        },
+      });
 
           if (!response.ok) throw new Error("삭제 실패");
 
@@ -477,10 +459,10 @@
             document.getElementById("hidden-coupon-discount").value =
               couponDisc.dataset.amount || 0;
 
-          // 최종 금액 문자열에서 숫자 추출
-          const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
-          document.getElementById("hidden-final-amount").value = finalText;
-        });
-    </script>
-  </body>
+      // 최종 금액 문자열에서 숫자 추출
+      const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
+      document.getElementById("hidden-final-amount").value = finalText;
+    });
+</script>
+</body>
 </html>

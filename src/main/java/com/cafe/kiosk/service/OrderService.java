@@ -24,6 +24,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@RequiredArgsConstructor
 public class OrderService {
     private final OrdersRepository ordersRepository;
     private final OrderItemRepository orderItemRepository;
@@ -53,11 +54,16 @@ public class OrderService {
 
         cartItemDto.setQuantity(sum);
 
+        int subtotal = cartItem.stream()
+                .mapToInt(i -> i.getPrice() * i.getQuantity())
+                .sum();
+
         Map<String, Object> result = new HashMap<>();
         result.put("id", cartItemDto.getId());
         result.put("price", cartItemDto.getPrice());
         result.put("quantity", cartItemDto.getQuantity());
         result.put("removed", false);
+        result.put("subtotal", subtotal);
 
         return  result;
     }

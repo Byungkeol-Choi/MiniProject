@@ -31,4 +31,11 @@ public class OrderItem {
     @Column(name="unit_price") //단가
     private int unitPrice;
 
+
+    public OrderItem(Orders orders, Menu menu, int quantity, int unitPrice){
+        this.orders = orders;
+        this.menu = menu;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+    }
 }

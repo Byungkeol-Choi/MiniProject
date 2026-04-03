@@ -33,4 +33,30 @@ public class Menu {
     private LocalDateTime createdAt;
 
     public enum Category {FOOD, DRINK};
+
+    // 메뉴 수정
+    public void update(String name, int price, Category category, String description, String imageUrl){
+        this.name = name;
+        this.price = price;
+        this.category = category;
+        this.description = description;
+        this.imageUrl = imageUrl;
+    }
+
+    // 품절 처리
+    public void setAvailable(Boolean available){
+        this.available = available;
+    }
+
+//    public Menu(String name, int price, Category category, String description, String imageUrl,
+//                boolean available, LocalDateTime createdAt){
+//        this.name = name;
+//        this.price = price;
+//        this.category = category;
+//        this.description = description;
+//        this.imageUrl = imageUrl;
+//        this.available = available;
+//        this.createdAt = createdAt;
+//    }
 }
+
