@@ -66,6 +66,7 @@ public class MemberService {
             unusedCouponCount = couponRepository.countByMemberIdAndUsedFalse(member.getId());
             List<Coupon> couponList = couponRepository.findByMemberIdOrderByCreatedAtDesc(member.getId());
             coupons = couponList.stream()
+                    .filter(Coupon::isCurrentlyUsable)
                     .map(c -> new MemberCouponDto(
                             c.getName(),
                             c.getCode(),

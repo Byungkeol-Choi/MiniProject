@@ -83,4 +83,20 @@ public class Coupon {
     public enum DiscountType {
         FIXED, PERCENT
     }
+
+    /**
+     * 미사용이고 만료일이 없거나 아직 지나지 않았으면 {@code true}.
+     * 결제 시 {@link com.cafe.kiosk.service.CouponService#validateCoupon(String)}와 동일한 기준입니다.
+     */
+    public boolean isCurrentlyUsable() {
+        if (used) { // 이미 사용된 쿠폰이면 true로 false반환.
+            return false;
+        }
+        if (expiresAt == null) { // 미사용 쿠폰인데 만료일이 없으면(null값) true반환.
+            return true;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        return expiresAt.isEqual(now) || expiresAt.isAfter(now); // “만료 시간이 현재 시각과 같을 때는 아직 사용할 수 있다고 본다”.
+    }
+
 }
