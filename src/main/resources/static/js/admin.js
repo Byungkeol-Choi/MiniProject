@@ -190,6 +190,102 @@ function editMemberPoints(memberId, currentPoints) {
   showAdminToast('포인트가 수정되었습니다. (백엔드 연동 후 동작)');
 }
 
+/* ─── 회원 추가/삭제 ───────────────────────────────── */
+function openAddMemberModal() {
+  const modal = document.getElementById('add-member-modal');
+  if (!modal) return;
+
+  const msgEl = document.getElementById('add-member-msg');
+  if (msgEl) {
+    msgEl.textContent = '';
+    msgEl.style.color = '';
+  }
+
+  const phoneInput = document.getElementById('add-member-phone');
+  if (phoneInput) {
+    phoneInput.value = '';
+    phoneInput.focus();
+  }
+
+  const nameInput = document.getElementById('add-member-name');
+  if (nameInput) nameInput.value = '';
+
+  modal.style.display = 'flex';
+}
+
+function closeAddMemberModal() {
+  const modal = document.getElementById('add-member-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+async function addMember() {
+  const phoneRaw = document.getElementById('add-member-phone')?.value || '';
+  const nameRaw = document.getElementById('add-member-name')?.value || '';
+
+  const msgEl = document.getElementById('add-member-msg');
+  if (msgEl) {
+    msgEl.textContent = '';
+    msgEl.style.color = '#e53935';
+  }
+
+  const phoneDigits = phoneRaw.replace(/\D/g, '');
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+    if (msgEl) msgEl.textContent = '전화번호는 10~11자리 숫자로 입력해주세요.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/admin/api/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phoneRaw, name: nameRaw })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      showAdminToast('회원이 추가되었습니다.');
+      closeAddMemberModal();
+      location.reload();
+      return;
+    }
+
+    if (msgEl) msgEl.textContent = data.error || '회원 추가 중 오류가 발생했습니다.';
+  } catch (e) {
+    if (msgEl) msgEl.textContent = '네트워크 오류가 발생했습니다.';
+  }
+}
+
+async function deleteMember(btnEl) {
+  const memberId = btnEl?.dataset?.memberId;
+  const memberName = btnEl?.dataset?.memberName || '해당 회원';
+  if (!memberId) return;
+
+  if (!confirm(`${memberName} 회원을 삭제할까요?\n(쿠폰/주문이 있으면 삭제가 거부됩니다.)`)) return;
+
+  try {
+    btnEl.disabled = true;
+    btnEl.textContent = '삭제 중...';
+
+    const res = await fetch(`/admin/api/members/${memberId}`, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      showAdminToast('회원이 삭제되었습니다.');
+      location.reload();
+      return;
+    }
+
+    const message = data.error || '삭제 중 오류가 발생했습니다.';
+    showAdminToast(message, 'error');
+  } catch (e) {
+    showAdminToast('네트워크 오류가 발생했습니다.', 'error');
+  } finally {
+    btnEl.disabled = false;
+    btnEl.textContent = '삭제';
+  }
+}
+
 /* ─── 검색 & 필터 ─────────────────────────────────── */
 function filterTable(inputId, tableId) {
   const keyword = document.getElementById(inputId)?.value.toLowerCase().trim() || '';
@@ -218,19 +314,21 @@ function updateDashboardDate() {
 
 /* ─── Toast ────────────────────────────────────────── */
 function showAdminToast(msg, type = 'success') {
+  const bg = type === 'error' ? '#b71c1c' : '#1E2A38';
   let toast = document.getElementById('admin-toast');
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'admin-toast';
     toast.style.cssText = `
       position:fixed; bottom:28px; right:28px; z-index:9999;
-      background:#1E2A38; color:white; padding:12px 22px;
+      background:${bg}; color:white; padding:12px 22px;
       border-radius:10px; font-size:14px; font-weight:600;
       box-shadow:0 4px 20px rgba(0,0,0,0.2);
       transition:all 0.3s; transform:translateY(20px); opacity:0;
     `;
     document.body.appendChild(toast);
   }
+  toast.style.background = bg;
   toast.textContent = msg;
   toast.style.transform = 'translateY(0)';
   toast.style.opacity   = '1';
@@ -246,6 +344,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeMenuModal();
     closeOrderDetail();
+    closeAddMemberModal();
   }
 });
 

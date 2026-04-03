@@ -27,7 +27,8 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         // JSON API 엔드포인트. fetch 호출 시 CSRF 토큰 전송 생략을 허용한다.
-                        .ignoringRequestMatchers("/api/member/lookup", "/api/member/stamp", "/api/member/stamp-info")
+                        .ignoringRequestMatchers("/api/member/lookup", "/api/member/stamp", "/api/member/stamp-info",
+                                "/admin/api/**")
                 )
                 //HTTP 요청에 대한 보안을 설정한다. Security 6버전.
                 //경로별 인가 설정

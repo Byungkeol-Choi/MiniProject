@@ -4,6 +4,7 @@ import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
 import com.cafe.kiosk.service.CouponService;
 import com.cafe.kiosk.service.OrderService;
+import com.cafe.kiosk.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -22,6 +23,7 @@ public class OrderController {
     private final ObjectMapper objectMapper; //json 세션 저장 방법
     private final CouponService couponService;
     private final OrderService orderService;
+    private final OrderService orderService;
 
     @GetMapping("/order/cart")
     public String confrim(HttpSession session, Model model) {
@@ -31,8 +33,8 @@ public class OrderController {
         }
 
         int subtotal = cartItemDto.stream()
-                        .mapToInt((item)->item.getPrice() * item.getQuantity())
-                                .sum();
+                .mapToInt((item)->item.getPrice() * item.getQuantity())
+                .sum();
 
         model.addAttribute("cartItems", cartItemDto);
         model.addAttribute("subtotal", subtotal);
@@ -51,6 +53,8 @@ public class OrderController {
         session.setAttribute("couponDiscount", cart.getCouponDiscount());
         session.setAttribute("usePoints", cart.getUsePoints());
 
+        System.out.println("items : " + cart.getItems());
+        System.out.println("memberId : " + cart.getMemberId());
         System.out.println("items : " + cart.getItems());
         System.out.println("memberId : " + cart.getMemberId());
 
@@ -85,7 +89,57 @@ public class OrderController {
         return "kiosk/payment";
     }
 
+    @GetMapping("/order/payment")
+    public String payment(HttpSession session, Model model) {
+        List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
+        if (cartItemDto == null) {
+            cartItemDto = new ArrayList<>();
+        }
+
+        int totalAmount = cartItemDto.stream()
+                .mapToInt((item)->item.getPrice() * item.getQuantity())
+                .sum();
+
+        String couponCode = (String) session.getAttribute("couponCode");
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isEmpty()) {
+            couponDiscount = (int) session.getAttribute("couponDiscount");
+        }
+
+        int finalAmount = totalAmount - couponDiscount;
+
+
+        model.addAttribute("cartItems", cartItemDto);
+        model.addAttribute("summaryTotalAmount", totalAmount);
+        model.addAttribute("summaryDiscountAmount", couponDiscount);
+        model.addAttribute("summaryFinalAmount", finalAmount);
+
+        return "kiosk/payment";
+    }
+
     @PostMapping("/order/payment")
+    public String payment(@RequestParam(required = false) Long memberId,
+                          @RequestParam(required = false) String memberName,
+                          @RequestParam(required = false) String couponCode,
+                          @RequestParam(defaultValue = "0") int couponDiscount,
+                          HttpSession session) {
+        System.out.println("회원명"+memberName);
+        System.out.println("회원명"+memberId);
+
+        if (memberName != null) session.setAttribute("memberName", memberName);
+        if (memberId != null) session.setAttribute("memberId", memberId); // 회원 조회 했을때 id가 null이 아니면 세션에 id값 저장.
+        if (couponCode != null && !couponCode.isEmpty()) {
+            session.setAttribute("couponCode", couponCode);
+            session.setAttribute("couponDiscount", couponDiscount);
+        }
+
+        return "redirect:/order/payment";
+    }
+
+    @GetMapping("/order/complete")
+    public String complete(HttpSession session, Model model) {
+        orderService.complete(session);
+        return "kiosk/complete";
     public String payment(@RequestParam(required = false) Long memberId,
                           @RequestParam(required = false) String memberName,
                           @RequestParam(required = false) String couponCode,

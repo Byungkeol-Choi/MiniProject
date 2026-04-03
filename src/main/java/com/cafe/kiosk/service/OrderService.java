@@ -4,7 +4,15 @@ import com.cafe.kiosk.domain.Member;
 import com.cafe.kiosk.domain.Menu;
 import com.cafe.kiosk.domain.OrderItem;
 import com.cafe.kiosk.domain.Orders;
+import com.cafe.kiosk.domain.Member;
+import com.cafe.kiosk.domain.Menu;
+import com.cafe.kiosk.domain.OrderItem;
+import com.cafe.kiosk.domain.Orders;
 import com.cafe.kiosk.dto.CartItemDto;
+import com.cafe.kiosk.repository.MemberRepository;
+import com.cafe.kiosk.repository.MenuRepository;
+import com.cafe.kiosk.repository.OrderItemRepository;
+import com.cafe.kiosk.repository.OrdersRepository;
 import com.cafe.kiosk.repository.MemberRepository;
 import com.cafe.kiosk.repository.MenuRepository;
 import com.cafe.kiosk.repository.OrderItemRepository;
@@ -12,9 +20,13 @@ import com.cafe.kiosk.repository.OrdersRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,9 +34,16 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@RequiredArgsConstructor
 public class OrderService {
+    private final OrdersRepository ordersRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final MemberRepository memberRepository;
+    private final MenuRepository menuRepository;
+
     private final OrdersRepository ordersRepository;
     private final OrderItemRepository orderItemRepository;
     private final MemberRepository memberRepository;

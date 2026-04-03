@@ -72,11 +72,14 @@ public class AdminController {
         return "/admin/orders";
     }
     @GetMapping("/members")
+    // @RequestParam(defaultValue = "0") int page: URL의 쿼리 스트링(예: /members?page=1)에서 page 파라미터 값을 추출합니다.
     public String adminMembers(@RequestParam(defaultValue = "0") int page,
                                Model model) {
 
         // id 오름차순 정렬 (1번부터 보이도록)
+        // 요청 (Request) 몇 페이지를, 몇 개씩 볼지 정하는 주문서
         Pageable pageable = PageRequest.of(page, 10, Sort.by(Sort.Direction.ASC, "id"));
+        // 응답 (Response) 조회된 데이터 리스트와 전체 통계가 담긴 결과물
         Page<Member> members = memberRepository.findAll(pageable);
 
         model.addAttribute("members", members);
