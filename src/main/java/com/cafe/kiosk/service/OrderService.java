@@ -125,6 +125,10 @@ public class OrderService {
                 })
                 .toList();
         orderItemRepository.saveAll(orderItem);
+
+        Long orderId = orders.getId();
+        session.setAttribute("orderId", orderId);
+        session.setAttribute("finalAmount", finalAmount);
     }
 
     @Transactional
