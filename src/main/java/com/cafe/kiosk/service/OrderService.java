@@ -101,6 +101,7 @@ public class OrderService {
                 .build();
         ordersRepository.save(orders);
 
+
         //OrderItem DB 저장
         List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
         if (cartItemDto == null) {
@@ -124,9 +125,9 @@ public class OrderService {
                 })
                 .toList();
         orderItemRepository.saveAll(orderItem);
-    }
 
-    @Transactional
-    public void complete(HttpSession session) {
+        Long orderId = orders.getId();
+        session.setAttribute("orderId", orderId);
+        session.setAttribute("finalAmount", finalAmount);
     }
 }
