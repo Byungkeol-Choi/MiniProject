@@ -62,19 +62,17 @@ public class OrderController {
   }
 
   @PostMapping("/order/pay")
-  public String pay(@RequestParam(required = false) String couponCode,
+  public String pay(@RequestParam(required = false) String paymentMethod,
                     @RequestParam(defaultValue = "0") int finalAmount,
-                    @RequestParam(defaultValue = "0") int couponDiscount,
-                    @RequestParam(required = false) String paymentMethod,
                     HttpSession session) {
-    couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
-
-    List<CartItemDto> items = (List<CartItemDto>) session.getAttribute("items");
-    if (items != null && !items.isEmpty()) {
-      orderService.saveOrder(items, finalAmount, couponDiscount, paymentMethod);
+    String couponCode = (String) session.getAttribute("couponCode");
+    if (couponCode != null && !couponCode.isEmpty()) {
+      couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
     }
-    session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
-    session.removeAttribute("item"); // 주문후 장바구니 비움
-    return "/kiosk/complete";
+
+    // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
+    orderService.update(paymentMethod, finalAmount, session);
+
+    return "kiosk/complete";
   }
 }
