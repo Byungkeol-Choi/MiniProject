@@ -88,6 +88,7 @@ public class Coupon {
      * 미사용이고 만료일이 없거나 아직 지나지 않았으면 {@code true}.
      * 결제 시 {@link com.cafe.kiosk.service.CouponService#validateCoupon(String)}와 동일한 기준입니다.
      */
+    // 이 메서드는 CouponRepository 등으로 Coupon 엔티티를 조회한 뒤, 가져온 그 객체의 값으로 사용 가능 여부를 판정한다.
     public boolean isCurrentlyUsable() {
         if (used) { // 이미 사용된 쿠폰이면 true로 false반환.
             return false;

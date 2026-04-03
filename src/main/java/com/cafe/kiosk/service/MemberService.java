@@ -63,10 +63,10 @@ public class MemberService {
         long unusedCouponCount = 0;
         List<MemberCouponDto> coupons = Collections.emptyList();
         try {
-            unusedCouponCount = couponRepository.countByMemberIdAndUsedFalse(member.getId());
-            List<Coupon> couponList = couponRepository.findByMemberIdOrderByCreatedAtDesc(member.getId());
+            unusedCouponCount = couponRepository.countByMemberIdAndUsedFalse(member.getId()); // 회원의 "미사용이면서 만료되지 않은" 쿠폰 개수를 DB에서 바로 집계해서 가져온다.
+            List<Coupon> couponList = couponRepository.findByMemberIdOrderByCreatedAtDesc(member.getId()); // 회원의 전체 쿠폰 목록을 (최신 순으로) 가져온다. (사용/만료 여부 상관없이 전부)
             coupons = couponList.stream()
-                    .filter(Coupon::isCurrentlyUsable)
+                    .filter(Coupon::isCurrentlyUsable) // 전체 쿠폰 목록 중에서 "지금 사용 가능한 쿠폰"만 필터링한다.
                     .map(c -> new MemberCouponDto(
                             c.getName(),
                             c.getCode(),
