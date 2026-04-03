@@ -4,7 +4,6 @@ import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
 import com.cafe.kiosk.service.CouponService;
 import com.cafe.kiosk.service.OrderService;
-import com.cafe.kiosk.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
