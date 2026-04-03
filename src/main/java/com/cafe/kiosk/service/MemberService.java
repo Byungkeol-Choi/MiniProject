@@ -63,9 +63,10 @@ public class MemberService {
         long unusedCouponCount = 0;
         List<MemberCouponDto> coupons = Collections.emptyList();
         try {
-            unusedCouponCount = couponRepository.countByMemberIdAndUsedFalse(member.getId());
-            List<Coupon> couponList = couponRepository.findByMemberIdOrderByCreatedAtDesc(member.getId());
+            unusedCouponCount = couponRepository.countByMemberIdAndUsedFalse(member.getId()); // 회원의 "미사용이면서 만료되지 않은" 쿠폰 개수를 DB에서 바로 집계해서 가져온다.
+            List<Coupon> couponList = couponRepository.findByMemberIdOrderByCreatedAtDesc(member.getId()); // 회원의 전체 쿠폰 목록을 (최신 순으로) 가져온다. (사용/만료 여부 상관없이 전부)
             coupons = couponList.stream()
+                    .filter(Coupon::isCurrentlyUsable) // 전체 쿠폰 목록 중에서 "지금 사용 가능한 쿠폰"만 필터링한다.
                     .map(c -> new MemberCouponDto(
                             c.getName(),
                             c.getCode(),
@@ -102,6 +103,9 @@ public class MemberService {
      */
     @Transactional
     public Member processStamp(String phone, int earnedPoints) {
+
+        // DB에서 읽어온 이 member 객체는 일반적인 자바 객체가 아닙니다.
+        // JPA는 DB에서 가져온 데이터를 자바 객체로 만든 뒤, **"이 객체는 지금부터 내가 관리한다"며 영속성 컨텍스트에 등록(스냅샷 저장)**합니다. 이제 member는 영속 객체가 되었습니다.
         Member member = findByPhone(phone);
         if (member == null) {
             throw new IllegalArgumentException("가입되지 않은 전화번호입니다.");
@@ -129,12 +133,20 @@ public class MemberService {
             throw new IllegalStateException("이미 가입된 전화번호입니다.");
         }
 
+        // **Dirty checking(변경 감지)**은 이미 영속(managed) 상태인 엔티티에만 해당합니다.
+        // 즉, 이번 트랜잭션 안에서 DB에서 읽어 온 뒤 같은 EntityManager가 관리하는 객체를 수정했을 때, flush 시점에 UPDATE가 나갑니다.
+
         Member member = Member.builder()
                 .phone(normalizedPhone)
                 .name((name != null && !name.isBlank()) ? name.trim() : null)
                 .build();
 
-        return memberRepository.save(member);
+        // Member.builder()…build()로 방금 만든 새 객체이고
+        // 아직 영속 컨텍스트에 등록되지 않은(transient) 상태입니다.
+        // 이 상태에서는 필드를 바꿔도 Hibernate가 “새 행을 INSERT해야 한다”고 자동으로 알 수 없습니다. INSERT는 persist / save로 엔티티를 영속화할 때 처리됩니다.
+        // 즉, 자바 코드상에서는 똑같은 Member 타입이라도, JPA가 개입하느냐 아니냐에 따라 **"상태"**가 달라집니다. (Managed상태가 되야 JPA한테 관리받음)
+
+        return memberRepository.save(member); // memberRepository.save()는 언제나 **"EntityManager가 현재 확실하게 관리하고 있는 최신 상태의 영속(Managed) 객체"**를 반환하도록 설계되어 있습니다.
     }
 
     /**
@@ -148,7 +160,7 @@ public class MemberService {
             throw new IllegalArgumentException("회원 ID가 필요합니다.");
         }
 
-        Member member = memberRepository.findById(memberId).orElseThrow(NoSuchElementException::new);
+        Member member = memberRepository.findById(memberId).orElseThrow(NoSuchElementException::new); // .orElseThrow(() -> new NoSuchElementException()); 과 동일한 람다식.
 
         boolean hasCoupons = !couponRepository
                 .findByMemberIdOrderByCreatedAtDesc(memberId)

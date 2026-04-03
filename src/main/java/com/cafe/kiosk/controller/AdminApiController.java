@@ -29,8 +29,8 @@ public class AdminApiController {
     private final CouponService couponService;
     private final MemberService memberService;
 
-    /** 특정 회원의 쿠폰 목록 조회 */
-    @GetMapping("/members/{memberId}/coupons") // members.html 307 lines. (사용자가 특정 회원 행의「쿠폰 관리」버튼을 클릭). 참고로 쿠폰 관리 클릭은 AJAX 조회이지 주소창이 바뀌는 내비게이션이 아닙니다.
+    /** 특정 회원의 쿠폰 목록 조회 */ // members.html 432 lines
+    @GetMapping("/members/{memberId}/coupons") // (사용자가 특정 회원 행의「쿠폰 관리」버튼을 클릭). 참고로 쿠폰 관리 클릭은 AJAX 조회이지 주소창이 바뀌는 내비게이션이 아닙니다.
     public ResponseEntity<?> getMemberCoupons(@PathVariable Long memberId) {
         List<Coupon> coupons = couponRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
         // 쿠폰 리스트를 스트림으로 변환해 각각을 키-값(Map) 형태로 가공하여 반환. (응답 본문 타입이 길어지는 것을 방지하기 위해 ResponseEntity<?> 와일드카드 사용)
