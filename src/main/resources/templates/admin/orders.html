@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
   <title>주문 관리 - 브런치 카페 관리자</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" th:href="@{/css/admin.css}">
@@ -31,8 +33,8 @@
       </div>
       <div class="topbar-right">
         <span style="font-size:13px;">
-          대기 주문
-          <strong th:text="${pendingCount ?: 3}" style="color:#D97706; font-size:15px;">3</strong>건
+          주문 접수 상태
+          <strong th:text="${receivedCount ?: 3}" style="color:#D97706; font-size:15px;">3</strong>건
         </span>
         <button onclick="location.reload()" class="btn-secondary btn-sm">
           <i class="bi bi-arrow-clockwise"></i> 새로고침
@@ -87,7 +89,8 @@
 
               <!-- Thymeleaf 반복 -->
               <tr th:each="order : ${orders}"
-                  th:id="'order-row-' + order.id">
+                  th:id="'order-row-' + order.id"
+                  th:attr="data-order-id=${order.id}">
                 <td><strong th:text="'#' + ${order.id}">#42</strong></td>
                 <td th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">03/30 14:32</td>
                 <td>
@@ -120,12 +123,11 @@
                 </td>
                 <td>
                   <select class="status-select"
-                          th:onchange="'updateOrderStatus(' + order.id + ', this)'"
-                          th:value="${order.status}">
-                    <option value="RECEIVED"  th:selected="${order.status == 'RECEIVED'}">접수</option>
-                    <option value="PREPARING" th:selected="${order.status == 'PREPARING'}">준비중</option>
-                    <option value="COMPLETED" th:selected="${order.status == 'COMPLETED'}">완료</option>
-                    <option value="CANCELLED" th:selected="${order.status == 'CANCELLED'}">취소</option>
+                          th:attr="data-original-status=${order.status.name()}">
+                    <option value="RECEIVED"  th:selected="${order.status.name() == 'RECEIVED'}">접수</option>
+                    <option value="PREPARING" th:selected="${order.status.name() == 'PREPARING'}">준비중</option>
+                    <option value="COMPLETED" th:selected="${order.status.name() == 'COMPLETED'}">완료</option>
+                    <option value="CANCELLED" th:selected="${order.status.name() == 'CANCELLED'}">취소</option>
                   </select>
                 </td>
                 <td>
@@ -137,7 +139,7 @@
               </tr>
 
               <!-- 샘플 데이터 -->
-              <tr th:if="${orders == null}" id="order-row-47">
+              <tr th:if="${orders == null}" id="order-row-47" data-order-id="47">
                 <td><strong>#47</strong></td>
                 <td>03/30 14:52</td>
                 <td>아보카도 토스트 외 1건</td>
@@ -147,7 +149,7 @@
                 <td><span class="badge badge-member">010-1234-5678</span></td>
                 <td><span class="badge badge-preparing status-badge">준비중</span></td>
                 <td>
-                  <select class="status-select" onchange="updateOrderStatus(47, this)">
+                  <select class="status-select" data-original-status="PREPARING">
                     <option value="RECEIVED">접수</option>
                     <option value="PREPARING" selected>준비중</option>
                     <option value="COMPLETED">완료</option>
@@ -156,7 +158,7 @@
                 </td>
                 <td><button class="btn-edit btn-sm" onclick="openOrderDetail(47)"><i class="bi bi-eye"></i> 보기</button></td>
               </tr>
-              <tr th:if="${orders == null}" id="order-row-46">
+              <tr th:if="${orders == null}" id="order-row-46" data-order-id="46">
                 <td><strong>#46</strong></td>
                 <td>03/30 14:38</td>
                 <td>에그 베네딕트</td>
@@ -166,7 +168,7 @@
                 <td><span style="color:#9E8B7B; font-size:12px;">비회원</span></td>
                 <td><span class="badge badge-completed status-badge">완료</span></td>
                 <td>
-                  <select class="status-select" onchange="updateOrderStatus(46, this)">
+                  <select class="status-select" data-original-status="COMPLETED">
                     <option value="RECEIVED">접수</option>
                     <option value="PREPARING">준비중</option>
                     <option value="COMPLETED" selected>완료</option>
@@ -175,7 +177,7 @@
                 </td>
                 <td><button class="btn-edit btn-sm" onclick="openOrderDetail(46)"><i class="bi bi-eye"></i> 보기</button></td>
               </tr>
-              <tr th:if="${orders == null}" id="order-row-45">
+              <tr th:if="${orders == null}" id="order-row-45" data-order-id="45">
                 <td><strong>#45</strong></td>
                 <td>03/30 14:15</td>
                 <td>팬케이크 스택 외 2건</td>
@@ -185,7 +187,7 @@
                 <td><span class="badge badge-member">010-9876-5432</span></td>
                 <td><span class="badge badge-received status-badge">접수</span></td>
                 <td>
-                  <select class="status-select" onchange="updateOrderStatus(45, this)">
+                  <select class="status-select" data-original-status="RECEIVED">
                     <option value="RECEIVED" selected>접수</option>
                     <option value="PREPARING">준비중</option>
                     <option value="COMPLETED">완료</option>

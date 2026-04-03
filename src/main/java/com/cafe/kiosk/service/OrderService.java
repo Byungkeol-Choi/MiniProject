@@ -127,6 +127,14 @@ public class OrderService {
     }
 
     @Transactional
+    public void updateOrderStatus(Long orderId, Orders.Status newStatus) {
+        int updated = ordersRepository.updateStatusById(orderId, newStatus);
+        if (updated == 0) {
+            throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId);
+        }
+    }
+
+    @Transactional
     public void complete(HttpSession session) {
     }
 }
