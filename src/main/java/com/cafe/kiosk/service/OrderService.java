@@ -24,7 +24,6 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@RequiredArgsConstructor
 public class OrderService {
     private final OrdersRepository ordersRepository;
     private final OrderItemRepository orderItemRepository;
