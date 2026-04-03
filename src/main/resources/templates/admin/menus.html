@@ -122,12 +122,48 @@
                   </button>
                 </td>
               </tr>
+
+              <!-- 샘플 데이터 -->
+              <tr th:if="${menus == null}" id="menu-row-1" data-category="FOOD">
+                <td style="color:#9E8B7B;">1</td>
+                <td><div class="img-preview" style="width:50px;height:42px;"><img src="/images/menu/default-food.svg" alt="에그 베네딕트" style="width:100%;height:100%;object-fit:cover;"></div></td>
+                <td><span class="menu-name-cell">에그 베네딕트</span></td>
+                <td><span class="badge badge-food">음식</span></td>
+                <td style="font-weight:600;">16,500원</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6B7A8D;">홀란다이즈 소스와 수란이 올라간 브런치의 정석</td>
+                <td><button class="badge badge-available" data-available="true" onclick="toggleMenuAvailable(1,this)" style="border:none;cursor:pointer;padding:4px 12px;">판매중</button></td>
+                <td><button class="btn-edit btn-sm" onclick="openMenuModal(1)"><i class="bi bi-pencil"></i> 수정</button></td>
+                <td><button class="btn-danger btn-sm" onclick="deleteMenu(1,'에그 베네딕트')"><i class="bi bi-trash3"></i> 삭제</button></td>
+              </tr>
+              <tr th:if="${menus == null}" id="menu-row-2" data-category="FOOD">
+                <td style="color:#9E8B7B;">2</td>
+                <td><div class="img-preview" style="width:50px;height:42px;"><img src="/images/menu/default-food.svg" alt="아보카도 토스트" style="width:100%;height:100%;object-fit:cover;"></div></td>
+                <td><span class="menu-name-cell">아보카도 토스트</span></td>
+                <td><span class="badge badge-food">음식</span></td>
+                <td style="font-weight:600;">13,500원</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6B7A8D;">신선한 아보카도와 크림치즈를 올린 사워도우 토스트</td>
+                <td><button class="badge badge-available" data-available="true" onclick="toggleMenuAvailable(2,this)" style="border:none;cursor:pointer;padding:4px 12px;">판매중</button></td>
+                <td><button class="btn-edit btn-sm" onclick="openMenuModal(2)"><i class="bi bi-pencil"></i> 수정</button></td>
+                <td><button class="btn-danger btn-sm" onclick="deleteMenu(2,'아보카도 토스트')"><i class="bi bi-trash3"></i> 삭제</button></td>
+              </tr>
+              <tr th:if="${menus == null}" id="menu-row-7" data-category="DRINK">
+                <td style="color:#9E8B7B;">7</td>
+                <td><div class="img-preview" style="width:50px;height:42px;"><img src="/images/menu/default-drink.svg" alt="아메리카노" style="width:100%;height:100%;object-fit:cover;"></div></td>
+                <td><span class="menu-name-cell">아메리카노</span></td>
+                <td><span class="badge badge-drink">음료</span></td>
+                <td style="font-weight:600;">5,000원</td>
+                <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6B7A8D;">진하고 깔끔한 에스프레소 베이스 커피</td>
+                <td><button class="badge badge-soldout" data-available="false" onclick="toggleMenuAvailable(7,this)" style="border:none;cursor:pointer;padding:4px 12px;">품절</button></td>
+                <td><button class="btn-edit btn-sm" onclick="openMenuModal(7)"><i class="bi bi-pencil"></i> 수정</button></td>
+                <td><button class="btn-danger btn-sm" onclick="deleteMenu(7,'아메리카노')"><i class="bi bi-trash3"></i> 삭제</button></td>
+              </tr>
+
             </tbody>
           </table>
         </div>
 
         <div class="pagination-wrap">
-          <span th:text="${'총 ' + #lists.size(menus) + '개 메뉴'}">총 0개 메뉴</span>
+          <span th:text="${'총 ' + (menus != null ? #lists.size(menus) : '3') + '개 메뉴'}">총 3개 메뉴 (샘플)</span>
         </div>
 
       </div><!-- /data-card -->
