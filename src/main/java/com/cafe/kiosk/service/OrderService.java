@@ -101,6 +101,7 @@ public class OrderService {
                 .build();
         ordersRepository.save(orders);
 
+
         //OrderItem DB 저장
         List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
         if (cartItemDto == null) {
@@ -124,6 +125,18 @@ public class OrderService {
                 })
                 .toList();
         orderItemRepository.saveAll(orderItem);
+
+        Long orderId = orders.getId();
+        session.setAttribute("orderId", orderId);
+        session.setAttribute("finalAmount", finalAmount);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Long orderId, Orders.Status newStatus) {
+        int updated = ordersRepository.updateStatusById(orderId, newStatus);
+        if (updated == 0) {
+            throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId);
+        }
     }
 
     @Transactional

@@ -23,10 +23,13 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Query("SELECT c FROM Coupon c WHERE c.member.id = :memberId ORDER BY c.createdAt DESC")
     List<Coupon> findByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId);
 
-    /** 회원의 미사용 쿠폰 수 */
-    @Query("SELECT COUNT(c) FROM Coupon c WHERE c.member.id = :memberId AND c.used = false")
+    /** 회원별 미사용·미만료 쿠폰 수 ({@code expiresAt}이 null이면 무기한 유효). */
+    @Query("SELECT COUNT(c) FROM Coupon c WHERE c.member.id = :memberId AND c.used = false "
+            + "AND (c.expiresAt IS NULL OR c.expiresAt >= CURRENT_TIMESTAMP)") // 쿠폰 만료시간 지난것도 검증 추가.
     long countByMemberIdAndUsedFalse(@Param("memberId") Long memberId);
 
-    /** 전체 미사용 쿠폰 수 */
+    /** 전체 미사용·미만료 쿠폰 수 */
+    @Query("SELECT COUNT(c) FROM Coupon c WHERE c.used = false "
+            + "AND (c.expiresAt IS NULL OR c.expiresAt >= CURRENT_TIMESTAMP)") // 쿠폰 만료시간 지난것도 검증 추가.
     long countByUsedFalse();
 }

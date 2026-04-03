@@ -66,8 +66,8 @@ body {
   font-size: 22px;
 }
 .cafe-logo-circle img {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 }
 
 .cafe-name-block .name {
@@ -315,6 +315,7 @@ body {
     background 0.2s,
     transform 0.1s;
   flex-shrink: 0;
+  padding-top: 1.5px;
 }
 .btn-add-cart:hover {
   background: var(--cafe-accent);
@@ -777,7 +778,7 @@ body {
 /* 쿠폰 조회 결과 목록 (체크박스 + 내용) */
 .lookup-coupon-check-row {
   align-items: center;
-  padding: 12px 0;
+  padding: 12px 0 14px;
   border-bottom: 1px solid var(--cafe-cream);
   margin: 0;
 }
@@ -790,22 +791,24 @@ body {
   min-width: 0;
 }
 .lookup-coupon-code {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--cafe-secondary);
   letter-spacing: 0.02em;
+  margin-bottom: 8px;
 }
 .lookup-coupon-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--cafe-primary);
-  margin-top: 4px;
+  margin-bottom: 4px;
 }
 .lookup-coupon-benefit {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 500;
   color: #c2692a;
   flex-shrink: 0;
+  margin-bottom: 4px;
 }
 
 .lookup-error-box {
@@ -831,13 +834,14 @@ body {
   font-size: 15px;
   font-weight: 700;
   color: var(--cafe-primary);
-  margin-bottom: 12px;
+  /* margin-bottom: 12px; */
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 .lookup-result-heading i {
-  color: #16a34a;
+  color: #5c3317;
+  margin-right: 4px;
 }
 
 .lookup-result-row {
@@ -858,6 +862,7 @@ body {
   font-weight: 500;
 }
 .lookup-result-value {
+  font-size: 16px;
   font-weight: 700;
   color: var(--cafe-primary);
   text-align: right;
@@ -1439,7 +1444,6 @@ body {
 }
 
 .cart-lookup-coupon-list {
-  margin: 0 0 16px;
   padding-left: 18px;
   line-height: 1.55;
 }

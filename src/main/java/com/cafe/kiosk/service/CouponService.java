@@ -32,7 +32,7 @@ public class CouponService {
         Coupon coupon = couponRepository.findByCodeAndUsedFalse(code)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰 코드입니다.")); // orElseThrow(): 조회 결과가 있으면 Coupon 객체를 반환하고, 없으면(Optional.empty() 이건 기본값) 즉시 예외를 발생시킵니다.
 
-        if (coupon.getExpiresAt() != null && coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (!coupon.isCurrentlyUsable()) {
             throw new IllegalStateException("만료된 쿠폰입니다.");
         }
         return coupon;

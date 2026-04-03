@@ -39,7 +39,7 @@ public class AdminDashboardService {
         long totalMembers = memberRepository.count();
         long todayMemberCount = memberRepository.countByMemberForDate(targetDate);
 
-        //Dashboard - 발행쿠폰 수, 미 사용 쿠폰 수
+        //Dashboard - 발행쿠폰 수, 유효한 미사용 쿠폰 수(만료일 경과 분 제외)
         long couponCount = couponRepository.count();
         long unusedCouponCount = couponRepository.countByUsedFalse();
 

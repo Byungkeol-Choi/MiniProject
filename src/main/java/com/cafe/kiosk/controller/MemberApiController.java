@@ -1,5 +1,6 @@
 package com.cafe.kiosk.controller;
 
+import com.cafe.kiosk.domain.Coupon;
 import com.cafe.kiosk.domain.Member;
 import com.cafe.kiosk.dto.MemberCouponDto;
 import com.cafe.kiosk.dto.MemberLookupRequest;
@@ -65,6 +66,7 @@ public class MemberApiController {
         List<MemberCouponDto> coupons = couponRepository
                 .findByMemberIdOrderByCreatedAtDesc(member.getId())
                 .stream()
+                .filter(Coupon::isCurrentlyUsable)
                 .map(c -> new MemberCouponDto(
                         c.getName(),
                         c.getCode(),
