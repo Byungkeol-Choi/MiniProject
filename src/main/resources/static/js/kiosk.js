@@ -262,6 +262,8 @@ async function lookupMemberByPhone() {
     document.getElementById("hidden-member-name").value = data.memberName || "";
     document.getElementById("hidden-member-id").value = data.memberId || 0;
 
+    document.getElementById("lookup-member-name").textContent =
+      data.memberName || "";
     document.getElementById("lookup-coupon-count").textContent =
       (data.unusedCouponCount || 0) + "개";
 
