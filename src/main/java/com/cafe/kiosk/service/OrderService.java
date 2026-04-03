@@ -81,10 +81,11 @@ public class OrderService {
 
     @Transactional
     public void update(String paymentMethod, Integer finalAmount, HttpSession session) {
-        //memberId -> Order DB 저장
+        // null 처리 수정
+        // 비회원 주문 시 JS 기본값 0(cart.html value=0), 세션 만료 시 null
         Long id = (Long) session.getAttribute("memberId");
-        Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("비회원 주문"));
-        Integer couponDiscount = (Integer) session.getAttribute("couponDiscount");
+        Member member = (id != null && id != 0) ? memberRepository.findById(id).orElse(null)  : null;
+        Integer couponDiscount = session.getAttribute("couponDiscount") != null ? (Integer) session.getAttribute("couponDiscount") : 0;
         Orders orders = Orders.builder()
                 .totalAmount(finalAmount)
                 .discountAmount(couponDiscount)
