@@ -12,7 +12,7 @@
 
 <!--
   [백엔드 연동] Controller 필요 변수
-  - orders       : Page<Order> (pageable, 필드: id, member, totalAmount, discountAmount, paymentMethod, status, createdAt, orderItems)
+  - orders       : Page<Orders> (pageable, 필드: …, orderItem = List<OrderItem>)
   - statusFilter : String (현재 필터 값)
   - pendingCount : int
   - adminName    : String
@@ -88,13 +88,13 @@
               <!-- Thymeleaf 반복 -->
               <tr th:each="order : ${orders}"
                   th:id="'order-row-' + order.id">
-                <td><strong th:text="'#' + order.id">#42</strong></td>
+                <td><strong th:text="'#' + ${order.id}">#42</strong></td>
                 <td th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}">03/30 14:32</td>
                 <td>
                   <!-- 주문 아이템 요약 (첫 번째 항목 + 개수) -->
-                  <span th:if="${order.orderItems != null and !#lists.isEmpty(order.orderItems)}"
-                        th:text="${order.orderItems[0].menu.name + (#lists.size(order.orderItems) > 1 ? ' 외 ' + (#lists.size(order.orderItems) - 1) + '건' : '')}">에그 베네딕트 외 1건</span>
-                  <span th:unless="${order.orderItems != null and !#lists.isEmpty(order.orderItems)}" style="color:#9E8B7B;">-</span>
+                  <span th:if="${order.orderItem != null and !#lists.isEmpty(order.orderItem)}"
+                        th:text="${order.orderItem[0].menu.name + (#lists.size(order.orderItem) > 1 ? ' 외 ' + (#lists.size(order.orderItem) - 1) + '건' : '')}">에그 베네딕트 외 1건</span>
+                  <span th:unless="${order.orderItem != null and !#lists.isEmpty(order.orderItem)}" style="color:#9E8B7B;">-</span>
                 </td>
                 <td style="font-weight:600;"
                     th:text="${#numbers.formatInteger(order.totalAmount, 1, 'COMMA') + '원'}">27,500원</td>
@@ -110,13 +110,13 @@
                 </td>
                 <td>
                   <span th:if="${order.member != null}" class="badge badge-member"
-                        th:text="${order.member.phone}">010-****-5678</span>
+                        th:text="${order.member.displayPhone}">010-****-5678</span>
                   <span th:unless="${order.member != null}" style="color:#9E8B7B; font-size:12px;">비회원</span>
                 </td>
                 <td>
                   <span class="badge status-badge"
-                        th:classappend="${order.status == 'RECEIVED' ? 'badge-received' : (order.status == 'PREPARING' ? 'badge-preparing' : (order.status == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'))}"
-                        th:text="${order.status == 'RECEIVED' ? '접수' : (order.status == 'PREPARING' ? '준비중' : (order.status == 'COMPLETED' ? '완료' : '취소'))}">접수</span>
+                        th:classappend="${order.status.name() == 'RECEIVED' ? 'badge-received' : (order.status.name() == 'PREPARING' ? 'badge-preparing' : (order.status.name() == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'))}"
+                        th:text="${order.status.name() == 'RECEIVED' ? '접수' : (order.status.name() == 'PREPARING' ? '준비중' : (order.status.name() == 'COMPLETED' ? '완료' : '취소'))}">접수</span>
                 </td>
                 <td>
                   <select class="status-select"
@@ -206,7 +206,7 @@
         -->
         <div class="pagination-wrap">
           <span th:if="${orders != null}"
-                th:text="'총 ' + orders.totalElements + '건'">총 24건</span>
+                th:text="'총 ' + ${orders.totalElements} + '건'">총 24건</span>
           <span th:if="${orders == null}">총 3건 (샘플)</span>
           <ul class="pagination" th:if="${orders != null and orders.totalPages > 1}">
             <li>
