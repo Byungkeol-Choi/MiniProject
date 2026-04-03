@@ -104,11 +104,11 @@ public class OrderController {
         return "redirect:/order/payment";
     }
 
-    @GetMapping("/order/complete")
-    public String complete(HttpSession session, Model model) {
-        orderService.complete(session);
-        return "kiosk/complete";
-    }
+//    @GetMapping("/order/complete")
+//    public String complete(HttpSession session, Model model) {
+//        orderService.complete(session);
+//        return "kiosk/complete";
+//    }
 
     @PostMapping("/order/pay")
     public String pay(@RequestParam(required = false) String paymentMethod,
@@ -122,6 +122,6 @@ public class OrderController {
         // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
         orderService.update(paymentMethod, finalAmount, session);
 
-        return "redirect:/order/complete";
+        return "kiosk/complete";
     }
 }

@@ -81,6 +81,7 @@ public class OrderService {
 
     @Transactional
     public void update(String paymentMethod, Integer finalAmount, HttpSession session) {
+        //memberId -> Order DB 저장
         Long id = (Long) session.getAttribute("memberId");
         Member member = memberRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("비회원 주문"));
         Integer couponDiscount = (Integer) session.getAttribute("couponDiscount");
@@ -94,6 +95,7 @@ public class OrderService {
                 .build();
         ordersRepository.save(orders);
 
+        //OrderItem DB 저장
         List<CartItemDto> cartItemDto = (List<CartItemDto>) session.getAttribute("items");
         if (cartItemDto == null) {
             cartItemDto = new ArrayList<>();
