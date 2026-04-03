@@ -125,6 +125,15 @@ public class OrderService {
                 })
                 .toList();
         orderItemRepository.saveAll(orderItem);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Long orderId, Orders.Status newStatus) {
+        int updated = ordersRepository.updateStatusById(orderId, newStatus);
+        if (updated == 0) {
+            throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId);
+        }
+    }
 
         Long orderId = orders.getId();
         session.setAttribute("orderId", orderId);

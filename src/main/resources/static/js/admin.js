@@ -9,8 +9,22 @@
 
 'use strict';
 
+function adminCsrfHeaders() {
+  const token = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+  const headerName = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token && headerName) {
+    headers[headerName] = token;
+  }
+  return headers;
+}
 /* ─── 주문 상태 변경 ──────────────────────────────── */
-function updateOrderStatus(orderId, selectEl) {
+async function updateOrderStatus(orderId, selectEl) {
+  if (!selectEl || orderId == null) {
+    return;
+  }
+
+  const previous = selectEl.getAttribute('data-original-status') || selectEl.value;
   const newStatus = selectEl.value;
   const statusLabels = {
     RECEIVED:  '접수',
@@ -20,30 +34,45 @@ function updateOrderStatus(orderId, selectEl) {
   };
 
   if (!confirm(`주문 #${orderId} 상태를 "${statusLabels[newStatus]}"(으)로 변경할까요?`)) {
-    // 취소 시 이전 값 복원 (백엔드에서 받아오는 방식으로 대체 가능)
+    selectEl.value = previous;
+    showAdminToast('변경을 취소했습니다.');
     return;
   }
 
-  /**
-   * [백엔드 연동]
-   * fetch(`/admin/orders/${orderId}/status`, {
-   *   method: 'PATCH',
-   *   headers: { 'Content-Type': 'application/json' },
-   *   body: JSON.stringify({ status: newStatus })
-   * }).then(r => { if (r.ok) showAdminToast('상태가 변경되었습니다.'); });
-   */
+  try {
+    const res = await fetch(`/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: adminCsrfHeaders(),
+      body: JSON.stringify({ status: newStatus })
+    });
 
-  // 목업: 배지 색상 즉시 업데이트
-  const row = selectEl.closest('tr');
-  if (row) {
-    const badgeEl = row.querySelector('.status-badge');
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || res.statusText);
+    }
+
+    try {
+      await res.json();
+    } catch (_) {
+      /* 본문 없음·비 JSON */
+    }
+
+    selectEl.setAttribute('data-original-status', newStatus);
+    const row = selectEl.closest('tr');
+    const badgeEl = row?.querySelector('.status-badge');
     if (badgeEl) {
       badgeEl.className = 'badge ' + statusClassMap(newStatus);
       badgeEl.textContent = statusLabels[newStatus];
     }
+    showAdminToast('주문 상태가 변경되었습니다.');
+  } catch (e) {
+    selectEl.value = previous;
+    showAdminToast('상태 변경에 실패했습니다.', 'error');
   }
-  showAdminToast('주문 상태가 변경되었습니다.');
 }
+
+window.updateOrderStatus = updateOrderStatus;
 
 function statusClassMap(status) {
   const map = {
@@ -319,17 +348,21 @@ function showAdminToast(msg, type = 'success') {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'admin-toast';
+    toast.setAttribute('role', 'status');
     toast.style.cssText = `
-      position:fixed; bottom:28px; right:28px; z-index:9999;
+      position:fixed; bottom:28px; right:28px; left:auto; z-index:2147483000;
+      max-width:min(90vw, 360px); word-break:break-word;
       background:${bg}; color:white; padding:12px 22px;
       border-radius:10px; font-size:14px; font-weight:600;
       box-shadow:0 4px 20px rgba(0,0,0,0.2);
-      transition:all 0.3s; transform:translateY(20px); opacity:0;
+      transition:opacity 0.25s, transform 0.25s; transform:translateY(20px); opacity:0;
+      pointer-events:none; visibility:visible;
     `;
     document.body.appendChild(toast);
   }
   toast.style.background = bg;
   toast.textContent = msg;
+  toast.style.visibility = 'visible';
   toast.style.transform = 'translateY(0)';
   toast.style.opacity   = '1';
   clearTimeout(toast._t);
@@ -383,4 +416,22 @@ document.addEventListener('DOMContentLoaded', () => {
   orderSearch?.addEventListener('input',  () => filterTable('order-search',  'orders-table'));
   memberSearch?.addEventListener('input', () => filterTable('member-search', 'members-table'));
   menuSearch?.addEventListener('input',   () => filterTable('menu-search',   'menus-table'));
+
+  const ordersTable = document.getElementById('orders-table');
+  ordersTable?.addEventListener('change', (e) => {
+    const sel = e.target;
+    if (!sel || !sel.classList || !sel.classList.contains('status-select')) {
+      return;
+    }
+    const row = sel.closest('tr');
+    const rawId = row?.dataset?.orderId;
+    if (rawId == null || rawId === '') {
+      return;
+    }
+    const orderId = Number(rawId);
+    if (Number.isNaN(orderId)) {
+      return;
+    }
+    void updateOrderStatus(orderId, sel);
+  });
 });

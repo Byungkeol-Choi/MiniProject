@@ -6,18 +6,21 @@ import com.cafe.kiosk.repository.CouponRepository;
 import com.cafe.kiosk.repository.MemberRepository;
 import com.cafe.kiosk.repository.OrdersRepository;
 import com.cafe.kiosk.service.AdminDashboardService;
+import com.cafe.kiosk.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
@@ -28,6 +31,7 @@ public class AdminController {
     private final MemberRepository memberRepository;
     private final CouponRepository couponRepository;
     private final OrdersRepository ordersRepository;
+    private final OrderService orderService;
 
     @GetMapping("/login")
     public String adminLogin(Authentication authentication) {
@@ -72,12 +76,36 @@ public class AdminController {
                 statusFilter = "";
             }
         }
+        LocalDate targetDate = statsDate();
+        long receivedCount = ordersRepository.countByStatusForDate(targetDate, "RECEIVED");
 
         model.addAttribute("orders", orders);
         model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("receivedCount", receivedCount);
+
+        System.out.println("receivedCount" + receivedCount);
         return "/admin/orders";
     }
 
+    public record OrderStatusPatchRequest(String status) {}
+    @PatchMapping("/orders/{id}/status")
+    @ResponseBody
+    public ResponseEntity<?> patchOrderStatus(
+            @PathVariable Long id,
+            @RequestBody OrderStatusPatchRequest body) {
+        if (body == null || body.status() == null || body.status().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "status가 필요합니다."));
+        }
+        try {
+            Orders.Status st = Orders.Status.valueOf(body.status().trim());
+            orderService.updateOrderStatus(id, st);
+            return ResponseEntity.ok(Map.of("ok", true, "status", st.name()));
+        } catch (IllegalArgumentException ex) {
+            // valueOf 실패 또는 서비스에서 "주문 없음" 등으로 같은 예외를 쓰는 경우 구분하고 싶다면 커스텀 예외로 나누는 편이 좋음
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
+    }
+    
     @GetMapping("/members")
     // @RequestParam(defaultValue = "0") int page: URL의 쿼리 스트링(예: /members?page=1)에서 page 파라미터 값을 추출합니다.
     public String adminMembers(@RequestParam(defaultValue = "0") int page,
@@ -95,5 +123,9 @@ public class AdminController {
                 members.map(m -> couponRepository.countByMemberIdAndUsedFalse(m.getId())).getContent());
 
         return "/admin/members";
+    }
+    private LocalDate statsDate() {
+        return LocalDate.now();
+//         return LocalDate.of(2026, 4, 1);
     }
 }
