@@ -33,7 +33,6 @@ public class MemberApiController {
      * 전화번호로 가입 회원의 포인트·쿠폰을 조회한다. 적립/차감은 하지 않는다.
      */
     // 호출위치: src/main/resources/static/js/kiosk.js
-    // api/member/lookup은 장바구니 화면에서 회원 포인트·쿠폰을 조회하는 용도로 설계된 것인데, kiosk.js의 장바구니 관련 JS에 아직 fetch 호출 코드가 작성되지 않은 상태입니다.
     @PostMapping("/lookup")
     public ResponseEntity<MemberLookupResponse> lookup(@RequestBody MemberLookupRequest request) {
         Optional<MemberLookupResponse> found = memberService.lookupMemberSummary(request.phone());
