@@ -84,6 +84,10 @@ VALUES ('에그 베네딕트', 16500, 'FOOD', '/images/menu/eggs-benedict.png', 
        ('자몽 에이드', 6500, 'DRINK', '', '신선한 자몽으로 만든 상큼한 에이드', TRUE),
        ('딸기 스무디', 7000, 'DRINK', '', '신선한 딸기로 만든 진한 스무디', TRUE) ON CONFLICT DO NOTHING;
 
+-- 메뉴를 추가하고싶을때는 밑에 꺼 참고하고 추가하시면 됩니다.
+INSERT INTO menu (name, price, category, image_url, description, available)
+VALUES ('바질 파스타', 15000, 'FOOD', '/images/menu/basil-pasta.png', '신선한 바질 페스토 파스타', TRUE);
+
 
 -- 샘플 관리자 계정 (비밀번호: admin1234 - BCrypt 해시)
 INSERT INTO admin (username, password) VALUES

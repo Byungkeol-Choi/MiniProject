@@ -2,10 +2,12 @@ package com.cafe.kiosk.controller;
 
 import com.cafe.kiosk.domain.Member;
 import com.cafe.kiosk.domain.Orders;
+import com.cafe.kiosk.dto.MenuDto;
 import com.cafe.kiosk.repository.CouponRepository;
 import com.cafe.kiosk.repository.MemberRepository;
 import com.cafe.kiosk.repository.OrdersRepository;
 import com.cafe.kiosk.service.AdminDashboardService;
+import com.cafe.kiosk.service.MenuService;
 import com.cafe.kiosk.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ public class AdminController {
     private final CouponRepository couponRepository;
     private final OrdersRepository ordersRepository;
     private final OrderService orderService;
+    private final MenuService menuService;
 
     @GetMapping("/login")
     public String adminLogin(Authentication authentication) {
@@ -51,7 +54,41 @@ public class AdminController {
 
     @GetMapping("/menus")
     public String adminMenus(Model model) {
+        model.addAttribute("menus", menuService.findAll()); // ← 추가
         return "/admin/menus";
+    }
+
+    @GetMapping("/menus/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getMenu(@PathVariable Long id) {
+        return ResponseEntity.ok(menuService.findById(id));
+    }
+
+    @PutMapping("/menus/{id}")
+    @ResponseBody
+    public ResponseEntity<?> updateMenu(@PathVariable Long id, @RequestBody MenuDto dto) {
+        menuService.updateFromDto(id, dto);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @DeleteMapping("/menus/{id}")
+    @ResponseBody
+    public ResponseEntity<?> deleteMenu(@PathVariable Long id) {
+        menuService.delete(id);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    @PatchMapping("/menus/{id}/available")
+    @ResponseBody
+    public ResponseEntity<?> toggleAvailable(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
+        menuService.setAvailable(id, body.get("available"));
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+    @PostMapping("/menus")
+    @ResponseBody
+    public ResponseEntity<?> createMenu(@RequestBody MenuDto dto) {
+        menuService.saveFromDto(dto);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 
     @GetMapping("/orders")
