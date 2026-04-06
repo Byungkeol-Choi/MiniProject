@@ -264,7 +264,7 @@ async function lookupMemberByPhone() {
     document.getElementById("lookup-member-name").textContent =
       data.memberName || "";
     document.getElementById("lookup-coupon-count").textContent =
-      (data.unusedCouponCount || 0) + "개";
+      "총 " + (data.unusedCouponCount || 0) + "개";
 
     // 미사용 쿠폰 목록 렌더링
     const couponListEl = document.getElementById("lookup-coupon-list");

@@ -795,7 +795,7 @@ body {
   font-weight: 500;
   color: var(--cafe-secondary);
   letter-spacing: 0.02em;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .lookup-coupon-title {
   font-size: 16px;
@@ -1461,7 +1461,7 @@ button.cart-lookup-coupon-pick {
   width: 100%;
   margin: 0;
   padding: 12px 14px;
-  text-align: left;
+  text-align: center;
   font-family: inherit;
   font-size: 14px;
   line-height: 1.45;

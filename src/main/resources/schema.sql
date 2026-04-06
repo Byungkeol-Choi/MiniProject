@@ -79,10 +79,10 @@ VALUES ('에그 베네딕트', 16500, 'FOOD', '/images/menu/eggs-benedict.png', 
        ('Ice아메리카노', 5000, 'DRINK', '/images/menu/ice-americano.png', '진하고 깔끔한 에스프레소 베이스 커피', TRUE),
        ('Hot카페 라떼', 5500, 'DRINK', '/images/menu/hot-cafelatte.png', '부드러운 스팀 밀크와 에스프레소의 조화', TRUE),
        ('Ice카페 라떼', 5500, 'DRINK', '/images/menu/ice-cafelatte.png', '부드러운 스팀 밀크와 에스프레소의 조화', TRUE),
-       ('플랫 화이트', 6000, 'DRINK', '', '진한 에스프레소에 마이크로폼 밀크를 더한 커피', TRUE),
-       ('카푸치노', 5500, 'DRINK', '', '에스프레소와 스팀 밀크, 풍부한 폼이 조화로운 커피', TRUE),
-       ('자몽 에이드', 6500, 'DRINK', '', '신선한 자몽으로 만든 상큼한 에이드', TRUE),
-       ('딸기 스무디', 7000, 'DRINK', '', '신선한 딸기로 만든 진한 스무디', TRUE) ON CONFLICT DO NOTHING;
+       ('플랫 화이트', 6000, 'DRINK', '/images/menu/flat-white.png', '진한 에스프레소에 마이크로폼 밀크를 더한 커피', TRUE),
+       ('카푸치노', 5500, 'DRINK', '/images/menu/cappuccino.png', '에스프레소와 스팀 밀크, 풍부한 폼이 조화로운 커피', TRUE),
+       ('자몽 에이드', 6500, 'DRINK', '/images/menu/jamong-ade.png', '신선한 자몽으로 만든 상큼한 에이드', TRUE),
+       ('딸기 스무디', 7000, 'DRINK', '/images/menu/strowberry.png', '신선한 딸기로 만든 진한 스무디', TRUE) ON CONFLICT DO NOTHING;
 
 -- 메뉴를 추가하고싶을때는 밑에 꺼 참고하고 추가하시면 됩니다.
 INSERT INTO menu (name, price, category, image_url, description, available)
