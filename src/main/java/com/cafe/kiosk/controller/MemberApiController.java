@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,8 +35,9 @@ public class MemberApiController {
      */
     // 호출위치: src/main/resources/static/js/kiosk.js
     @PostMapping("/lookup")
-    public ResponseEntity<MemberLookupResponse> lookup(@RequestBody MemberLookupRequest request) {
+    public ResponseEntity<MemberLookupResponse> lookup(@RequestBody MemberLookupRequest request, HttpSession session) {
         Optional<MemberLookupResponse> found = memberService.lookupMemberSummary(request.phone());
+        found.ifPresent(r -> session.setAttribute("memberPhone", request.phone()));
         return found.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -48,7 +50,14 @@ public class MemberApiController {
     public ResponseEntity<?> stampInfo(HttpSession session) {
         Integer finalAmount = (Integer) session.getAttribute("finalAmount"); // OrderController 에서 세션에 저장된 마지막 결제금액 가져오면됨.
         int earnedPoints = (finalAmount != null) ? (int) (finalAmount * 0.05) : 0;
-        return ResponseEntity.ok(Map.of("earnedPoints", earnedPoints));
+        String memberPhone = (String) session.getAttribute("memberPhone");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("earnedPoints", earnedPoints);
+        if (memberPhone != null) {
+            result.put("memberPhone", memberPhone);
+        }
+        return ResponseEntity.ok(result);
     }
 
     /**
