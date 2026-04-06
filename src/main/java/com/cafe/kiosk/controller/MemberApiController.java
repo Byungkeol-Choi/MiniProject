@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,10 +34,10 @@ public class MemberApiController {
      * 전화번호로 가입 회원의 포인트·쿠폰을 조회한다. 적립/차감은 하지 않는다.
      */
     // 호출위치: src/main/resources/static/js/kiosk.js
-    // api/member/lookup은 장바구니 화면에서 회원 포인트·쿠폰을 조회하는 용도로 설계된 것인데, kiosk.js의 장바구니 관련 JS에 아직 fetch 호출 코드가 작성되지 않은 상태입니다.
     @PostMapping("/lookup")
-    public ResponseEntity<MemberLookupResponse> lookup(@RequestBody MemberLookupRequest request) {
+    public ResponseEntity<MemberLookupResponse> lookup(@RequestBody MemberLookupRequest request, HttpSession session) {
         Optional<MemberLookupResponse> found = memberService.lookupMemberSummary(request.phone());
+        found.ifPresent(r -> session.setAttribute("memberPhone", request.phone()));
         return found.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -49,7 +50,14 @@ public class MemberApiController {
     public ResponseEntity<?> stampInfo(HttpSession session) {
         Integer finalAmount = (Integer) session.getAttribute("finalAmount"); // OrderController 에서 세션에 저장된 마지막 결제금액 가져오면됨.
         int earnedPoints = (finalAmount != null) ? (int) (finalAmount * 0.05) : 0;
-        return ResponseEntity.ok(Map.of("earnedPoints", earnedPoints));
+        String memberPhone = (String) session.getAttribute("memberPhone");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("earnedPoints", earnedPoints);
+        if (memberPhone != null) {
+            result.put("memberPhone", memberPhone);
+        }
+        return ResponseEntity.ok(result);
     }
 
     /**

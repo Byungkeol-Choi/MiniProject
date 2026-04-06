@@ -106,6 +106,12 @@
             <strong id="earned-points-label">0 P</strong>
           </div>
 
+          <!-- 쿠폰 적용 회원: 전화번호 자동 입력 안내 -->
+          <div id="auto-phone-notice" style="display:none; background:#e8f5e9; border-radius:10px; padding:12px; margin-bottom:16px; font-size:14px; color:#2e7d32; font-weight:600;">
+            <i class="bi bi-check-circle-fill"></i>
+            쿠폰 적용 시 입력한 전화번호가 자동으로 입력되었습니다.
+          </div>
+
           <!-- POST /api/member/stamp 응답 success=false 일 때 StampResponse.message를 표시 -->
           <div id="error-message" style="display:none; background: #fee2e2; border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 14px; color: #dc2626;">
             <i class="bi bi-exclamation-circle"></i>
@@ -229,6 +235,16 @@
             if (_earnedPoints > 0) {
               document.getElementById('earned-points-label').textContent = formatNumber(_earnedPoints) + ' P';
               document.getElementById('earned-points-banner').style.display = 'block';
+            }
+            if (data.memberPhone) {
+              const phone = data.memberPhone;
+              document.getElementById('phone-value-input').value = phone;
+              const formatted = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+              const display = document.getElementById('phone-display');
+              display.textContent = formatted;
+              display.classList.remove('placeholder');
+              document.querySelector('.numpad').style.display = 'none';
+              document.getElementById('auto-phone-notice').style.display = 'block';
             }
           } catch (e) {
             console.warn('stamp-info 조회 실패', e);
