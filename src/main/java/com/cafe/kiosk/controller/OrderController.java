@@ -118,6 +118,7 @@ public class OrderController {
         return "kiosk/complete";
     }
 
+    // Order4 - 미주문 결제시
     @PostMapping("/order/pay")
     @ResponseBody
     public String pay(@RequestParam(required = false) String paymentMethod,
