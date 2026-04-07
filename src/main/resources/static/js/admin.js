@@ -396,45 +396,35 @@ function openAddMemberModal() {
   const modal = document.getElementById('add-member-modal');
   if (!modal) return;
 
-  const msgEl = document.getElementById('add-member-msg');
-  if (msgEl) {
-    msgEl.textContent = '';
-    msgEl.style.color = '';
+  const form = document.getElementById('add-member-form');
+  if (form) {
+    form.reset();
+  } else {
+    const phoneInput = document.getElementById('add-member-phone');
+    if (phoneInput) phoneInput.value = '';
+    const nameInput = document.getElementById('add-member-name');
+    if (nameInput) nameInput.value = '';
   }
 
   const phoneInput = document.getElementById('add-member-phone');
   if (phoneInput) {
-    phoneInput.value = '';
+    phoneInput.setCustomValidity('');
     phoneInput.focus();
   }
 
-  const nameInput = document.getElementById('add-member-name');
-  if (nameInput) nameInput.value = '';
-
-  modal.style.display = 'flex';
+  modal.classList.add('open');
 }
 
 function closeAddMemberModal() {
   const modal = document.getElementById('add-member-modal');
   if (!modal) return;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
 }
 
-async function addMember() {
+async function addMember(event) {
+  event.preventDefault();
   const phoneRaw = document.getElementById('add-member-phone')?.value || '';
   const nameRaw = document.getElementById('add-member-name')?.value || '';
-
-  const msgEl = document.getElementById('add-member-msg');
-  if (msgEl) {
-    msgEl.textContent = '';
-    msgEl.style.color = '#e53935';
-  }
-
-  const phoneDigits = phoneRaw.replace(/\D/g, '');
-  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-    if (msgEl) msgEl.textContent = '전화번호는 10~11자리 숫자로 입력해주세요.';
-    return;
-  }
 
   try {
     const res = await fetch('/admin/api/members', {
@@ -451,9 +441,9 @@ async function addMember() {
       return;
     }
 
-    if (msgEl) msgEl.textContent = data.error || '회원 추가 중 오류가 발생했습니다.';
+    showAdminToast(data.error || '회원 추가 중 오류가 발생했습니다.', 'error');
   } catch (e) {
-    if (msgEl) msgEl.textContent = '네트워크 오류가 발생했습니다.';
+    showAdminToast('네트워크 오류가 발생했습니다.', 'error');
   }
 }
 
@@ -550,6 +540,7 @@ document.addEventListener('keydown', e => {
     closeMenuModal();
     closeOrderDetail();
     closeAddMemberModal();
+    if (typeof closeCouponModal === 'function') closeCouponModal();
   }
 });
 
@@ -558,6 +549,8 @@ document.addEventListener('click', e => {
   if (e.target.classList.contains('modal-overlay')) {
     closeMenuModal();
     closeOrderDetail();
+    closeAddMemberModal();
+    if (typeof closeCouponModal === 'function') closeCouponModal();
   }
 });
 
