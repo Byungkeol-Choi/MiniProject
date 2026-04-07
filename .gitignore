@@ -42,3 +42,9 @@ src/main/resources/application-secret.yml
 ### Local docs & tools (not tracked) ###
 docs/
 tools/
+
+### 발표 자료 · npm 의존성 (GitHub 변경사항 제외) ###
+/doc/
+/node_modules/
+/package.json
+/package-lock.json
