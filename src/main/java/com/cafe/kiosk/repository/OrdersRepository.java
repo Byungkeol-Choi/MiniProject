@@ -13,9 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Repository
 public interface OrdersRepository extends JpaRepository<Orders, Long> {
+
+    @EntityGraph(attributePaths = {"member", "orderItem", "orderItem.menu"})
+    @Query("select o from Orders o where o.id = :id")
+    Optional<Orders> findWithLineItemsById(@Param("id") Long id);
 
     // 최병걸 추가 시작
     @EntityGraph(attributePaths = {"member", "orderItem", "orderItem.menu"})

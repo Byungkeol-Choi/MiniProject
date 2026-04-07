@@ -43,3 +43,7 @@ server:
   servlet:
     session:
       timeout: 30m
+
+#logging:
+#  level:
+#    org.springframework.security: DEBUG

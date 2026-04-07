@@ -5,6 +5,7 @@ import com.cafe.kiosk.domain.Menu;
 import com.cafe.kiosk.domain.OrderItem;
 import com.cafe.kiosk.domain.Orders;
 import com.cafe.kiosk.dto.CartItemDto;
+import com.cafe.kiosk.dto.OrderAdminDetailDto;
 import com.cafe.kiosk.repository.MemberRepository;
 import com.cafe.kiosk.repository.MenuRepository;
 import com.cafe.kiosk.repository.OrderItemRepository;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -137,6 +139,41 @@ public class OrderService {
         if (updated == 0) {
             throw new IllegalArgumentException("주문을 찾을 수 없습니다: " + orderId);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public OrderAdminDetailDto getAdminOrderDetail(Long orderId) {
+        Orders o = ordersRepository.findWithLineItemsById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("주문을 찾을 수 없습니다: " + orderId));
+
+        OrderAdminDetailDto.MemberInfo memberInfo = null;
+        if (o.getMember() != null) {
+            Member m = o.getMember();
+            memberInfo = new OrderAdminDetailDto.MemberInfo(
+                    m.getId(), m.getName(), m.getDisplayPhone());
+        }
+
+        List<OrderAdminDetailDto.LineItem> lines = o.getOrderItem() == null
+                ? List.of()
+                : o.getOrderItem().stream()
+                .map(item -> {
+                    String menuName = item.getMenu() != null ? item.getMenu().getName() : "(메뉴)";
+                    int lineTotal = item.getUnitPrice() * item.getQuantity();
+                    return new OrderAdminDetailDto.LineItem(
+                            menuName, item.getQuantity(), item.getUnitPrice(), lineTotal);
+                })
+                .toList();
+
+        return new OrderAdminDetailDto(
+                o.getId(),
+                o.getCreatedAt() != null ? o.getCreatedAt().toString() : "",
+                o.getStatus() != null ? o.getStatus().name() : "",
+                o.getTotalAmount(),
+                o.getDiscountAmount(),
+                o.getPaymentMethod(),
+                memberInfo,
+                lines
+        );
     }
 
     @Transactional

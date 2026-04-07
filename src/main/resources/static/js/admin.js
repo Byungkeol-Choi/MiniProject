@@ -3,7 +3,7 @@
  *
  * [백엔드 연동 포인트]
  * - updateOrderStatus() : PATCH /admin/orders/{id}/status
- * - updateMenuAvailable() : PATCH /admin/menus/{id}/available (메뉴 목록 select)
+ * - toggleMenuAvailable() : PATCH /admin/menus/{id}/available
  * - deleteMenu()          : DELETE /admin/menus/{id}
  */
 
@@ -252,24 +252,125 @@ async function submitMenuForm(event) {
   }
 }
 
-/* ─── 주문 상세 모달 ──────────────────────────────── */
-function openOrderDetail(orderId) {
+/* ─── 주문 상세 모달 (GET /admin/api/orders/{id} JSON → DOM) ─── */
+function escapeHtml(str) {
+  if (str == null || str === '') return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+function orderDetailPaymentLabel(code) {
+  const map = {
+    CARD: '카드',
+    CASH: '현금',
+    KAKAO_PAY: '카카오페이',
+    NAVER_PAY: '네이버페이'
+  };
+  return map[code] || (code || '-');
+}
+
+function orderDetailStatusLabel(status) {
+  const map = {
+    RECEIVED: '접수',
+    PREPARING: '준비중',
+    COMPLETED: '완료',
+    CANCELLED: '취소'
+  };
+  return map[status] || status || '-';
+}
+
+function formatWon(n) {
+  const x = Number(n);
+  if (Number.isNaN(x)) return '-';
+  return x.toLocaleString('ko-KR') + '원';
+}
+
+function renderOrderDetailHtml(data) {
+  const member = data.member;
+  const memberBlock = member
+    ? `<div class="order-detail-row"><span class="order-detail-label">회원</span><span>${escapeHtml(member.displayPhone || '')}${member.name ? ' · ' + escapeHtml(member.name) : ''}</span></div>`
+    : '<div class="order-detail-row"><span class="order-detail-label">회원</span><span style="color:#9E8B7B;">비회원</span></div>';
+
+  const itemsRows = (data.items || [])
+    .map(
+      (it) => `
+    <tr>
+      <td>${escapeHtml(it.menuName)}</td>
+      <td style="text-align:right;">${it.quantity}</td>
+      <td style="text-align:right;">${formatWon(it.unitPrice)}</td>
+      <td style="text-align:right;font-weight:600;">${formatWon(it.lineTotal)}</td>
+    </tr>`
+    )
+    .join('');
+
+  const created = data.createdAt
+    ? new Date(data.createdAt).toLocaleString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : '-';
+
+  return `
+    <div class="order-detail-summary">
+      <div class="order-detail-row"><span class="order-detail-label">주문번호</span><span><strong>#${escapeHtml(String(data.id))}</strong></span></div>
+      <div class="order-detail-row"><span class="order-detail-label">주문일시</span><span>${escapeHtml(created)}</span></div>
+      <div class="order-detail-row"><span class="order-detail-label">상태</span><span>${escapeHtml(orderDetailStatusLabel(data.status))}</span></div>
+      <div class="order-detail-row"><span class="order-detail-label">결제수단</span><span>${escapeHtml(orderDetailPaymentLabel(data.paymentMethod))}</span></div>
+      ${memberBlock}
+      <div class="order-detail-row"><span class="order-detail-label">총액</span><span style="font-weight:700;">${formatWon(data.totalAmount)}</span></div>
+      <div class="order-detail-row"><span class="order-detail-label">할인</span><span>${data.discountAmount > 0 ? '-' + formatWon(data.discountAmount) : '-'}</span></div>
+    </div>
+    <div style="margin-top:16px; font-size:13px; font-weight:700; color:#5C4D3C;">주문 품목</div>
+    <div style="overflow-x:auto; margin-top:8px;">
+      <table class="admin-table" style="font-size:13px;">
+        <thead><tr><th>메뉴</th><th style="text-align:right;">수량</th><th style="text-align:right;">단가</th><th style="text-align:right;">금액</th></tr></thead>
+        <tbody>${itemsRows || '<tr><td colspan="4" style="color:#9E8B7B;">품목 없음</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+async function openOrderDetail(orderId) {
   const modal = document.getElementById('order-detail-modal');
-  if (!modal) return;
+  const body = document.getElementById('order-detail-body');
+  if (!modal || !body) return;
 
-  /**
-   * [백엔드 연동]
-   * fetch(`/admin/orders/${orderId}`).then(r => r.json()).then(order => {
-   *   renderOrderDetail(order);
-   * });
-   */
-
+  body.innerHTML = `
+    <div style="text-align:center; padding:30px; color:#9E8B7B;">
+      <i class="bi bi-hourglass-split" style="font-size:32px; display:block; margin-bottom:10px;"></i>
+      주문 상세 정보를 불러오는 중입니다...
+    </div>`;
   modal.classList.add('open');
+
+  try {
+    const res = await fetch(`/admin/api/orders/${orderId}`, {
+      method: 'GET',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+    if (res.status === 404) {
+      body.innerHTML = `<div style="text-align:center; padding:24px; color:#b71c1c;">주문을 찾을 수 없습니다.</div>`;
+      return;
+    }
+    if (!res.ok) {
+      body.innerHTML = `<div style="text-align:center; padding:24px; color:#b71c1c;">불러오기에 실패했습니다. (${res.status})</div>`;
+      return;
+    }
+    const data = await res.json();
+    body.innerHTML = renderOrderDetailHtml(data);
+  } catch (e) {
+    body.innerHTML = `<div style="text-align:center; padding:24px; color:#b71c1c;">네트워크 오류로 불러오지 못했습니다.</div>`;
+  }
 }
 
 function closeOrderDetail() {
   document.getElementById('order-detail-modal')?.classList.remove('open');
 }
+
+window.openOrderDetail = openOrderDetail;
+window.closeOrderDetail = closeOrderDetail;
 
 /* ─── 회원 포인트 수정 ────────────────────────────── */
 function editMemberPoints(memberId, currentPoints) {
@@ -489,16 +590,12 @@ document.addEventListener('DOMContentLoaded', () => {
   menuSearch?.addEventListener('input',   () => filterTable('menu-search',   'menus-table'));
 
   const ordersTable = document.getElementById('orders-table');
-  ordersTable?.addEventListener('change', (e) => {
-    const sel = e.target;
-    if (!sel || !sel.classList || !sel.classList.contains('status-select')) {
+  ordersTable?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.js-order-detail-btn');
+    if (!btn) {
       return;
     }
-    if (sel.classList.contains('menu-availability-select')) {
-      return;
-    }
-    const row = sel.closest('tr');
-    const rawId = row?.dataset?.orderId;
+    const rawId = btn.getAttribute('data-order-id');
     if (rawId == null || rawId === '') {
       return;
     }
@@ -506,7 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Number.isNaN(orderId)) {
       return;
     }
-    void updateOrderStatus(orderId, sel);
+    e.preventDefault();
+    void openOrderDetail(orderId);
   });
 
   const menusTable = document.getElementById('menus-table');
