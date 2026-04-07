@@ -136,6 +136,6 @@ public class OrderController {
         // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
         orderService.update(paymentMethod, finalAmount, session);
 
-        return "redirect:/order/complete";
+        return "<script>location.href='/order/complete';</script>";
     }
 }

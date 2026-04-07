@@ -15,6 +15,24 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
     <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/images/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/images/favicon-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/images/favicon-16x16.png"
+    />
   </head>
   <body>
     <!--
@@ -53,19 +71,17 @@
         <div class="page-content">
           <div class="data-card">
             <div class="data-card-header">
-              <div class="data-card-title">
-                <i class="bi bi-list-ul" style="color: #1e2a38"></i> 주문 목록
+              <div class="data-card-title-wrap">
+                <div class="data-card-title">주문 목록</div>
+                <span
+                  class="data-card-txt"
+                  th:if="${orders != null}"
+                  th:text="'총 ' + ${orders.totalElements} + '건'"
+                  >총 24건</span
+                >
+                <span th:if="${orders == null}">총 3건 (샘플)</span>
               </div>
               <div class="data-card-actions">
-                <!-- 검색 -->
-                <div class="search-box">
-                  <i class="bi bi-search"></i>
-                  <input
-                    type="text"
-                    id="order-search"
-                    placeholder="주문번호, 금액 검색..."
-                  />
-                </div>
                 <!-- 상태 필터 -->
                 <form
                   method="get"
@@ -77,6 +93,7 @@
                     class="filter-select"
                     name="status"
                     onchange="document.getElementById('filter-form').submit()"
+                    style="width: 110px"
                   >
                     <option
                       value=""
@@ -110,6 +127,15 @@
                     </option>
                   </select>
                 </form>
+                <!-- 검색 -->
+                <div class="search-box">
+                  <i class="bi bi-search"></i>
+                  <input
+                    type="text"
+                    id="order-search"
+                    placeholder="주문번호, 금액 검색..."
+                  />
+                </div>
               </div>
             </div>
 
@@ -137,7 +163,13 @@
                     th:id="'order-row-' + order.id"
                     th:attr="data-order-id=${order.id}"
                   >
-                    <td><strong th:text="'#' + ${order.id}">#42</strong></td>
+                    <td>
+                      <span
+                        class="badge badge-default"
+                        th:text="'#' + ${order.id}"
+                        >#42</span
+                      >
+                    </td>
                     <td
                       th:text="${#temporals.format(order.createdAt, 'MM/dd HH:mm')}"
                     >
@@ -157,7 +189,6 @@
                       >
                     </td>
                     <td
-                      style="font-weight: 600"
                       th:text="${#numbers.formatInteger(order.totalAmount, 1, 'COMMA') + '원'}"
                     >
                       27,500원
@@ -170,10 +201,10 @@
                     </td>
                     <td>
                       <span th:switch="${order.paymentMethod}">
-                        <span th:case="'CARD'">💳 카드</span>
-                        <span th:case="'CASH'">💵 현금</span>
-                        <span th:case="'KAKAO_PAY'">📱 카카오페이</span>
-                        <span th:case="'NAVER_PAY'">💚 네이버페이</span>
+                        <span th:case="'CARD'">카드</span>
+                        <span th:case="'CASH'">현금</span>
+                        <span th:case="'KAKAO_PAY'">카카오페이</span>
+                        <span th:case="'NAVER_PAY'">네이버페이</span>
                         <span
                           th:case="*"
                           th:text="${order.paymentMethod ?: '-'}"
@@ -184,13 +215,12 @@
                     <td>
                       <span
                         th:if="${order.member != null}"
-                        class="badge badge-member"
                         th:text="${order.member.displayPhone}"
                         >010-****-5678</span
                       >
                       <span
                         th:unless="${order.member != null}"
-                        style="color: #9e8b7b; font-size: 12px"
+                        style="color: #999"
                         >비회원</span
                       >
                     </td>
@@ -206,6 +236,7 @@
                       <select
                         class="status-select"
                         th:attr="data-original-status=${order.status.name()}"
+                        style="width: 72px"
                       >
                         <option
                           value="RECEIVED"
@@ -373,12 +404,6 @@
           th:with="currentPage=${orders.number}, totalPages=${orders.totalPages}"
         -->
             <div class="pagination-wrap">
-              <span
-                th:if="${orders != null}"
-                th:text="'총 ' + ${orders.totalElements} + '건'"
-                >총 24건</span
-              >
-              <span th:if="${orders == null}">총 3건 (샘플)</span>
               <ul
                 class="pagination"
                 th:if="${orders != null and orders.totalPages > 1}"

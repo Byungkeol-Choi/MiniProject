@@ -237,7 +237,6 @@ body {
   box-shadow: 0 10px 32px rgba(92, 51, 23, 0.22);
 }
 .menu-card.soldout {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 .menu-card.soldout:hover {
@@ -256,8 +255,8 @@ body {
 }
 .menu-card-img-wrap img,
 .menu-card-img {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   display: block;
 }
@@ -315,7 +314,7 @@ body {
     background 0.2s,
     transform 0.1s;
   flex-shrink: 0;
-  padding-top: 1.5px;
+  padding: 2px 0 0 1px;
 }
 .btn-add-cart:hover {
   background: var(--cafe-accent);
@@ -333,10 +332,15 @@ body {
   justify-content: center;
   background: rgba(0, 0, 0, 0.75);
 }
-.soldout-badge {
-  color: #f5f5f5;
+.soldout-overlay-txt {
+  color: #fff;
   font-size: 20px;
-  font-weight: 500;
+}
+
+.soldout-badge {
+  color: #5c3317;
+  font-size: 18px;
+  font-weight: 600;
   padding: 5px 14px;
   border-radius: 20px;
 }
@@ -790,13 +794,13 @@ body {
   flex: 1;
   min-width: 0;
 }
-.lookup-coupon-code {
+/* .lookup-coupon-code {
   font-size: 14px;
   font-weight: 500;
   color: var(--cafe-secondary);
   letter-spacing: 0.02em;
   margin-bottom: 12px;
-}
+} */
 .lookup-coupon-title {
   font-size: 16px;
   font-weight: 600;
@@ -808,7 +812,7 @@ body {
   font-weight: 500;
   color: #c2692a;
   flex-shrink: 0;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .lookup-error-box {

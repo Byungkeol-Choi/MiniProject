@@ -284,7 +284,6 @@ async function lookupMemberByPhone() {
             <div>
               <div class="lookup-coupon-title">${c.name || "쿠폰"}</div>
               <div class="lookup-coupon-benefit">${discount}</div>
-              <div class="lookup-coupon-code">${c.code}</div>
             </div>
             <button class="cart-lookup-coupon-pick"
               onclick="applyLookupCoupon('${c.code}', '${c.discountType}', ${c.discountValue}, '${c.name || "쿠폰"}')">
@@ -317,7 +316,7 @@ function applyLookupCoupon(code, discountType, discountValue, name) {
       : Math.round((subtotal * discountValue) / 100);
   discount = Math.min(discount, subtotal);
 
-  updateDiscount(discount, `${name} (${code}) 적용`);
+  updateDiscount(discount, `${name} 적용`);
 
   // 결제 폼 hidden input에 쿠폰 코드 세팅 → POST /order/payment 전송
   const hiddenCode = document.getElementById("hidden-coupon-code");

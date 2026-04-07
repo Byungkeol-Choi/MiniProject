@@ -9,6 +9,24 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
     <link rel="stylesheet" th:href="@{/css/kiosk.css}" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/images/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/images/favicon-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/images/favicon-16x16.png"
+    />
   </head>
   <body>
     <!-- ===== 헤더 ===== -->
@@ -134,7 +152,7 @@
                 </div>
               </div>
               <div th:unless="${menu.available}" class="soldout-overlay">
-                <span class="soldout-badge">품절</span>
+                <span class="soldout-overlay-txt">품절</span>
               </div>
             </div>
 
@@ -452,7 +470,7 @@
                 </div>
               </div>
               <div th:unless="${menu.available}" class="soldout-overlay">
-                <span class="soldout-badge">품절</span>
+                <span class="soldout-overlay-txt">품절</span>
               </div>
             </div>
 

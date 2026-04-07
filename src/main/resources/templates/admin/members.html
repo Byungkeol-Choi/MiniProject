@@ -13,6 +13,24 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
     <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/images/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="/images/favicon-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/images/favicon-16x16.png"
+    />
   </head>
   <body>
     <!--
@@ -34,21 +52,36 @@
             <i class="bi bi-people" style="color: #1e2a38"></i> 회원 관리
           </div>
           <div class="topbar-right">
+            <!-- # 중복 텍스트
             <span style="font-size: 13px; color: #6b7a8d">
               총
               <strong th:text="${totalMembers ?: 142}" style="color: #1e2a38"
                 >142</strong
               >명
-            </span>
+            </span> -->
+            <button
+              type="button"
+              class="btn-primary"
+              onclick="openAddMemberModal()"
+            >
+              + 회원 추가
+            </button>
           </div>
         </div>
 
         <div class="page-content">
           <div class="data-card">
             <div class="data-card-header">
-              <div class="data-card-title">
-                <i class="bi bi-person-lines-fill" style="color: #1e2a38"></i>
-                회원 목록
+              <div class="data-card-title-wrap">
+                <div class="data-card-title">회원 목록</div>
+                <span
+                  class="data-card-txt"
+                  th:if="${members != null}"
+                  th:text="'총 ' + ${members.totalElements} + '명'"
+                >
+                  총 4명
+                </span>
+                <span th:if="${members == null}">총 4명 (샘플)</span>
               </div>
               <div class="data-card-actions">
                 <div class="search-box">
@@ -59,13 +92,6 @@
                     placeholder="전화번호, 이름 검색..."
                   />
                 </div>
-                <button
-                  type="button"
-                  class="btn-secondary"
-                  onclick="openAddMemberModal()"
-                >
-                  + 회원 추가
-                </button>
               </div>
             </div>
 
@@ -87,17 +113,12 @@
                 <tbody>
                   <!-- Thymeleaf 반복 -->
                   <tr th:each="member : ${members}">
-                    <td style="color: #9e8b7b" th:text="${member.id}">#1</td>
-                    <td
-                      style="font-weight: 600"
-                      th:text="${member.displayPhone}"
-                    >
-                      010-1234-5678
-                    </td>
+                    <td th:text="${member.id}">#1</td>
+                    <td th:text="${member.displayPhone}">010-1234-5678</td>
                     <td th:text="${member.name ?: '-'}">홍길동</td>
                     <td>
                       <span
-                        class="points-tag"
+                        class="badge badge-member"
                         th:id="'member-points-' + member.id"
                         th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}"
                         >1,200 P</span
@@ -113,17 +134,6 @@
                     </td>
                     <td>
                       <div class="member-manage-row">
-                        <!-- 
-                        # class 변경 JS에서 사용했는지 확인 필요
-                        <button
-                          class="btn-coupon-manage"
-                          th:data-member-id="${member.id}"
-                          th:data-member-name="${member.name ?: member.phone}"
-                          onclick="openCouponModal(this)"
-                        >
-                          쿠폰 관리
-                        </button>
-                         -->
                         <button
                           class="btn-edit btn-sm"
                           th:data-member-id="${member.id}"
@@ -136,17 +146,6 @@
                     </td>
                     <td>
                       <div class="member-manage-row">
-                        <!-- 
-                        # class 변경 JS에서 사용했는지 확인 필요
-                        <button
-                          class="btn-member-delete"
-                          th:data-member-id="${member.id}"
-                          th:data-member-name="${member.name ?: member.phone}"
-                          onclick="deleteMember(this)"
-                        >
-                          <i class="bi bi-trash3"></i>삭제
-                        </button>
-                         -->
                         <button
                           class="btn-danger btn-sm"
                           th:data-member-id="${member.id}"
@@ -164,12 +163,6 @@
 
             <!-- 페이지네이션 -->
             <div class="pagination-wrap">
-              <span
-                th:if="${members != null}"
-                th:text="'총 ' + ${members.totalElements} + '명'"
-                >총 4명</span
-              >
-              <span th:if="${members == null}">총 4명 (샘플)</span>
               <ul
                 class="pagination"
                 th:if="${members != null and members.totalPages > 1}"
@@ -313,10 +306,10 @@
               placeholder="홍길동 (선택)"
             />
           </div>
-          <button class="btn-member-add-submit" onclick="addMember()">
-            회원 추가
-          </button>
-          <span id="add-member-msg" style="font-size: 13px"></span>
+          <span id="add-member-msg"></span>
+          <div class="btn-coupon-issue">
+            <button class="btn-primary" onclick="addMember()">회원 추가</button>
+          </div>
         </div>
       </div>
     </div>
@@ -390,6 +383,8 @@
         color: #aaa;
         font-size: 13px;
         padding: 10px 0;
+        display: flex;
+        justify-content: center;
       }
       .coupon-list-table {
         width: 100%;
@@ -677,9 +672,6 @@
           : "";
 
         const msg = document.getElementById("coupon-form-msg");
-        msg.style.color = "#dc2626";
-        msg.style.background = "#fee2e2";
-        msg.style.border = "1px solid #dc2626";
         msg.style.marginTop = "10px";
         msg.style.fontSize = "13px";
         msg.style.borderRadius = "8px";
@@ -687,10 +679,16 @@
 
         if (!name) {
           msg.textContent = "쿠폰 이름을 입력해 주세요.";
+          msg.style.color = "#dc2626";
+          msg.style.background = "#fee2e2";
+          msg.style.border = "1px solid #dc2626";
           return;
         }
         if (!discountValue || discountValue <= 0) {
           msg.textContent = "할인 값을 올바르게 입력해 주세요.";
+          msg.style.color = "#dc2626";
+          msg.style.background = "#fee2e2";
+          msg.style.border = "1px solid #dc2626";
           return;
         }
 
@@ -705,16 +703,19 @@
         );
         const data = await res.json();
         if (res.ok) {
+          msg.textContent = "쿠폰이 발급되었습니다. 코드: " + data.code;
           msg.style.color = "#16a34a";
           msg.style.background = "#f0fff4";
           msg.style.border = "1px solid #16a34a";
-          msg.textContent = "쿠폰이 발급되었습니다. 코드: " + data.code;
           document.getElementById("new-coupon-name").value = "";
           document.getElementById("new-coupon-value").value = "";
           document.getElementById("new-coupon-expires").value = "";
           loadCoupons();
         } else {
           msg.textContent = data.error || "발급 중 오류가 발생했습니다.";
+          msg.style.color = "#dc2626";
+          msg.style.background = "#fee2e2";
+          msg.style.border = "1px solid #dc2626";
         }
       }
     </script>
