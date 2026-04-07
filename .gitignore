@@ -43,6 +43,12 @@ src/main/resources/application-secret.yml
 docs/
 tools/
 
+### 발표 자료 · npm 의존성 (GitHub 변경사항 제외) ###
+/doc/
+/node_modules/
+/package.json
+/package-lock.json
+
 ### Markdown (로컬 메모 등 기본 무시, 프로젝트 가이드만 추적) ###
 *.md
 !PROJECT_GUIDE.md
