@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>메뉴 관리 - 브런치 카페 관리자</title>
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" th:href="@{/css/admin.css}">
 </head>
@@ -26,24 +28,24 @@
 
   <aside th:replace="~{fragments/layout :: admin-sidebar}"></aside>
 
-  <div class="admin-content">
-    <div class="admin-topbar">
-      <div class="topbar-title">
-        <i class="bi bi-grid"></i> 메뉴 관리
-      </div>
-      <div class="topbar-right">
-        <button class="btn-primary" onclick="openMenuModal(null)">
-          <i class="bi bi-plus-lg"></i> 메뉴 추가
-        </button>
-      </div>
-    </div>
+      <div class="admin-content">
+        <div class="admin-topbar">
+          <div class="topbar-title">
+            <i class="bi bi-grid" style="color: #1e2a38"></i> 메뉴 관리
+          </div>
+          <div class="topbar-right">
+            <button class="btn-primary" onclick="openMenuModal(null)">
+              <i class="bi bi-plus-lg"></i> 메뉴 추가
+            </button>
+          </div>
+        </div>
 
     <div class="page-content">
 
       <div class="data-card">
         <div class="data-card-header">
           <div class="data-card-title">
-            <i class="bi bi-card-list"></i> 메뉴 목록
+            <i class="bi bi-card-list" style="color: #1e2a38"></i> 메뉴 목록
           </div>
           <div class="data-card-actions">
             <div class="search-box">
@@ -58,7 +60,7 @@
           </div>
         </div>
 
-        <div style="overflow-x:auto;">
+        <div style="overflow-x:auto">
           <table class="admin-table" id="menus-table">
             <thead>
               <tr>
@@ -78,14 +80,16 @@
               <!-- Thymeleaf 반복 -->
               <tr th:each="menu : ${menus}"
                   th:id="'menu-row-' + menu.id"
-                  th:data-category="${menu.category}">
+                  th:data-category="${menu.category.name()}"
+                  th:data-id="${menu.id}"
+                  th:data-name="${menu.name}">
                 <td style="color:#9E8B7B;" th:text="${menu.id}">1</td>
                 <td>
                   <div class="img-preview" style="width:50px; height:42px; font-size:0;">
                     <img th:src="${menu.imageUrl != null and !#strings.isEmpty(menu.imageUrl) ? menu.imageUrl : (menu.category == 'FOOD' ? '/images/menu/default-food.svg' : '/images/menu/default-drink.svg')}"
                          th:alt="${menu.name}"
                          onerror="this.src='/images/menu/default-food.svg'"
-                         style="width:100%;height:100%;object-fit:cover;">
+                         style="width:100%;height:100%;object-fit:cover">
                   </div>
                 </td>
                 <td>
@@ -94,8 +98,8 @@
                 </td>
                 <td>
                   <span class="badge"
-                        th:classappend="${menu.category == 'FOOD' ? 'badge-food' : 'badge-drink'}"
-                        th:text="${menu.category == 'FOOD' ? '음식' : '음료'}">음식</span>
+                        th:classappend="${menu.category.name() == 'FOOD' ? 'badge-food' : 'badge-drink'}"
+                        th:text="${menu.category.name() == 'FOOD' ? '음식' : '음료'}">음식</span>
                 </td>
                 <td style="font-weight:600;"
                     th:text="${#numbers.formatInteger(menu.price, 1, 'COMMA') + '원'}">16,500원</td>
@@ -106,18 +110,18 @@
                           th:classappend="${menu.available ? 'badge-available' : 'badge-soldout'}"
                           th:text="${menu.available ? '판매중' : '품절'}"
                           th:data-available="${menu.available}"
-                          th:onclick="'toggleMenuAvailable(' + menu.id + ', this)'"
+                          onclick="toggleMenuAvailable(this.closest('tr').dataset.id, this)"
                           style="border:none; cursor:pointer; padding:4px 12px;">판매중</button>
                 </td>
                 <td>
                   <button class="btn-edit btn-sm"
-                          th:onclick="'openMenuModal(' + menu.id + ')'">
+                          onclick="openMenuModal(this.closest('tr').dataset.id)">
                     <i class="bi bi-pencil"></i> 수정
                   </button>
                 </td>
                 <td>
                   <button class="btn-danger btn-sm"
-                          th:onclick="'deleteMenu(' + menu.id + ', \'' + menu.name + '\')'">
+                          onclick="deleteMenu(this.closest('tr').dataset.id, this.closest('tr').dataset.name)">
                     <i class="bi bi-trash3"></i> 삭제
                   </button>
                 </td>
@@ -212,7 +216,7 @@
 
       <div class="form-group">
         <label class="form-label">이미지 URL</label>
-        <input type="url" class="form-control" id="menu-image-url" name="imageUrl"
+        <input type="text" class="form-control" id="menu-image-url" name="imageUrl"
                placeholder="https://example.com/image.jpg"
                oninput="previewMenuImage()">
         <div class="img-preview" id="menu-img-preview">

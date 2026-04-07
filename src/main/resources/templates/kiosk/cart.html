@@ -281,7 +281,7 @@
 
         <!-- ─── 버튼 ──────────────────────────────── -->
         <div class="action-btn-row">
-          <a th:href="@{/}" href="/" class="btn-back-page">
+          <a href="/" class="btn-back-page" onclick="goBack(event)">
             <i class="bi bi-arrow-left"></i> 이전
           </a>
           <!--
@@ -481,6 +481,23 @@
           const finalText = finalEl?.textContent?.replace(/[^0-9]/g, "") || "0";
           document.getElementById("hidden-final-amount").value = finalText;
         });
+
+      // 이전으로 가기
+      window.goBack = async function(event) {
+        event.preventDefault();
+        const response = await fetch('/api/cart/session');
+        const items = await response.json();
+        const converted = items.map(item => ({
+          id: Number(item.id),
+          name: item.name,
+          price: Number(item.price),
+          quantity: Number(item.quantity),
+          imgUrl: item.imgUrl || '/images/menu/default-food.svg'
+        }));
+        sessionStorage.setItem('cafe_cart', JSON.stringify(converted));
+        window.location.href = '/';
+      };
+
     </script>
   </body>
 </html>

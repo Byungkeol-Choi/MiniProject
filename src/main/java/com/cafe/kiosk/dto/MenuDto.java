@@ -11,5 +11,6 @@ public class MenuDto {
   private int price;
   private Menu.Category category;
   private String description;
+  private String imageUrl;
   private boolean available;
 }

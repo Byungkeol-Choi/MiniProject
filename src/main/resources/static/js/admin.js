@@ -85,7 +85,7 @@ function statusClassMap(status) {
 }
 
 /* ─── 메뉴 판매 여부 토글 ─────────────────────────── */
-function toggleMenuAvailable(menuId, btn) {
+async function toggleMenuAvailable(menuId, btn) {
   const isAvailable = btn.dataset.available === 'true';
   const newState    = !isAvailable;
 
@@ -98,19 +98,30 @@ function toggleMenuAvailable(menuId, btn) {
    * }).then(r => { if (r.ok) { ... } });
    */
 
-  btn.dataset.available = String(newState);
-  btn.textContent       = newState ? '판매중' : '품절';
-  btn.className         = newState ? 'badge badge-available' : 'badge badge-soldout';
+  try {
+    const res = await fetch(`/admin/menus/${menuId}/available`, {
+      method: 'PATCH',
+      headers: adminCsrfHeaders(),
+      body: JSON.stringify({ available: newState })
+    });
+    if (!res.ok) throw new Error('상태 변경 실패');
 
-  const row   = btn.closest('tr');
-  const nameEl = row?.querySelector('.menu-name-cell');
-  if (nameEl) nameEl.style.opacity = newState ? '1' : '0.5';
+    btn.dataset.available = String(newState);
+    btn.textContent = newState ? '판매중' : '품절';
+    btn.className = newState ? 'badge badge-available' : 'badge badge-soldout';
+    btn.style = 'border:none; cursor:pointer; padding:4px 12px;';
 
-  showAdminToast(newState ? '판매 재개되었습니다.' : '품절 처리되었습니다.');
+    const nameEl = btn.closest('tr')?.querySelector('.menu-name-cell');
+    if (nameEl) nameEl.style.opacity = newState ? '1' : '0.5';
+
+    showAdminToast(newState ? '판매 재개되었습니다.' : '품절 처리되었습니다.');
+  } catch (e) {
+    showAdminToast('상태 변경에 실패했습니다.', 'error');
+  }
 }
 
 /* ─── 메뉴 삭제 ───────────────────────────────────── */
-function deleteMenu(menuId, menuName) {
+async function deleteMenu(menuId, menuName) {
   if (!confirm(`"${menuName}" 메뉴를 삭제할까요?\n삭제된 메뉴는 복구할 수 없습니다.`)) return;
 
   /**
@@ -118,9 +129,18 @@ function deleteMenu(menuId, menuName) {
    * fetch(`/admin/menus/${menuId}`, { method: 'DELETE' })
    * .then(r => { if (r.ok) document.getElementById(`menu-row-${menuId}`)?.remove(); });
    */
+  try {
+    const res = await fetch(`/admin/menus/${menuId}`, {
+      method: 'DELETE',
+      headers: adminCsrfHeaders()
+    });
+    if (!res.ok) throw new Error('삭제 실패');
 
-  document.getElementById(`menu-row-${menuId}`)?.remove();
-  showAdminToast(`"${menuName}" 메뉴가 삭제되었습니다.`);
+    document.getElementById(`menu-row-${menuId}`)?.remove();
+    showAdminToast(`"${menuName}" 메뉴가 삭제되었습니다.`);
+  } catch (e) {
+    showAdminToast('삭제에 실패했습니다.', 'error');
+  }
 }
 
 /* ─── 메뉴 등록/수정 모달 ────────────────────────── */
@@ -148,7 +168,7 @@ function closeMenuModal() {
   document.getElementById('menu-modal')?.classList.remove('open');
 }
 
-function loadMenuForEdit(menuId, form) {
+async function loadMenuForEdit(menuId, form) {
   /**
    * [백엔드 연동]
    * fetch(`/admin/menus/${menuId}`).then(r => r.json()).then(menu => {
@@ -160,12 +180,34 @@ function loadMenuForEdit(menuId, form) {
    *   form.querySelector('[name=id]').value        = menu.id;
    * });
    */
+  try {
+    const res = await fetch(`/admin/menus/${menuId}`);
+    if (!res.ok) throw new Error('메뉴 조회 실패');
+    const menu = await res.json();
+
+    form.querySelector('[name=id]').value = menu.id;
+    form.querySelector('[name=name]').value = menu.name;
+    form.querySelector('[name=price]').value = menu.price;
+    form.querySelector('[name=category]').value = menu.category;
+    form.querySelector('[name=description]').value = menu.description || '';
+    form.querySelector('[name=imageUrl]').value = menu.imageUrl || '';
+    form.querySelector('[name=available]').checked = menu.available;
+
+    const previewEl = document.getElementById('menu-img-preview');
+    if (previewEl && menu.imageUrl) {
+      previewEl.innerHTML = `<img src="${menu.imageUrl}" alt="미리보기" style="width:100%;height:100%;object-fit:cover;">`;
+    }
+  } catch (e) {
+    showAdminToast('메뉴 정보를 불러오지 못했습니다.', 'error');
+  }
 }
 
-function submitMenuForm(event) {
+async function submitMenuForm(event) {
   event.preventDefault();
   const form = event.target;
-  const data = Object.fromEntries(new FormData(form));
+
+  const id = form.querySelector('[name=id]').value;
+  const isEdit = !!id;
 
   /**
    * [백엔드 연동]
@@ -177,8 +219,29 @@ function submitMenuForm(event) {
    * }).then(r => { if (r.ok) { closeMenuModal(); location.reload(); } });
    */
 
-  showAdminToast('메뉴가 저장되었습니다. (백엔드 연동 후 동작)');
-  closeMenuModal();
+  const body = {
+    name: form.querySelector('[name=name]').value,
+    price: Number(form.querySelector('[name=price]').value),
+    category: form.querySelector('[name=category]').value,
+    description: form.querySelector('[name=description]').value,
+    imageUrl: form.querySelector('[name=imageUrl]').value || '',
+    available: form.querySelector('[name=available]').checked
+  };
+
+  try {
+    const res = await fetch(isEdit ? `/admin/menus/${id}` : '/admin/menus', {
+      method: isEdit ? 'PUT' : 'POST',
+      headers: adminCsrfHeaders(),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('저장 실패');
+
+    showAdminToast('메뉴가 저장되었습니다.');
+    closeMenuModal();
+    location.reload();
+  } catch (e) {
+    showAdminToast('저장에 실패했습니다.', 'error');
+  }
 }
 
 /* ─── 주문 상세 모달 ──────────────────────────────── */
