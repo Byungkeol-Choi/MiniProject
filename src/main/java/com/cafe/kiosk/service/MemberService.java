@@ -150,7 +150,7 @@ public class MemberService {
         }
 
         // **Dirty checking(변경 감지)**은 이미 영속(managed) 상태인 엔티티에만 해당합니다.
-        // 즉, 이번 트랜잭션 안에서 DB에서 읽어 온 뒤 같은 EntityManager가 관리하는 객체를 수정했을 때, flush 시점에 UPDATE가 나갑니다.
+        // 즉, 이번 트랜잭션 안에서 DB에서 읽어 온 뒤 같은 EntityManager가 관리하는 객체를 수정했을 때, flush(물을 쏟아부어 씻어내다) 시점에 UPDATE가 나갑니다.
 
         Member member = Member.builder()
                 .phone(normalizedPhone)
@@ -207,7 +207,7 @@ public class MemberService {
         if (phoneRaw == null) {
             return "";
         }
-        String normalized = phoneRaw.replaceAll("[^0-9]", "");
+        String normalized = phoneRaw.replaceAll("[^0-9]", ""); // 숫자가 아닌 문자 전부 제거
         return normalized;
     }
 }
