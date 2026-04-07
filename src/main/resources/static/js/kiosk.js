@@ -255,6 +255,12 @@ async function lookupMemberByPhone() {
 
     Cart.getState().memberId = data.memberId;
     Cart.getState().memberName = data.memberName;
+    Cart.getState().memberPoints = data.points || 0;
+
+    const pointsEl = document.getElementById('lookup-points-value');
+    if (pointsEl) pointsEl.textContent = (data.points || 0).toLocaleString('ko-KR') + ' P';
+    const pointsInput = document.getElementById('points-use-input');
+    if (pointsInput) pointsInput.max = data.points || 0;
 
     console.log(data.memberId);
     console.log(data);
@@ -327,6 +333,38 @@ function applyLookupCoupon(code, discountType, discountValue, name) {
   Cart.getState().couponDiscount = discount;
 }
 
+function applyUsePoints() {
+  const input = document.getElementById('points-use-input');
+  const requested = parseInt(input?.value || 0);
+  if (isNaN(requested) || requested <= 0) {
+    showToast('사용할 포인트를 입력해주세요.');
+    return;
+  }
+  const maxPoints = Cart.getState().memberPoints || 0;
+  if (requested > maxPoints) {
+    showToast('보유 포인트가 부족합니다.');
+    return;
+  }
+  const subtotal = Number(document.getElementById('subtotal-value')?.dataset.amount || 0);
+  const couponDiscount = Number(document.getElementById('coupon-discount-value')?.dataset.amount || 0);
+  const pointsToUse = Math.min(requested, Math.max(0, subtotal - couponDiscount));
+
+  const discountEl = document.getElementById('points-discount-value');
+  if (discountEl) {
+    discountEl.textContent = pointsToUse > 0 ? `-${fmtPrice(pointsToUse)}` : '-';
+    discountEl.dataset.amount = pointsToUse;
+  }
+  const resultEl = document.getElementById('points-result');
+  if (resultEl && pointsToUse > 0) {
+    resultEl.textContent = `${pointsToUse.toLocaleString('ko-KR')} P 사용`;
+    resultEl.className = 'discount-result visible';
+  }
+  Cart.getState().usePoints = pointsToUse;
+  const hiddenPoints = document.getElementById('hidden-use-points');
+  if (hiddenPoints) hiddenPoints.value = pointsToUse;
+  recalcTotal();
+}
+
 function updateDiscount(amount, label) {
   const resultEl = document.getElementById("coupon-result");
   const discountEl = document.getElementById("coupon-discount-value");
@@ -353,7 +391,8 @@ function recalcTotal() {
     document.getElementById("coupon-discount-value")?.dataset.amount || 0,
   );
 
-  const total = Math.max(0, subtotal - couponAmt);
+  const pointsAmt = Number(document.getElementById('points-discount-value')?.dataset.amount || 0);
+  const total = Math.max(0, subtotal - couponAmt - pointsAmt);
   const totalEl = document.getElementById("final-total-value");
   if (totalEl) totalEl.textContent = fmtPrice(total);
 }

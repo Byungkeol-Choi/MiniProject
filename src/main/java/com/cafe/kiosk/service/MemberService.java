@@ -117,6 +117,22 @@ public class MemberService {
     }
 
     /**
+     * 키오스크 결제 시 포인트를 차감한다.
+     *
+     * @param memberId       회원 ID
+     * @param pointsToDeduct 차감할 포인트
+     */
+    @Transactional
+    public void deductPoints(Long memberId, int pointsToDeduct) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        if (member.getPoints() < pointsToDeduct) {
+            throw new IllegalArgumentException("포인트가 부족합니다.");
+        }
+        member.setPoints(member.getPoints() - pointsToDeduct);
+    }
+
+    /**
      * 관리자: 회원 추가
      * - 전화번호는 숫자만 정규화해서 저장(하이픈/공백 무시)
      * - 같은 전화번호가 이미 있으면 409로 처리되도록 {@link IllegalStateException} 발생
