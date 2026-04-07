@@ -27,8 +27,9 @@ public class SecurityConfig {
                 .csrf((csrf) -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         // JSON API 엔드포인트. fetch 호출 시 CSRF 토큰 전송 생략을 허용한다.
-                        .ignoringRequestMatchers("/api/member/lookup", "/api/member/stamp", "/api/member/stamp-info",
-                                "/admin/api/**")
+                        .ignoringRequestMatchers("/admin/api/**", "/order/cart", "/order/payment", "/order/pay")
+                        // 키오스크: 메인(/)을 오래 연 채 두거나 서버 재기동 후에도 Thymeleaf가 넣어 준 hidden CSRF가
+                        // 세션과 어긋나 POST가 403이 되는 경우가 있어, 동일 출처 키오스크 주문 흐름만 예외 처리.
                 )
                 //HTTP 요청에 대한 보안을 설정한다. Security 6버전.
                 //경로별 인가 설정
