@@ -30,6 +30,13 @@ body {
   min-height: 100vh;
 }
 
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 0;
+}
+
 /* ─── Admin Layout ────────────────────────────────── */
 .admin-layout { display: flex; min-height: 100vh; }
 
@@ -52,6 +59,7 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   flex-shrink: 0;
 }
@@ -259,6 +267,12 @@ body {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: 12px;
+}
+
+.data-card-title-wrap {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
@@ -526,16 +540,9 @@ body {
 }
 .modal-close:hover { background: var(--content-bg); }
 
-.modal-body { padding: 20px 24px; }
-
-.order-detail-summary { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
-.order-detail-row {
-  display: flex; justify-content: space-between; align-items: baseline;
-  gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+.modal-body {
+  padding: 20px 24px;
 }
-.order-detail-row:last-of-type { border-bottom: none; padding-bottom: 0; }
-.order-detail-label { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
-
 .modal-footer {
   padding: 14px 24px 20px;
   border-top: 1px solid var(--border);
