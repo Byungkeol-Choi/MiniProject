@@ -3,7 +3,7 @@
  *
  * [백엔드 연동 포인트]
  * - updateOrderStatus() : PATCH /admin/orders/{id}/status
- * - toggleMenuAvailable() : PATCH /admin/menus/{id}/available
+ * - updateMenuAvailable() : PATCH /admin/menus/{id}/available (메뉴 목록 select)
  * - deleteMenu()          : DELETE /admin/menus/{id}
  */
 
@@ -84,38 +84,46 @@ function statusClassMap(status) {
   return map[status] || 'badge-received';
 }
 
-/* ─── 메뉴 판매 여부 토글 ─────────────────────────── */
-async function toggleMenuAvailable(menuId, btn) {
-  const isAvailable = btn.dataset.available === 'true';
-  const newState    = !isAvailable;
+/* ─── 메뉴 판매 상태 변경 (주문 관리와 동일한 select + 확인 패턴) ─ */
+async function updateMenuAvailable(menuId, selectEl) {
+  if (!selectEl || menuId == null || menuId === '') {
+    return;
+  }
 
-  /**
-   * [백엔드 연동]
-   * fetch(`/admin/menus/${menuId}/available`, {
-   *   method: 'PATCH',
-   *   headers: { 'Content-Type': 'application/json' },
-   *   body: JSON.stringify({ available: newState })
-   * }).then(r => { if (r.ok) { ... } });
-   */
+  const previous = selectEl.getAttribute('data-original-available') || 'true';
+  const newVal = selectEl.value;
+  const availLabels = { true: '판매중', false: '품절' };
+  const newState = newVal === 'true';
+
+  if (!confirm(`이 메뉴를 "${availLabels[newVal]}"(으)로 변경할까요?`)) {
+    selectEl.value = previous;
+    showAdminToast('변경을 취소했습니다.');
+    return;
+  }
 
   try {
     const res = await fetch(`/admin/menus/${menuId}/available`, {
       method: 'PATCH',
+      credentials: 'same-origin',
       headers: adminCsrfHeaders(),
       body: JSON.stringify({ available: newState })
     });
     if (!res.ok) throw new Error('상태 변경 실패');
 
-    btn.dataset.available = String(newState);
-    btn.textContent = newState ? '판매중' : '품절';
-    btn.className = newState ? 'badge badge-available' : 'badge badge-soldout';
-    btn.style = 'border:none; cursor:pointer; padding:4px 12px;';
-
-    const nameEl = btn.closest('tr')?.querySelector('.menu-name-cell');
+    selectEl.setAttribute('data-original-available', newVal);
+    const row = selectEl.closest('tr');
+    const badgeEl = row?.querySelector('.menu-status-badge');
+    if (badgeEl) {
+      badgeEl.className =
+        'badge menu-status-badge ' + (newState ? 'badge-available' : 'badge-soldout');
+      badgeEl.textContent = newState ? '판매중' : '품절';
+    }
+    const nameEl = row?.querySelector('.menu-name-cell');
     if (nameEl) nameEl.style.opacity = newState ? '1' : '0.5';
 
     showAdminToast(newState ? '판매 재개되었습니다.' : '품절 처리되었습니다.');
   } catch (e) {
+    selectEl.value = previous;
     showAdminToast('상태 변경에 실패했습니다.', 'error');
   }
 }
@@ -127,7 +135,7 @@ async function deleteMenu(menuId, menuName) {
   /**
    * [백엔드 연동]
    * fetch(`/admin/menus/${menuId}`, { method: 'DELETE' })
-   * .then(r => { if (r.ok) document.getElementById(`menu-row-${menuId}`)?.remove(); });
+   * .then(r => { if (r.ok) document.querySelector(`#menus-table tr[data-id="${menuId}"]`)?.remove(); });
    */
   try {
     const res = await fetch(`/admin/menus/${menuId}`, {
@@ -136,7 +144,7 @@ async function deleteMenu(menuId, menuName) {
     });
     if (!res.ok) throw new Error('삭제 실패');
 
-    document.getElementById(`menu-row-${menuId}`)?.remove();
+    document.querySelector(`#menus-table tr[data-id="${menuId}"]`)?.remove();
     showAdminToast(`"${menuName}" 메뉴가 삭제되었습니다.`);
   } catch (e) {
     showAdminToast('삭제에 실패했습니다.', 'error');
@@ -486,6 +494,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!sel || !sel.classList || !sel.classList.contains('status-select')) {
       return;
     }
+    if (sel.classList.contains('menu-availability-select')) {
+      return;
+    }
     const row = sel.closest('tr');
     const rawId = row?.dataset?.orderId;
     if (rawId == null || rawId === '') {
@@ -496,5 +507,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     void updateOrderStatus(orderId, sel);
+  });
+
+  const menusTable = document.getElementById('menus-table');
+  menusTable?.addEventListener('change', (e) => {
+    const sel = e.target;
+    if (!sel?.classList?.contains('menu-availability-select')) {
+      return;
+    }
+    const row = sel.closest('tr');
+    const rawId = row?.dataset?.id;
+    if (rawId == null || rawId === '') {
+      return;
+    }
+    void updateMenuAvailable(rawId, sel);
   });
 });
