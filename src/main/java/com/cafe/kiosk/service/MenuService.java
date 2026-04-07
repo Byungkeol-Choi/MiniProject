@@ -20,36 +20,10 @@ public class MenuService {
   public List<Menu> findAll() {
     return menuRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
   }
-  // 메뉴 등록
-  public Menu save(Menu menu){
-    return menuRepository.save(menu);
-  }
-
-  // 메뉴 수정
-  @Transactional
-  public Menu update(Long id, Menu updateMenu){
-    Menu menu = menuRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("not found: " + id));
-    menu.update(
-            updateMenu.getName(),
-            updateMenu.getPrice(),
-            updateMenu.getCategory(),
-            updateMenu.getDescription(),
-            updateMenu.getImageUrl()
-    );
-    return menu;
-  }
 
   // 메뉴 삭제
   public void delete(Long id){
     menuRepository.deleteById(id);
-  }
-
-  // 메뉴 품절 처리
-  public void soldOut(Long id){
-    Menu menu = menuRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("not found: " + id));
-    menu.setAvailable(false);
   }
 
   public List<Menu> findByCategory(Menu.Category category) {
@@ -70,6 +44,7 @@ public class MenuService {
     );
     return menuRepository.save(menu);
   }
+
   // 메뉴 수정 dto
   @Transactional
   public Menu updateFromDto(Long id, MenuDto dto){
@@ -78,7 +53,8 @@ public class MenuService {
     menu.update(dto.getName(), dto.getPrice(), dto.getCategory(),dto.getDescription(), dto.getImageUrl());
     return menu;
   }
-  // 판매상태 변경
+
+  // 판매상태 변경 /품절확인
   @Transactional
   public void setAvailable(Long id, boolean availble){
     Menu menu = menuRepository.findById(id)
