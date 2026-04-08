@@ -748,8 +748,7 @@ select {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding-bottom: 8px;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border);
 }
 .order-detail-row:last-of-type {

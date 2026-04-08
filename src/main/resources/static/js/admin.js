@@ -343,7 +343,7 @@ function renderOrderDetailHtml(data) {
     <div class="form-group">
       <div class="form-label">주문 품목</div>
       <div style="overflow-x:auto;">
-        <table class="admin-table" style="font-size:13px; margin-bottom:18px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+        <table class="admin-table" style="font-size:13px; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
           <thead><tr><th>메뉴</th><th style="text-align:right;">수량</th><th style="text-align:right;">단가</th><th style="text-align:right;">금액</th></tr></thead>
           <tbody>${itemsRows || '<tr><td colspan="4" style="color:#aaa; text-align:center;">품목 없음</td></tr>'}</tbody>
         </table>
