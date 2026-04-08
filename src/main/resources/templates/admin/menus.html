@@ -65,7 +65,14 @@
         <div class="page-content">
           <div class="data-card">
             <div class="data-card-header">
-              <div class="data-card-title">메뉴 목록</div>
+              <div class="data-card-title-wrap">
+                <div class="data-card-title">메뉴 목록</div>
+                <span
+                  class="data-card-txt"
+                  th:text="${'총 ' + (menus != null ? #lists.size(menus) : '3') + '개 메뉴'}"
+                  >총 3개 메뉴 (샘플)</span
+                >
+              </div>
               <div class="data-card-actions">
                 <select
                   class="filter-select"
@@ -403,13 +410,6 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            <div class="pagination-wrap">
-              <span
-                th:text="${'총 ' + (menus != null ? #lists.size(menus) : '3') + '개 메뉴'}"
-                >총 3개 메뉴 (샘플)</span
-              >
             </div>
           </div>
           <!-- /data-card -->
