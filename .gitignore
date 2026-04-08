@@ -42,3 +42,6 @@ src/main/resources/application-secret.yml
 ### Local docs & tools (not tracked) ###
 docs/
 tools/
+
+### Node ###
+/node_modules/

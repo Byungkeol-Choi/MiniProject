@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>브런치 카페 키오스크 웹 — 팀 발표</title>
+<style>
+  :root {
+    --primary: #7c4a2d;
+    --accent: #d4a574;
+    --accent2: #e8c9a8;
+    --bg: #1a1410;
+    --card-bg: #261e18;
+    --card-border: rgba(212, 165, 116, 0.28);
+    --text: #f5ebe0;
+    --muted: #b9a08c;
+    --code-bg: #120e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  #progress-bar {
+    position: fixed; top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    transition: width 0.35s ease;
+    z-index: 200;
+  }
+  #slides-container { flex: 1; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2.2rem 2.8rem 5.2rem;
+    opacity: 0; transform: translateX(48px);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none; overflow-y: auto;
+  }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .slide-content { width: 100%; max-width: 1080px; max-height: 100%; }
+  .slide-tag {
+    display: inline-block; padding: 0.22rem 0.75rem;
+    background: var(--primary); color: #fff; border-radius: 20px;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 0.75rem;
+  }
+  h1.slide-title { font-size: 2.65rem; font-weight: 800; color: var(--accent); line-height: 1.12; }
+  h2.slide-title { font-size: 1.85rem; font-weight: 700; color: var(--accent); margin-bottom: 1rem; }
+  .slide-subtitle { font-size: 1.05rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.55; }
+  .card-grid { display: grid; gap: 0.85rem; }
+  .card-grid.c2 { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { .card-grid.c2 { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 1.1rem 1.25rem; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+  }
+  .card h3 { font-size: 0.92rem; color: var(--accent2); font-weight: 600; margin-bottom: 0.45rem; }
+  .card p, .card li { font-size: 0.82rem; color: var(--muted); line-height: 1.58; }
+  .card ul { padding-left: 1.05rem; margin: 0.35rem 0; }
+  .card strong { color: var(--text); }
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .data-table th { background: var(--primary); color: #fff; padding: 0.5rem 0.65rem; text-align: left; }
+  .data-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid var(--card-border); color: var(--muted); }
+  .pill-pk { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 999px; font-size: 0.68rem; background: #3d2918; color: #ffb86c; }
+  .pill-fk { background: #1e2d24; color: #7bed9f; }
+  .pill-uq { background: #2a2438; color: #c4a7ff; }
+  pre.tree {
+    background: var(--code-bg); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 1rem 1.15rem; font-family: Consolas, monospace; font-size: 0.74rem;
+    line-height: 1.55; color: #d4c4a8; overflow-x: auto; white-space: pre;
+  }
+  .diagram-wrap { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 1rem; margin-top: 0.6rem; }
+  .flow-screens { display: flex; align-items: stretch; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-top: 0.75rem; }
+  .mini-screen {
+    width: 148px; border-radius: 12px; border: 2px solid var(--card-border);
+    background: linear-gradient(180deg, #3d2e25 0%, #2a211c 100%);
+    overflow: hidden; flex-shrink: 0; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .mini-screen .bar {
+    height: 26px; background: #5c3d2e; display: flex; align-items: center;
+    padding: 0 8px; font-size: 0.58rem; color: #f0e6d8; font-weight: 700; gap: 6px;
+  }
+  .mini-screen .bar img { width: 14px; height: 14px; object-fit: contain; }
+  .mini-body { padding: 8px; min-height: 118px; font-size: 0.58rem; color: var(--muted); line-height: 1.35; }
+  .flow-arrow-lg { align-self: center; color: var(--accent); font-size: 1.4rem; font-weight: 700; padding: 0 0.15rem; }
+  .git-tree {
+    font-family: Consolas, monospace; font-size: 0.8rem; line-height: 1.65; color: var(--accent2);
+    background: var(--code-bg); border-radius: 12px; padding: 1.2rem 1.4rem;
+    border: 1px solid var(--card-border); white-space: pre; overflow-x: auto;
+  }
+  .cover { text-align: center; }
+  .cover .emoji { font-size: 4rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 24px rgba(212,165,116,0.35)); }
+  .meta-row { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.25rem; font-size: 0.88rem; color: var(--muted); }
+  .aar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.75rem; }
+  .aar-cell { min-height: 120px; border: 2px dashed var(--card-border); border-radius: 12px; padding: 0.85rem; background: rgba(0,0,0,0.2); }
+  .aar-cell h4 { color: var(--accent); font-size: 0.95rem; margin-bottom: 0.4rem; }
+  #nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center; gap: 1.25rem;
+    padding: 0.75rem 1.5rem; background: rgba(38, 30, 24, 0.97);
+    border-top: 1px solid var(--card-border); backdrop-filter: blur(10px); z-index: 150;
+  }
+  .nav-btn {
+    background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text);
+    padding: 0.48rem 1.35rem; border-radius: 8px; cursor: pointer; font-size: 0.88rem;
+  }
+  .nav-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--accent); color: #fff; }
+  .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  #slide-counter { font-size: 0.85rem; color: var(--muted); min-width: 72px; text-align: center; }
+  .toc-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.85rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; }
+  .toc-num { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+  .toc-row .t1 { font-weight: 600; color: var(--text); font-size: 0.86rem; }
+  .toc-row .t2 { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+  a.link { color: #7ec8e3; font-weight: 600; word-break: break-all; }
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+<div id="slides-container">
+
+  <div class="slide active" data-index="0">
+    <div class="slide-content cover">
+      <div class="emoji">☕</div>
+      <div class="slide-tag">Mini Project · Spring Boot 4.0.3 · Supabase</div>
+      <h1 class="slide-title">브런치 카페 키오스크 웹</h1>
+      <p class="slide-subtitle" style="font-size:1.15rem;">매장 주문·결제 키오스크 + 운영자 관리자 시스템</p>
+      <div class="card-grid c2" style="max-width:640px;margin:1.5rem auto;text-align:left;">
+        <div class="card"><h3>팀장</h3><p><strong>최병걸</strong></p></div>
+        <div class="card"><h3>팀원</h3><p><strong>유재혁</strong> · <strong>정소희</strong> · <strong>이기문</strong></p></div>
+      </div>
+      <div class="meta-row">
+        <span>Java 21</span><span>Thymeleaf · JS</span><span>Spring Security</span><span>PostgreSQL / Supabase</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="1">
+    <div class="slide-content">
+      <div class="slide-tag">Index</div>
+      <h2 class="slide-title">목차</h2>
+      <div class="card-grid c2">
+        <div class="toc-row"><span class="toc-num">1</span><div><div class="t1">프로젝트 개요</div><div class="t2">키오스크 · 브랜드 · 메뉴 · 관리자</div></div></div>
+        <div class="toc-row"><span class="toc-num">2</span><div><div class="t1">개발 환경</div><div class="t2">스택 · 빌드</div></div></div>
+        <div class="toc-row"><span class="toc-num">3</span><div><div class="t1">데이터베이스</div><div class="t2">테이블 · 컬럼</div></div></div>
+        <div class="toc-row"><span class="toc-num">4</span><div><div class="t1">파일 구조</div><div class="t2">패키지 · 템플릿</div></div></div>
+        <div class="toc-row"><span class="toc-num">5</span><div><div class="t1">키오스크 화면</div><div class="t2">사이트맵 · 흐름 미리보기</div></div></div>
+        <div class="toc-row"><span class="toc-num">6</span><div><div class="t1">관리자 화면</div><div class="t2">사이트맵 · 흐름</div></div></div>
+        <div class="toc-row"><span class="toc-num">7</span><div><div class="t1">업무 분장</div><div class="t2">전체 · 담당자별</div></div></div>
+        <div class="toc-row"><span class="toc-num">8</span><div><div class="t1">Git 브랜치</div><div class="t2">트리 · 2~4.1</div></div></div>
+        <div class="toc-row"><span class="toc-num">9</span><div><div class="t1">시연 · Issue</div><div class="t2">URL · GitHub</div></div></div>
+        <div class="toc-row"><span class="toc-num">10</span><div><div class="t1">AAR</div><div class="t2">회고 4인</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="2">
+    <div class="slide-content">
+      <div class="slide-tag">Overview</div>
+      <h2 class="slide-title">프로젝트 개요</h2>
+      <div class="card-grid c2">
+        <div class="card"><h3>키오스크</h3><ul><li>메뉴 선택 → 장바구니 → 쿠폰·할인 → 결제 → 완료·적립 안내</li><li>회원 전화번호·쿠폰 연동</li></ul></div>
+        <div class="card"><h3>브랜드 · 주메뉴</h3><ul><li>헤더: 버터벨 · BRUNCH &amp; COFFEE</li><li>탭: 음식(FOOD) / 음료(DRINK)</li></ul></div>
+        <div class="card"><h3>샘플 메뉴</h3><p>브런치·커피·에이드 등 <code>schema.sql</code> 샘플 데이터 기준</p></div>
+        <div class="card"><h3>관리자</h3><ul><li>대시보드 · 메뉴 · 주문 · 회원/쿠폰</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="3">
+    <div class="slide-content">
+      <div class="slide-tag">Tech</div>
+      <h2 class="slide-title">개발 환경</h2>
+      <div class="card-grid c2">
+        <div class="card"><h3>백엔드</h3><ul><li>Java 21, Spring Boot 4.0.3, JPA, Gradle</li></ul></div>
+        <div class="card"><h3>보안</h3><ul><li>Spring Security, 관리자 로그인, CSRF</li></ul></div>
+        <div class="card"><h3>프론트</h3><ul><li>Thymeleaf, JS, <code>kiosk.css</code> / <code>admin.css</code></li></ul></div>
+        <div class="card"><h3>DB</h3><ul><li>Supabase(PostgreSQL), <code>schema.sql</code></li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="4">
+    <div class="slide-content">
+      <div class="slide-tag">DB</div>
+      <h2 class="slide-title">DB 테이블</h2>
+      <div class="card-grid c2">
+        <div class="card" style="padding:0.75rem;"><h3>member</h3>
+          <table class="data-table"><tr><th>컬럼</th><th>비고</th></tr>
+          <tr><td>id</td><td><span class="pill-pk">PK</span></td></tr>
+          <tr><td>phone</td><td>UNIQUE</td></tr><tr><td>name, points, created_at</td><td></td></tr></table></div>
+        <div class="card" style="padding:0.75rem;"><h3>menu</h3>
+          <table class="data-table"><tr><th>컬럼</th><th>비고</th></tr>
+          <tr><td>id</td><td><span class="pill-pk">PK</span></td></tr>
+          <tr><td>category</td><td>FOOD / DRINK</td></tr><tr><td>price, image_url, available…</td><td></td></tr></table></div>
+        <div class="card" style="padding:0.75rem;"><h3>orders</h3>
+          <table class="data-table"><tr><th>컬럼</th><th>비고</th></tr>
+          <tr><td>member_id</td><td><span class="pill-pk pill-fk">FK</span></td></tr>
+          <tr><td>status</td><td>RECEIVED / PREPARING / COMPLETED / CANCELLED</td></tr></table></div>
+        <div class="card" style="padding:0.75rem;"><h3>order_item · coupon · admin</h3>
+          <p>order_item: order_id, menu_id, quantity, unit_price<br>
+          coupon: code, discount_type, used, expires_at<br>
+          admin: username, password(BCrypt)</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="5">
+    <div class="slide-content">
+      <div class="slide-tag">Structure</div>
+      <h2 class="slide-title">파일 · 패키지 구조</h2>
+      <pre class="tree">MiniProject/
+├── src/main/java/com/cafe/kiosk/
+│   ├── config/ (SecurityConfig, DataInitializer 등)
+│   ├── controller/ (Kiosk, Order, Member, Admin, Api)
+│   ├── domain/, dto/, repository/, service/, security/
+├── src/main/resources/
+│   ├── application.yml, schema.sql
+│   ├── static/ (css, js, images)
+│   └── templates/kiosk/, admin/, fragments/</pre>
+    </div>
+  </div>
+
+  <div class="slide" data-index="6">
+    <div class="slide-content">
+      <div class="slide-tag">Kiosk</div>
+      <h2 class="slide-title">키오스크 — 사이트맵 · 흐름</h2>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 920 200" xmlns="http://www.w3.org/2000/svg">
+          <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0,8 4,0 8" fill="#d4a574"/></marker></defs>
+          <text x="460" y="22" text-anchor="middle" fill="#e8c9a8" font-size="14" font-weight="bold">Main flow</text>
+          <rect x="20" y="60" width="100" height="48" rx="8" fill="#3d2e25" stroke="#d4a574"/><text x="70" y="88" text-anchor="middle" fill="#fff" font-size="12">/</text>
+          <line x1="120" y1="84" x2="175" y2="84" stroke="#d4a574" marker-end="url(#a)"/>
+          <rect x="180" y="60" width="120" height="48" rx="8" fill="#3d2e25" stroke="#d4a574"/><text x="240" y="88" text-anchor="middle" fill="#fff" font-size="11">/order/cart</text>
+          <line x1="300" y1="84" x2="355" y2="84" stroke="#d4a574" marker-end="url(#a)"/>
+          <rect x="360" y="60" width="130" height="48" rx="8" fill="#3d2e25" stroke="#d4a574"/><text x="425" y="88" text-anchor="middle" fill="#fff" font-size="11">/order/payment</text>
+          <line x1="490" y1="84" x2="545" y2="84" stroke="#d4a574" marker-end="url(#a)"/>
+          <rect x="550" y="60" width="140" height="48" rx="8" fill="#3d2e25" stroke="#d4a574"/><text x="620" y="88" text-anchor="middle" fill="#fff" font-size="11">/order/complete</text>
+          <rect x="720" y="60" width="160" height="48" rx="8" fill="#2a3d28" stroke="#7bed9f"/><text x="800" y="88" text-anchor="middle" fill="#e0ffe8" font-size="11">/member/stamp</text>
+        </svg>
+      </div>
+      <p class="slide-subtitle" style="margin-top:0.5rem;">미리보기(정적 자산 경로는 프로젝트 루트 기준)</p>
+      <div class="flow-screens">
+        <div class="mini-screen"><div class="bar"><img src="../src/main/resources/static/images/logo.svg" alt="" />메뉴</div><div class="mini-body">음식/음료 탭</div></div>
+        <span class="flow-arrow-lg">→</span>
+        <div class="mini-screen"><div class="bar">장바구니</div><div class="mini-body">쿠폰·합계</div></div>
+        <span class="flow-arrow-lg">→</span>
+        <div class="mini-screen"><div class="bar">결제</div><div class="mini-body"><img src="../src/main/resources/static/images/payment/card.svg" style="width:32px;" alt="" /></div></div>
+        <span class="flow-arrow-lg">→</span>
+        <div class="mini-screen"><div class="bar">완료</div><div class="mini-body"><img src="../src/main/resources/static/images/complete.svg" style="width:40px;" alt="" /></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="7">
+    <div class="slide-content">
+      <div class="slide-tag">Admin</div>
+      <h2 class="slide-title">관리자</h2>
+      <div class="card"><h3>흐름</h3><p><code>/admin/login</code> → <code>/admin/dashboard</code> → <code>menus</code> / <code>orders</code> / <code>members</code> · REST <code>/admin/api/**</code></p></div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="8">
+    <div class="slide-content">
+      <div class="slide-tag">Team</div>
+      <h2 class="slide-title">업무 분장 — 전체</h2>
+      <div class="card-grid c2">
+        <div class="card"><h3>도메인</h3><ul><li>메뉴 · 주문·결제 · 회원·쿠폰 · 인프라/통합</li></ul></div>
+        <div class="card"><h3>협업</h3><ul><li>기능 브랜치 병합, Security·CSRF 통합 검증</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="9">
+    <div class="slide-content">
+      <div class="slide-tag">최병걸</div>
+      <h2 class="slide-title">팀장</h2>
+      <div class="card"><ul><li>기반·Git·DB·Security·통합</li><li>관리자 대시보드·주문 관리</li></ul></div>
+    </div>
+  </div>
+  <div class="slide" data-index="10">
+    <div class="slide-content">
+      <div class="slide-tag">유재혁</div>
+      <h2 class="slide-title">팀원</h2>
+      <div class="card"><ul><li>메뉴 도메인, 키오스크 메인, 관리자 메뉴 관리</li></ul></div>
+    </div>
+  </div>
+  <div class="slide" data-index="11">
+    <div class="slide-content">
+      <div class="slide-tag">정소희</div>
+      <h2 class="slide-title">팀원</h2>
+      <div class="card"><ul><li>주문·결제, 장바구니~완료, 프론트 조율</li></ul></div>
+    </div>
+  </div>
+  <div class="slide" data-index="12">
+    <div class="slide-content">
+      <div class="slide-tag">이기문</div>
+      <h2 class="slide-title">팀원</h2>
+      <div class="card"><ul><li>회원·쿠폰, 스탬프, 관리자 회원 관리</li></ul></div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="13">
+    <div class="slide-content">
+      <div class="slide-tag">Git</div>
+      <h2 class="slide-title">브랜치 트리</h2>
+      <div class="git-tree">main
+  └── dev
+
+      ├── menu2 ~ menu4.1
+      ├── order2 ~ order4.1
+      ├── member2 ~ member4.1
+      └── admin2 ~ admin4.1</div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="14">
+    <div class="slide-content">
+      <div class="slide-tag">Demo</div>
+      <h2 class="slide-title">시연 · Issue</h2>
+      <div class="card-grid c2">
+        <div class="card"><h3>URL</h3><p><a class="link" href="http://localhost:8080" target="_blank" rel="noopener">localhost:8080</a><br><a class="link" href="http://localhost:8080/admin/login" target="_blank" rel="noopener">/admin/login</a></p></div>
+        <div class="card"><h3>Issues</h3><p><a class="link" href="https://github.com/Byungkeol-Choi/MiniProject/issues" target="_blank" rel="noopener">GitHub Issues</a></p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-index="15">
+    <div class="slide-content">
+      <div class="slide-tag">AAR</div>
+      <h2 class="slide-title">회고</h2>
+      <div class="aar-grid">
+        <div class="aar-cell"><h4>최병걸</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+        <div class="aar-cell"><h4>유재혁</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+        <div class="aar-cell"><h4>정소희</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+        <div class="aar-cell"><h4>이기문</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav id="nav" aria-label="슬라이드">
+  <button type="button" class="nav-btn" id="btn-prev">◀ 이전</button>
+  <span id="slide-counter">1 / 16</span>
+  <button type="button" class="nav-btn" id="btn-next">다음 ▶</button>
+</nav>
+<script>
+(function(){
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  const bar = document.getElementById('progress-bar');
+  const counter = document.getElementById('slide-counter');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    slides[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    bar.style.width = ((current + 1) / total * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current === total - 1;
+  }
+  btnPrev.addEventListener('click', () => goTo(current - 1));
+  btnNext.addEventListener('click', () => goTo(current + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+    if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+  });
+  goTo(0);
+})();
+</script>
+</body>
+</html>
