@@ -3,6 +3,7 @@ package com.cafe.kiosk.controller;
 import com.cafe.kiosk.dto.CartItemDto;
 import com.cafe.kiosk.dto.CartItemSessionDto;
 import com.cafe.kiosk.service.CouponService;
+import com.cafe.kiosk.service.MemberService;
 import com.cafe.kiosk.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class OrderController {
     private final ObjectMapper objectMapper; //json 세션 저장 방법
     private final CouponService couponService;
     private final OrderService orderService;
+    private final MemberService memberService;
 
   @GetMapping("/order/cart")
   public String confrim(HttpSession session, Model model) {
@@ -38,6 +40,13 @@ public class OrderController {
 
         model.addAttribute("cartItems", cartItemDto);
         model.addAttribute("subtotal", subtotal);
+
+        // 이전 버튼으로 돌아올 때 쿠폰·회원·포인트 정보 복원을 위해 세션값을 모델에 담는다
+        model.addAttribute("sessionCouponCode", session.getAttribute("couponCode"));
+        model.addAttribute("sessionCouponDiscount", session.getAttribute("couponDiscount"));
+        model.addAttribute("sessionMemberId", session.getAttribute("memberId"));
+        model.addAttribute("sessionMemberName", session.getAttribute("memberName"));
+        model.addAttribute("sessionUsePoints", session.getAttribute("usePoints"));
 
     return "kiosk/cart";
   }
@@ -76,12 +85,14 @@ public class OrderController {
             couponDiscount = (int) session.getAttribute("couponDiscount");
         }
 
-        int finalAmount = totalAmount - couponDiscount;
-
+        Integer usePoints = (Integer) session.getAttribute("usePoints");
+        int pointsDiscount = (usePoints != null && usePoints > 0) ? usePoints : 0;
+        int finalAmount = totalAmount - couponDiscount - pointsDiscount;
 
         model.addAttribute("cartItems", cartItemDto);
         model.addAttribute("summaryTotalAmount", totalAmount);
         model.addAttribute("summaryDiscountAmount", couponDiscount);
+        model.addAttribute("summaryPointsDiscount", pointsDiscount);
         model.addAttribute("summaryFinalAmount", finalAmount);
 
         return "kiosk/payment";
@@ -92,6 +103,7 @@ public class OrderController {
                           @RequestParam(required = false) String memberName,
                           @RequestParam(required = false) String couponCode,
                           @RequestParam(defaultValue = "0") int couponDiscount,
+                          @RequestParam(defaultValue = "0") int usePoints,
                           HttpSession session) {
         System.out.println("회원명"+memberName);
         System.out.println("회원명"+memberId);
@@ -102,6 +114,7 @@ public class OrderController {
             session.setAttribute("couponCode", couponCode);
             session.setAttribute("couponDiscount", couponDiscount);
         }
+        if (usePoints > 0) session.setAttribute("usePoints", usePoints);
 
         return "redirect:/order/payment";
     }
@@ -123,6 +136,12 @@ public class OrderController {
         String couponCode = (String) session.getAttribute("couponCode");
         if (couponCode != null && !couponCode.isEmpty()) {
             couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
+        }
+
+        Long memberId = (Long) session.getAttribute("memberId");
+        Integer usePoints = (Integer) session.getAttribute("usePoints");
+        if (memberId != null && memberId != 0 && usePoints != null && usePoints > 0) {
+            memberService.deductPoints(memberId, usePoints);
         }
 
         // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.

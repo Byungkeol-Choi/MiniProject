@@ -7,6 +7,7 @@ import com.cafe.kiosk.service.MemberService;
 import com.cafe.kiosk.repository.CouponRepository;
 import com.cafe.kiosk.repository.MemberRepository;
 import com.cafe.kiosk.service.CouponService;
+import com.cafe.kiosk.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,17 @@ public class AdminApiController {
     private final CouponRepository couponRepository;
     private final CouponService couponService;
     private final MemberService memberService;
+    private final OrderService orderService;
+
+    /** 관리자 주문 상세 모달용 (JSON). GET이라 CSRF 불필요, 세션 쿠키로 ADMIN 인증. */
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<?> getOrderDetail(@PathVariable Long orderId) {
+        try {
+            return ResponseEntity.ok(orderService.getAdminOrderDetail(orderId));
+        } catch (java.util.NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     /** 특정 회원의 쿠폰 목록 조회 */ // members.html 432 lines
     @GetMapping("/members/{memberId}/coupons") // (사용자가 특정 회원 행의「쿠폰 관리」버튼을 클릭). 참고로 쿠폰 관리 클릭은 AJAX 조회이지 주소창이 바뀌는 내비게이션이 아닙니다.

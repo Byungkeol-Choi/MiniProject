@@ -126,11 +126,19 @@
               >
             </div>
             <div class="summary-row" th:if="${summaryDiscountAmount > 0}">
-              <span>할인 금액</span>
+              <span>쿠폰 할인</span>
               <span
                 class="discount-tag"
                 th:text="${'-' + #numbers.formatInteger(summaryDiscountAmount?:0, 1, 'COMMA') + '원'}"
                 >-2,000원</span
+              >
+            </div>
+            <div class="summary-row" th:if="${summaryPointsDiscount != null && summaryPointsDiscount > 0}">
+              <span>포인트 할인</span>
+              <span
+                class="discount-tag"
+                th:text="${'-' + #numbers.formatInteger(summaryPointsDiscount, 1, 'COMMA') + '원'}"
+                >-500원</span
               >
             </div>
             <div class="summary-total">

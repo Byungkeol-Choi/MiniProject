@@ -117,6 +117,22 @@ public class MemberService {
     }
 
     /**
+     * 키오스크 결제 시 포인트를 차감한다.
+     *
+     * @param memberId       회원 ID
+     * @param pointsToDeduct 차감할 포인트
+     */
+    @Transactional
+    public void deductPoints(Long memberId, int pointsToDeduct) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        if (member.getPoints() < pointsToDeduct) {
+            throw new IllegalArgumentException("포인트가 부족합니다.");
+        }
+        member.setPoints(member.getPoints() - pointsToDeduct);
+    }
+
+    /**
      * 관리자: 회원 추가
      * - 전화번호는 숫자만 정규화해서 저장(하이픈/공백 무시)
      * - 같은 전화번호가 이미 있으면 409로 처리되도록 {@link IllegalStateException} 발생
@@ -134,7 +150,7 @@ public class MemberService {
         }
 
         // **Dirty checking(변경 감지)**은 이미 영속(managed) 상태인 엔티티에만 해당합니다.
-        // 즉, 이번 트랜잭션 안에서 DB에서 읽어 온 뒤 같은 EntityManager가 관리하는 객체를 수정했을 때, flush 시점에 UPDATE가 나갑니다.
+        // 즉, 이번 트랜잭션 안에서 DB에서 읽어 온 뒤 같은 EntityManager가 관리하는 객체를 수정했을 때, flush(물을 쏟아부어 씻어내다) 시점에 UPDATE가 나갑니다.
 
         Member member = Member.builder()
                 .phone(normalizedPhone)
@@ -191,7 +207,7 @@ public class MemberService {
         if (phoneRaw == null) {
             return "";
         }
-        String normalized = phoneRaw.replaceAll("[^0-9]", "");
+        String normalized = phoneRaw.replaceAll("[^0-9]", ""); // 숫자가 아닌 문자 전부 제거
         return normalized;
     }
 }

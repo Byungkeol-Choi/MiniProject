@@ -527,6 +527,15 @@ body {
 .modal-close:hover { background: var(--content-bg); }
 
 .modal-body { padding: 20px 24px; }
+
+.order-detail-summary { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.order-detail-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.order-detail-row:last-of-type { border-bottom: none; padding-bottom: 0; }
+.order-detail-label { color: var(--text-secondary); font-size: 13px; flex-shrink: 0; }
+
 .modal-footer {
   padding: 14px 24px 20px;
   border-top: 1px solid var(--border);
