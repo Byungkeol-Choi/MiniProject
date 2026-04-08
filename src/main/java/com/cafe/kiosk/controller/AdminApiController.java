@@ -46,7 +46,8 @@ public class AdminApiController {
     public ResponseEntity<?> getMemberCoupons(@PathVariable Long memberId) {
         List<Coupon> coupons = couponRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
         // 쿠폰 리스트를 스트림으로 변환해 각각을 키-값(Map) 형태로 가공하여 반환. (응답 본문 타입이 길어지는 것을 방지하기 위해 ResponseEntity<?> 와일드카드 사용)
-        List<Map<String, Object>> result = coupons.stream().map(c -> Map.<String, Object>of(
+        List<Map<String, Object>> result = coupons.stream().map(c -> Map.<String, Object>of( // 정적 팩토리 방식: Map.of("id", 1, "name", "A")
+                // “정적 팩토리 메서드”는 클래스가 제공하는 객체 생성용 static 메서드라고 이해하면 됩니다. (팩토리(factory): 객체를 “생산”해 주는 역할)
                 "id", c.getId(),
                 "name", c.getName(),
                 "code", c.getCode(),
