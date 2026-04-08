@@ -1,39 +1,16 @@
-<!doctype html>
-<html
-  xmlns:th="http://www.thymeleaf.org"
-  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-  lang="ko"
->
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>대시보드 - 브런치 카페 관리자</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/images/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="96x96"
-      href="/images/favicon-96x96.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/images/favicon-16x16.png"
-    />
-  </head>
-  <body>
-    <!--
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대시보드 - 브런치 카페 관리자</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+
+<!--
   [백엔드 연동] Controller 필요 변수
   - todaySales      : int   (오늘 매출)
   - todayOrderCount : int   (오늘 주문 수)
@@ -43,420 +20,220 @@
   - adminName       : String
 -->
 
-    <div class="admin-layout">
-      <!-- 사이드바 -->
-      <aside th:replace="~{fragments/layout :: admin-sidebar}">
-        <div th:fragment="admin-sidebar"><!-- fallback --></div>
-      </aside>
+<div class="admin-layout">
 
-      <!-- 메인 콘텐츠 -->
-      <div class="admin-content">
-        <!-- 상단 바 -->
-        <div class="admin-topbar">
-          <div class="topbar-title">
-            <i class="bi bi-speedometer2" style="color: #1e2a38"></i> 대시보드
+  <!-- 사이드바 -->
+  <aside th:replace="~{fragments/layout :: admin-sidebar}">
+    <div th:fragment="admin-sidebar"><!-- fallback --></div>
+  </aside>
+
+  <!-- 메인 콘텐츠 -->
+  <div class="admin-content">
+
+    <!-- 상단 바 -->
+    <div class="admin-topbar">
+      <div class="topbar-title">
+        <i class="bi bi-speedometer2"></i> 대시보드
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-date">
+          <i class="bi bi-calendar3"></i>
+          <span id="dashboard-date">2026년 3월 30일 월요일</span>
+        </div>
+        <a th:href="@{/}" href="/" target="_blank"
+           style="font-size:13px; color:#5C3317; text-decoration:none; display:flex; align-items:center; gap:4px;">
+          <i class="bi bi-display"></i> 키오스크 열기
+        </a>
+      </div>
+    </div>
+
+    <!-- 페이지 내용 -->
+    <div class="page-content">
+
+      <!-- ─── 통계 카드 ──────────────────────── -->
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-icon brown"><i class="bi bi-currency-won" style="color:#C2692A;"></i></div>
+          <div>
+            <div class="stat-label">오늘 매출</div>
+            <div class="stat-value"
+                 th:text="${#numbers.formatInteger(todaySales ?: 258000, 1, 'COMMA') + '원'}">258,000원</div>
+<!--            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 전일 대비 +12%</div>-->
           </div>
-          <div class="topbar-right">
-            <div class="topbar-date">
-              <!-- <i class="bi bi-calendar3"></i> -->
-              <span id="dashboard-date">2026년 3월 30일 월요일</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="bi bi-receipt" style="color:#2563EB;"></i></div>
+          <div>
+            <div class="stat-label">오늘 주문</div>
+            <div class="stat-value" th:text="${todayOrderCount ?: 24}">24</div>
+<!--            <div class="stat-sub">-->
+<!--              대기중 <strong th:text="${pendingCount ?: 3}" style="color:#D97706;">3</strong>건-->
+<!--            </div>-->
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="bi bi-people" style="color:#16A34A;"></i></div>
+          <div>
+            <div class="stat-label">총 회원 수</div>
+            <div class="stat-value" th:text="${memberCount ?: 142}">142</div>
+            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 오늘 신규 <strong th:text="${todayMemberCount ?: 2}">2</strong>명</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon purple"><i class="bi bi-star-fill" style="color:#7C3AED;"></i></div>
+          <div>
+            <div class="stat-label">발행 쿠폰</div>
+            <div class="stat-value" th:text="${couponCount ?: 38}">38</div>
+            <div class="stat-sub">미사용 <strong th:text="${unusedCouponCount ?: 15}">15</strong>개</div>
+          </div>
+        </div>
+
+      </div><!-- /stats-grid -->
+
+      <!-- ─── 하단 2열 레이아웃 ──────────────── -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+
+        <!-- 최근 주문 -->
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">
+              <i class="bi bi-clock-history"></i> 최근 주문
             </div>
-            <a
-              th:href="@{/}"
-              href="/"
-              target="_blank"
-              class="btn-secondary"
-              style="
-                font-size: 13px;
-                text-decoration: none;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              "
-            >
-              <i class="bi bi-display" style="margin-right: 4px"></i> 키오스크
-              열기
+            <a th:href="@{/admin/orders}" href="/admin/orders" class="btn-secondary btn-sm">
+              전체 보기
             </a>
           </div>
-        </div>
 
-        <!-- 페이지 내용 -->
-        <div class="page-content">
-          <!-- ─── 통계 카드 ──────────────────────── -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon brown">
-                <i class="bi bi-cash" style="color: #c2692a"></i>
+          <div style="padding:0 8px;">
+            <!-- Thymeleaf 반복 -->
+            <div th:each="order : ${recentOrders}" class="order-quick-item">
+              <div class="order-num-tag" th:text="'#' + ${order.id}">#42</div>
+              <div class="order-quick-info">
+                <div th:text="${order.totalAmount != null ? #numbers.formatInteger(order.totalAmount, 1, 'COMMA') + '원' : '-'}">27,500원</div>
+                <div class="order-quick-time"
+                     th:text="${#temporals.format(order.createdAt, 'HH:mm')}">14:32</div>
               </div>
-              <div>
-                <div class="stat-label">오늘 매출</div>
-                <div
-                  class="stat-value"
-                  th:text="${#numbers.formatInteger(todaySales ?: 258000, 1, 'COMMA') + '원'}"
-                >
-                  258,000원
-                </div>
-                <!--            <div class="stat-sub stat-up"><i class="bi bi-arrow-up"></i> 전일 대비 +12%</div>-->
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon blue">
-                <i class="bi bi-receipt" style="color: #2563eb"></i>
-              </div>
-              <div>
-                <div class="stat-label">오늘 주문</div>
-                <div class="stat-value" th:text="${todayOrderCount ?: 24}">
-                  24
-                </div>
-                <!--            <div class="stat-sub">-->
-                <!--              대기중 <strong th:text="${pendingCount ?: 3}" style="color:#D97706;">3</strong>건-->
-                <!--            </div>-->
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon green">
-                <i class="bi bi-people" style="color: #16a34a"></i>
-              </div>
-              <div>
-                <div class="stat-label">총 회원 수</div>
-                <div class="stat-value" th:text="${memberCount ?: 142}">
-                  142
-                </div>
-                <div class="stat-sub stat-up">
-                  신규
-                  <strong th:text="${todayMemberCount ?: 2}">2</strong>명
-                </div>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <div class="stat-icon purple">
-                <i class="bi bi-star-fill" style="color: #7c3aed"></i>
-              </div>
-              <div>
-                <div class="stat-label">발행 쿠폰</div>
-                <div class="stat-value" th:text="${couponCount ?: 38}">38</div>
-                <div class="stat-sub">
-                  미사용
-                  <strong th:text="${unusedCouponCount ?: 15}">15</strong>개
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- /stats-grid -->
-
-          <!-- ─── 하단 2열 레이아웃 ──────────────── -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
-            <!-- 최근 주문 -->
-            <div class="data-card">
-              <div class="data-card-header">
-                <div class="data-card-title">
-                  <i class="bi bi-clock-history" style="color: #1e2a38"></i>
-                  최근 주문
-                </div>
-                <a
-                  th:href="@{/admin/orders}"
-                  href="/admin/orders"
-                  class="btn-secondary btn-sm"
-                  style="text-decoration: none"
-                >
-                  전체 보기
-                </a>
-              </div>
-
-              <div style="padding: 0 20px">
-                <!-- Thymeleaf 반복 -->
-                <div th:each="order : ${recentOrders}" class="order-quick-item">
-                  <div
-                    class="order-num-tag badge-default"
-                    th:text="'#' + ${order.id}"
-                  >
-                    #42
-                  </div>
-                  <div class="order-quick-info">
-                    <div
-                      th:text="${order.totalAmount != null ? #numbers.formatInteger(order.totalAmount, 1, 'COMMA') + '원' : '-'}"
-                    >
-                      27,500원
-                    </div>
-                    <div
-                      class="order-quick-time"
-                      th:text="${#temporals.format(order.createdAt, 'HH:mm')}"
-                    >
-                      14:32
-                    </div>
-                  </div>
-                  <span
-                    class="badge"
+              <span class="badge"
                     th:classappend="${order.status.name() == 'RECEIVED' ? 'badge-received' : (order.status.name() == 'PREPARING' ? 'badge-preparing' : (order.status.name() == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'))}"
-                    th:text="${order.status.name() == 'RECEIVED' ? '접수' : (order.status.name() == 'PREPARING' ? '준비중' : (order.status.name() == 'COMPLETED' ? '완료' : '취소'))}"
-                    >접수</span
-                  >
-                </div>
-
-                <!-- 샘플 데이터 (recentOrders가 null인 경우) -->
-                <div th:if="${recentOrders == null}" class="order-quick-item">
-                  <div class="order-num-tag">#47</div>
-                  <div class="order-quick-info">
-                    <div>32,000원</div>
-                    <div class="order-quick-time">14:52</div>
-                  </div>
-                  <span class="badge badge-preparing">준비중</span>
-                </div>
-                <div th:if="${recentOrders == null}" class="order-quick-item">
-                  <div class="order-num-tag">#46</div>
-                  <div class="order-quick-info">
-                    <div>16,500원</div>
-                    <div class="order-quick-time">14:38</div>
-                  </div>
-                  <span class="badge badge-completed">완료</span>
-                </div>
-                <div th:if="${recentOrders == null}" class="order-quick-item">
-                  <div class="order-num-tag">#45</div>
-                  <div class="order-quick-info">
-                    <div>21,000원</div>
-                    <div class="order-quick-time">14:15</div>
-                  </div>
-                  <span class="badge badge-received">접수</span>
-                </div>
-                <div th:if="${recentOrders == null}" class="order-quick-item">
-                  <div class="order-num-tag">#44</div>
-                  <div class="order-quick-info">
-                    <div>11,000원</div>
-                    <div class="order-quick-time">13:58</div>
-                  </div>
-                  <span class="badge badge-completed">완료</span>
-                </div>
-                <div th:if="${recentOrders == null}" class="order-quick-item">
-                  <div class="order-num-tag">#43</div>
-                  <div class="order-quick-info">
-                    <div>27,500원</div>
-                    <div class="order-quick-time">13:44</div>
-                  </div>
-                  <span class="badge badge-completed">완료</span>
-                </div>
-              </div>
-              <!-- /padding -->
+                    th:text="${order.status.name() == 'RECEIVED' ? '접수' : (order.status.name() == 'PREPARING' ? '준비중' : (order.status.name() == 'COMPLETED' ? '완료' : '취소'))}">접수</span>
             </div>
-            <!-- /최근 주문 -->
 
-            <!-- 빠른 이동 + 주문 현황 요약 -->
-            <div>
-              <!-- 주문 현황 -->
-              <div class="data-card">
-                <div class="data-card-header">
-                  <div class="data-card-title">
-                    <i class="bi bi-bar-chart" style="color: #1e2a38"></i> 오늘
-                    주문 현황
-                  </div>
-                </div>
-                <div
-                  style="
-                    padding: 16px 22px;
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 12px;
-                  "
-                >
-                  <div
-                    style="
-                      text-align: center;
-                      background: #eff6ff;
-                      border-radius: 10px;
-                      padding: 14px;
-                    "
-                  >
-                    <div
-                      style="
-                        font-size: 11px;
-                        color: #6b7a8d;
-                        margin-bottom: 4px;
-                      "
-                    >
-                      접수
-                    </div>
-                    <div
-                      style="font-size: 26px; font-weight: 700; color: #2563eb"
-                      th:text="${receivedCount ?: 3}"
-                    >
-                      3
-                    </div>
-                  </div>
-                  <div
-                    style="
-                      text-align: center;
-                      background: #fef3c7;
-                      border-radius: 10px;
-                      padding: 14px;
-                    "
-                  >
-                    <div
-                      style="
-                        font-size: 11px;
-                        color: #6b7a8d;
-                        margin-bottom: 4px;
-                      "
-                    >
-                      준비중
-                    </div>
-                    <div
-                      style="font-size: 26px; font-weight: 700; color: #d97706"
-                      th:text="${preparingCount ?: 5}"
-                    >
-                      5
-                    </div>
-                  </div>
-                  <div
-                    style="
-                      text-align: center;
-                      background: #f0fff4;
-                      border-radius: 10px;
-                      padding: 14px;
-                    "
-                  >
-                    <div
-                      style="
-                        font-size: 11px;
-                        color: #6b7a8d;
-                        margin-bottom: 4px;
-                      "
-                    >
-                      완료
-                    </div>
-                    <div
-                      style="font-size: 26px; font-weight: 700; color: #16a34a"
-                      th:text="${completedCount ?: 16}"
-                    >
-                      16
-                    </div>
-                  </div>
-                  <div
-                    style="
-                      text-align: center;
-                      background: #fee2e2;
-                      border-radius: 10px;
-                      padding: 14px;
-                    "
-                  >
-                    <div
-                      style="
-                        font-size: 11px;
-                        color: #6b7a8d;
-                        margin-bottom: 4px;
-                      "
-                    >
-                      취소
-                    </div>
-                    <div
-                      style="font-size: 26px; font-weight: 700; color: #dc2626"
-                      th:text="${cancelledCount ?: 0}"
-                    >
-                      0
-                    </div>
-                  </div>
-                </div>
+            <!-- 샘플 데이터 (recentOrders가 null인 경우) -->
+            <div th:if="${recentOrders == null}" class="order-quick-item">
+              <div class="order-num-tag">#47</div>
+              <div class="order-quick-info">
+                <div>32,000원</div>
+                <div class="order-quick-time">14:52</div>
               </div>
+              <span class="badge badge-preparing">준비중</span>
+            </div>
+            <div th:if="${recentOrders == null}" class="order-quick-item">
+              <div class="order-num-tag">#46</div>
+              <div class="order-quick-info">
+                <div>16,500원</div>
+                <div class="order-quick-time">14:38</div>
+              </div>
+              <span class="badge badge-completed">완료</span>
+            </div>
+            <div th:if="${recentOrders == null}" class="order-quick-item">
+              <div class="order-num-tag">#45</div>
+              <div class="order-quick-info">
+                <div>21,000원</div>
+                <div class="order-quick-time">14:15</div>
+              </div>
+              <span class="badge badge-received">접수</span>
+            </div>
+            <div th:if="${recentOrders == null}" class="order-quick-item">
+              <div class="order-num-tag">#44</div>
+              <div class="order-quick-info">
+                <div>11,000원</div>
+                <div class="order-quick-time">13:58</div>
+              </div>
+              <span class="badge badge-completed">완료</span>
+            </div>
+            <div th:if="${recentOrders == null}" class="order-quick-item">
+              <div class="order-num-tag">#43</div>
+              <div class="order-quick-info">
+                <div>27,500원</div>
+                <div class="order-quick-time">13:44</div>
+              </div>
+              <span class="badge badge-completed">완료</span>
+            </div>
 
-              <!-- 빠른 이동 -->
-              <div class="data-card">
-                <div class="data-card-header">
-                  <div class="data-card-title">
-                    <i class="bi bi-lightning" style="color: #1e2a38"></i> 빠른
-                    이동
-                  </div>
-                </div>
-                <div
-                  style="
-                    padding: 14px 22px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                  "
-                >
-                  <a
-                    th:href="@{/admin/orders}"
-                    href="/admin/orders"
-                    style="
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      padding: 10px 14px;
-                      background: #f4f6f9;
-                      border-radius: 8px;
-                      text-decoration: none;
-                      color: #1e2a38;
-                      font-size: 14px;
-                      transition: background 0.2s;
-                    "
-                    onmouseover="this.style.background = '#E5E9EF'"
-                    onmouseout="this.style.background = '#F4F6F9'"
-                  >
-                    <i class="bi bi-receipt" style="color: #1e2a38"></i> 주문
-                    관리
-                    <span
-                      th:if="${(pendingCount ?: 0) > 0}"
-                      class="nav-badge"
-                      style="margin-left: auto"
-                      th:text="${pendingCount}"
-                      >3</span
-                    >
-                  </a>
-                  <a
-                    th:href="@{/admin/members}"
-                    href="/admin/members"
-                    style="
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      padding: 10px 14px;
-                      background: #f4f6f9;
-                      border-radius: 8px;
-                      text-decoration: none;
-                      color: #1e2a38;
-                      font-size: 14px;
-                      transition: background 0.2s;
-                    "
-                    onmouseover="this.style.background = '#E5E9EF'"
-                    onmouseout="this.style.background = '#F4F6F9'"
-                  >
-                    <i class="bi bi-people" style="color: #1e2a38"></i> 회원
-                    관리
-                  </a>
-                  <a
-                    th:href="@{/admin/menus}"
-                    href="/admin/menus"
-                    style="
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      padding: 10px 14px;
-                      background: #f4f6f9;
-                      border-radius: 8px;
-                      text-decoration: none;
-                      color: #1e2a38;
-                      font-size: 14px;
-                      transition: background 0.2s;
-                    "
-                    onmouseover="this.style.background = '#E5E9EF'"
-                    onmouseout="this.style.background = '#F4F6F9'"
-                  >
-                    <i class="bi bi-grid" style="color: #1e2a38"></i> 메뉴 관리
-                  </a>
-                </div>
+          </div><!-- /padding -->
+        </div><!-- /최근 주문 -->
+
+        <!-- 빠른 이동 + 주문 현황 요약 -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+
+          <!-- 주문 현황 -->
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">
+                <i class="bi bi-bar-chart"></i> 오늘 주문 현황
               </div>
             </div>
-            <!-- /오른쪽 열 -->
+            <div style="padding:16px 22px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div style="text-align:center; background:#EFF6FF; border-radius:10px; padding:14px;">
+                <div style="font-size:11px; color:#6B7A8D; margin-bottom:4px;">접수</div>
+                <div style="font-size:26px; font-weight:700; color:#2563EB;"
+                     th:text="${receivedCount ?: 3}">3</div>
+              </div>
+              <div style="text-align:center; background:#FEF3C7; border-radius:10px; padding:14px;">
+                <div style="font-size:11px; color:#6B7A8D; margin-bottom:4px;">준비중</div>
+                <div style="font-size:26px; font-weight:700; color:#D97706;"
+                     th:text="${preparingCount ?: 5}">5</div>
+              </div>
+              <div style="text-align:center; background:#F0FFF4; border-radius:10px; padding:14px;">
+                <div style="font-size:11px; color:#6B7A8D; margin-bottom:4px;">완료</div>
+                <div style="font-size:26px; font-weight:700; color:#16A34A;"
+                     th:text="${completedCount ?: 16}">16</div>
+              </div>
+              <div style="text-align:center; background:#FEE2E2; border-radius:10px; padding:14px;">
+                <div style="font-size:11px; color:#6B7A8D; margin-bottom:4px;">취소</div>
+                <div style="font-size:26px; font-weight:700; color:#DC2626;"
+                     th:text="${cancelledCount ?: 0}">0</div>
+              </div>
+            </div>
           </div>
-          <!-- /2열 그리드 -->
-        </div>
-        <!-- /page-content -->
-      </div>
-      <!-- /admin-content -->
-    </div>
-    <!-- /admin-layout -->
 
-    <script th:src="@{/js/admin.js}"></script>
-  </body>
+          <!-- 빠른 이동 -->
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title"><i class="bi bi-lightning"></i> 빠른 이동</div>
+            </div>
+            <div style="padding:14px 22px; display:flex; flex-direction:column; gap:8px;">
+              <a th:href="@{/admin/orders}" href="/admin/orders"
+                 style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:#F4F6F9; border-radius:8px; text-decoration:none; color:#1E2A38; font-size:14px; transition:background 0.2s;"
+                 onmouseover="this.style.background='#E5E9EF'" onmouseout="this.style.background='#F4F6F9'">
+                <i class="bi bi-receipt" style="color:#5C3317;"></i> 주문 관리
+                <span th:if="${(pendingCount ?: 0) > 0}" class="nav-badge" style="margin-left:auto;"
+                      th:text="${pendingCount}">3</span>
+              </a>
+              <a th:href="@{/admin/members}" href="/admin/members"
+                 style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:#F4F6F9; border-radius:8px; text-decoration:none; color:#1E2A38; font-size:14px; transition:background 0.2s;"
+                 onmouseover="this.style.background='#E5E9EF'" onmouseout="this.style.background='#F4F6F9'">
+                <i class="bi bi-people" style="color:#5C3317;"></i> 회원 관리
+              </a>
+              <a th:href="@{/admin/menus}" href="/admin/menus"
+                 style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:#F4F6F9; border-radius:8px; text-decoration:none; color:#1E2A38; font-size:14px; transition:background 0.2s;"
+                 onmouseover="this.style.background='#E5E9EF'" onmouseout="this.style.background='#F4F6F9'">
+                <i class="bi bi-grid" style="color:#5C3317;"></i> 메뉴 관리
+              </a>
+            </div>
+          </div>
+
+        </div><!-- /오른쪽 열 -->
+      </div><!-- /2열 그리드 -->
+
+    </div><!-- /page-content -->
+  </div><!-- /admin-content -->
+</div><!-- /admin-layout -->
+
+<script th:src="@{/js/admin.js}"></script>
+</body>
 </html>
