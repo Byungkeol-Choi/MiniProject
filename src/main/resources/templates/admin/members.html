@@ -1,673 +1,448 @@
-<!doctype html>
-<html
-  xmlns:th="http://www.thymeleaf.org"
-  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-  lang="ko"
->
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>회원 관리 - 브런치 카페 관리자</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-    <link rel="stylesheet" th:href="@{/css/admin.css}" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/images/admin-favicon/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="96x96"
-      href="/images/admin-favicon/favicon-96x96.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/images/admin-favicon/favicon-16x16.png"
-    />
-  </head>
-  <body>
-    <!--
-      [백엔드 연동] Controller 필요 변수
-      - members     : Page<Member> (필드: id, phone, name, points, createdAt, orderCount)
-      - totalMembers: int
-      - adminName   : String
-      - pendingCount: int
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원 관리 - 브런치 카페 관리자</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
 
-      URL 예시: GET /admin/members?keyword=010&page=0
-    -->
+<!--
+  [백엔드 연동] Controller 필요 변수
+  - members     : Page<Member> (필드: id, phone, name, points, createdAt, orderCount)
+  - totalMembers: int
+  - adminName   : String
+  - pendingCount: int
 
-    <div class="admin-layout">
-      <aside th:replace="~{fragments/layout :: admin-sidebar}"></aside>
+  URL 예시: GET /admin/members?keyword=010&page=0
+-->
 
-      <div class="admin-content">
-        <div class="admin-topbar">
-          <div class="topbar-title">
-            <i class="bi bi-people" style="color: #1e2a38"></i> 회원 관리
+<div class="admin-layout">
+
+  <aside th:replace="~{fragments/layout :: admin-sidebar}"></aside>
+
+  <div class="admin-content">
+    <div class="admin-topbar">
+      <div class="topbar-title">
+        <i class="bi bi-people"></i> 회원 관리
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:13px; color:#6B7A8D;">
+          총 <strong th:text="${totalMembers ?: 142}" style="color:#1E2A38;">142</strong>명
+        </span>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <div class="data-card">
+        <div class="data-card-header">
+          <div class="data-card-title">
+            <i class="bi bi-person-lines-fill"></i> 회원 목록
           </div>
-          <div class="topbar-right">
-            <!-- # 중복 텍스트
-              <span style="font-size: 13px; color: #6b7a8d">
-                총
-                <strong th:text="${totalMembers ?: 142}" style="color: #1e2a38"
-                  >142</strong
-                >명
-              </span>
-            -->
-            <button
-              type="button"
-              class="btn-primary"
-              onclick="openAddMemberModal()"
-            >
-              + 회원 추가
-            </button>
+          <div class="data-card-actions">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="member-search" placeholder="전화번호, 이름 검색...">
+            </div>
+            <button type="button" class="btn-member-add" onclick="openAddMemberModal()">회원 추가</button>
           </div>
         </div>
 
-        <div class="page-content">
-          <div class="data-card">
-            <div class="data-card-header">
-              <div class="data-card-title-wrap">
-                <div class="data-card-title">회원 목록</div>
-                <span
-                  class="data-card-txt"
-                  th:if="${members != null}"
-                  th:text="'총 ' + ${members.totalElements} + '명'"
-                >
-                  총 4명
-                </span>
-                <span th:if="${members == null}">총 4명 (샘플)</span>
-              </div>
-              <div class="topbar-right">
-                <button
-                  type="button"
-                  class="btn-primary"
-                  onclick="openAddMemberModal()"
-                >
-                  + 회원 추가
-                </button>
-              </div>
-            </div>
+        <!-- 테이블 -->
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="members-table">
+            <thead>
+              <tr>
+                <th>번호</th>
+                <th>전화번호</th>
+                <th>이름</th>
+                <th>보유 포인트</th>
+                <th>가입일</th>
+                <th>보유 쿠폰</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
 
-            <!-- 테이블 -->
-            <div style="overflow-x: auto">
-              <table class="admin-table" id="members-table">
-                <thead>
-                  <tr>
-                    <th>번호</th>
-                    <th>전화번호</th>
-                    <th>이름</th>
-                    <th>보유 포인트</th>
-                    <th>가입일</th>
-                    <th>보유 쿠폰</th>
-                    <th>관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Thymeleaf 반복 -->
-                  <tr th:each="member : ${members}">
-                    <td style="color: #9e8b7b" th:text="${member.id}">#1</td>
-                    <td
-                      style="font-weight: 600"
-                      th:text="${member.displayPhone}"
-                    >
-                      010-1234-5678
-                    </td>
-                    <td th:text="${member.name ?: '-'}">홍길동</td>
-                    <td>
-                      <span
-                        class="points-tag"
+              <!-- Thymeleaf 반복 -->
+              <tr th:each="member : ${members}">
+                <td style="color:#9E8B7B;" th:text="${member.id}">#1</td>
+                <td style="font-weight:600;" th:text="${member.displayPhone}">010-1234-5678</td>
+                <td th:text="${member.name ?: '-'}">홍길동</td>
+                <td>
+                  <span class="points-tag"
                         th:id="'member-points-' + member.id"
-                        th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}"
-                        >1,200 P</span
-                      >
-                    </td>
-                    <td
-                      th:text="${#temporals.format(member.createdAt, 'yyyy.MM.dd')}"
-                    >
-                      2025.11.04
-                    </td>
-                    <td th:text="${couponCounts[memberStat.index] ?: 0} + '개'">
-                      0개
-                    </td>
-                    <td>
-                      <div class="member-manage-row">
-                        <button
-                          class="btn-coupon-manage"
-                          th:data-member-id="${member.id}"
-                          th:data-member-name="${member.name ?: member.phone}"
-                          onclick="openCouponModal(this)"
-                        >
-                          쿠폰 관리
-                        </button>
-                        <button
-                          class="btn-member-delete"
-                          th:data-member-id="${member.id}"
-                          th:data-member-name="${member.name ?: member.phone}"
-                          onclick="deleteMember(this)"
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                        th:text="${#numbers.formatInteger(member.points, 1, 'COMMA') + ' P'}">1,200 P</span>
+                </td>
+                <td th:text="${#temporals.format(member.createdAt, 'yyyy.MM.dd')}">2025.11.04</td>
+                <td th:text="${couponCounts[memberStat.index] ?: 0} + '개'">0개</td>
+                <td>
+                  <div class="member-manage-row">
+                    <button class="btn-coupon-manage"
+                            th:data-member-id="${member.id}"
+                            th:data-member-name="${member.name ?: member.phone}"
+                            onclick="openCouponModal(this)">쿠폰 관리</button>
+                    <button class="btn-member-delete"
+                            th:data-member-id="${member.id}"
+                            th:data-member-name="${member.name ?: member.phone}"
+                            onclick="deleteMember(this)">삭제</button>
+                  </div>
+                </td>
+              </tr>
 
-            <!-- 페이지네이션 -->
-            <div class="pagination-wrap">
-              <span
-                th:if="${members != null}"
-                th:text="'총 ' + ${members.totalElements} + '명'"
-                >총 4명</span
-              >
-              <span th:if="${members == null}">총 4명 (샘플)</span>
-              <ul
-                class="pagination"
-                th:if="${members != null and members.totalPages > 1}"
-              >
-                <li>
-                  <a
-                    th:href="@{/admin/members(page=${members.number - 1})}"
-                    class="page-link"
-                    th:classappend="${members.first ? 'disabled' : ''}"
-                  >
-                    <i class="bi bi-chevron-left"></i>
-                  </a>
-                </li>
-                <li
-                  th:each="i : ${#numbers.sequence(0, members.totalPages - 1)}"
-                >
-                  <a
-                    th:href="@{/admin/members(page=${i})}"
-                    class="page-link"
-                    th:classappend="${i == members.number ? 'active' : ''}"
-                    th:text="${i + 1}"
-                    >1</a
-                  >
-                </li>
-                <li>
-                  <a
-                    th:href="@{/admin/members(page=${members.number + 1})}"
-                    class="page-link"
-                    th:classappend="${members.last ? 'disabled' : ''}"
-                  >
-                    <i class="bi bi-chevron-right"></i>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <!-- /data-card -->
+            </tbody>
+          </table>
         </div>
-        <!-- /page-content -->
-      </div>
-      <!-- /admin-content -->
+
+        <!-- 페이지네이션 -->
+        <div class="pagination-wrap">
+          <span th:if="${members != null}" th:text="'총 ' + ${members.totalElements} + '명'">총 4명</span>
+          <span th:if="${members == null}">총 4명 (샘플)</span>
+          <ul class="pagination" th:if="${members != null and members.totalPages > 1}">
+            <li>
+              <a th:href="@{/admin/members(page=${members.number - 1})}"
+                 class="page-link" th:classappend="${members.first ? 'disabled' : ''}">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            <li th:each="i : ${#numbers.sequence(0, members.totalPages - 1)}">
+              <a th:href="@{/admin/members(page=${i})}"
+                 class="page-link" th:classappend="${i == members.number ? 'active' : ''}"
+                 th:text="${i + 1}">1</a>
+            </li>
+            <li>
+              <a th:href="@{/admin/members(page=${members.number + 1})}"
+                 class="page-link" th:classappend="${members.last ? 'disabled' : ''}">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div><!-- /data-card -->
+    </div><!-- /page-content -->
+  </div><!-- /admin-content -->
+</div><!-- /admin-layout -->
+
+
+
+<!-- 쿠폰 관리 모달 (admin.css: .modal-overlay / .modal-box) -->
+<div id="coupon-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="coupon-modal-title">쿠폰 관리</div>
+      <button type="button" class="modal-close" onclick="closeCouponModal()">✕</button>
     </div>
-    <!-- /admin-layout -->
+    <div class="modal-body">
 
-    <!-- 쿠폰 관리 모달 (admin.css: .modal-overlay / .modal-box) -->
-    <div id="coupon-modal" class="modal-overlay">
-      <div class="modal-box">
-        <div class="modal-header">
-          <div class="modal-title" id="coupon-modal-title">쿠폰 관리</div>
-          <button
-            type="button"
-            class="modal-close"
-            onclick="closeCouponModal()"
-          >
-            ✕
-          </button>
-        </div>
-        <div class="modal-body">
-          <!-- 쿠폰 목록 -->
-          <div class="coupon-section-title">보유 쿠폰 목록</div>
-          <div id="coupon-list-wrap">
-            <div class="coupon-empty">쿠폰 정보를 불러오는 중...</div>
-          </div>
-
-          <!-- 쿠폰 발급 폼 -->
-          <div class="coupon-section-title" style="margin-top: 20px">
-            새 쿠폰 발급
-          </div>
-          <form
-            id="coupon-issue-form"
-            class="coupon-create-form"
-            onsubmit="issueCoupon(event)"
-          >
-            <div class="coupon-form-row">
-              <label>쿠폰 이름</label>
-              <input
-                type="text"
-                id="new-coupon-name"
-                name="couponName"
-                placeholder="예: 3,000원 할인 쿠폰"
-                required
-                maxlength="100"
-              />
-            </div>
-            <div class="coupon-form-row">
-              <label>할인 유형</label>
-              <select id="new-coupon-type" name="couponType">
-                <option value="FIXED">금액 할인 (FIXED)</option>
-                <option value="PERCENT">비율 할인 (PERCENT)</option>
-              </select>
-            </div>
-            <div class="coupon-form-row">
-              <label>할인 값</label>
-              <input
-                type="number"
-                id="new-coupon-value"
-                name="couponValue"
-                placeholder="예: 3000"
-                min="1"
-                step="1"
-                required
-              />
-            </div>
-            <div class="coupon-form-row">
-              <label>만료일 (선택)</label>
-              <input
-                type="datetime-local"
-                id="new-coupon-expires"
-                name="couponExpires"
-              />
-            </div>
-            <button type="submit" class="btn-coupon-issue">쿠폰 발급</button>
-          </form>
-        </div>
+      <!-- 쿠폰 목록 -->
+      <div class="coupon-section-title">보유 쿠폰 목록</div>
+      <div id="coupon-list-wrap">
+        <div class="coupon-empty">쿠폰 정보를 불러오는 중...</div>
       </div>
-    </div>
 
-    <!-- 회원 추가 모달 (admin.css: .modal-overlay / .modal-box) -->
-    <div id="add-member-modal" class="modal-overlay">
-      <div class="modal-box">
-        <div class="modal-header">
-          <div class="modal-title" id="add-member-modal-title">회원 추가</div>
-          <button
-            type="button"
-            class="modal-close"
-            onclick="closeAddMemberModal()"
-          >
-            ✕
-          </button>
+      <!-- 쿠폰 발급 폼 -->
+      <div class="coupon-section-title" style="margin-top:20px;">새 쿠폰 발급</div>
+      <form id="coupon-issue-form" class="coupon-create-form" onsubmit="issueCoupon(event)">
+        <div class="coupon-form-row">
+          <label>쿠폰 이름</label>
+          <input type="text" id="new-coupon-name" name="couponName" placeholder="예: 3,000원 할인 쿠폰" required maxlength="100">
         </div>
-        <form
-          id="add-member-form"
-          class="modal-body"
-          onsubmit="addMember(event)"
-        >
-          <div class="add-member-form-row">
-            <label>전화번호</label>
-            <input
-              type="text"
-              id="add-member-phone"
-              name="phone"
-              placeholder="010-1234-5678"
-              required
-              autocomplete="tel"
-            />
-          </div>
-          <div class="add-member-form-row">
-            <label>이름</label>
-            <input
-              type="text"
-              id="add-member-name"
-              name="name"
-              placeholder="홍길동 (선택)"
-            />
-          </div>
-          <button type="submit" class="btn-member-add-submit">회원 추가</button>
-        </form>
-      </div>
+        <div class="coupon-form-row">
+          <label>할인 유형</label>
+          <select id="new-coupon-type" name="couponType">
+            <option value="FIXED">금액 할인 (FIXED)</option>
+            <option value="PERCENT">비율 할인 (PERCENT)</option>
+          </select>
+        </div>
+        <div class="coupon-form-row">
+          <label>할인 값</label>
+          <input type="number" id="new-coupon-value" name="couponValue" placeholder="예: 3000" min="1" step="1" required>
+        </div>
+        <div class="coupon-form-row">
+          <label>만료일 (선택)</label>
+          <input type="datetime-local" id="new-coupon-expires" name="couponExpires">
+        </div>
+        <button type="submit" class="btn-coupon-issue">쿠폰 발급</button>
+      </form>
     </div>
+  </div>
+</div>
 
-    <style>
-      /* 쿠폰 모달은 목록이 넓어 공통 모달보다 조금 넓게 */
-      #coupon-modal .modal-box {
-        max-width: 620px;
-      }
+<!-- 회원 추가 모달 (admin.css: .modal-overlay / .modal-box) -->
+<div id="add-member-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="add-member-modal-title">회원 추가</div>
+      <button type="button" class="modal-close" onclick="closeAddMemberModal()">✕</button>
+    </div>
+    <form id="add-member-form" class="modal-body" onsubmit="addMember(event)">
+      <div class="add-member-form-row">
+        <label>전화번호</label>
+        <input type="text" id="add-member-phone" name="phone" placeholder="010-1234-5678" required autocomplete="tel">
+      </div>
+      <div class="add-member-form-row">
+        <label>이름</label>
+        <input type="text" id="add-member-name" name="name" placeholder="홍길동 (선택)">
+      </div>
+      <button type="submit" class="btn-member-add-submit">회원 추가</button>
+    </form>
+  </div>
+</div>
 
-      .btn-coupon-manage {
-        padding: 4px 12px;
-        background: #6b5344;
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .btn-coupon-manage:hover {
-        background: #4e3a2c;
-      }
+<style>
+/* 쿠폰 모달은 목록이 넓어 공통 모달보다 조금 넓게 */
+#coupon-modal .modal-box { max-width: 620px; }
 
-      .coupon-section-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: #6b5344;
-        margin-bottom: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-      .coupon-empty {
-        color: #aaa;
-        font-size: 13px;
-        padding: 10px 0;
-      }
-      .coupon-list-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-      }
-      .coupon-list-table th {
-        background: #f5f0ec;
-        color: #6b7a8d;
-        font-weight: 600;
-        padding: 7px 10px;
-        text-align: left;
-        border-bottom: 1px solid #e8ddd5;
-      }
-      .coupon-list-table td {
-        padding: 7px 10px;
-        border-bottom: 1px solid #f0ebe7;
-        color: #1e2a38;
-        vertical-align: middle;
-      }
-      .coupon-badge-used {
-        color: #aaa;
-        font-size: 11px;
-      }
-      .coupon-badge-unused {
-        color: #2e7d32;
-        font-size: 11px;
-        font-weight: 600;
-      }
-      .btn-coupon-delete {
-        padding: 3px 10px;
-        background: #e53935;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        font-size: 11px;
-        cursor: pointer;
-      }
-      .btn-coupon-delete:hover {
-        background: #b71c1c;
-      }
-      .coupon-create-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .coupon-form-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .coupon-form-row label {
-        min-width: 90px;
-        font-size: 13px;
-        color: #4a4a4a;
-        font-weight: 600;
-      }
-      .coupon-form-row input,
-      .coupon-form-row select {
-        flex: 1;
-        padding: 7px 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 13px;
-      }
-      .btn-coupon-issue {
-        margin-top: 4px;
-        padding: 8px 20px;
-        background: #6b5344;
-        color: #fff;
-        border: none;
-        border-radius: 7px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        align-self: flex-start;
-      }
-      .btn-coupon-issue:hover {
-        background: #4e3a2c;
-      }
+.btn-coupon-manage {
+  padding: 4px 12px;
+  background: #6B5344;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-coupon-manage:hover { background: #4e3a2c; }
 
-      /* ─── 회원 추가/삭제 UI ────────────────────────────── */
-      .btn-member-add {
-        margin-left: 10px;
-        padding: 7px 14px;
-        background: #6b5344;
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .btn-member-add:hover {
-        background: #4e3a2c;
-      }
+.coupon-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6B5344;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.coupon-empty { color: #aaa; font-size: 13px; padding: 10px 0; }
+.coupon-list-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.coupon-list-table th {
+  background: #f5f0ec;
+  color: #6B7A8D;
+  font-weight: 600;
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e8ddd5;
+}
+.coupon-list-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #f0ebe7;
+  color: #1E2A38;
+  vertical-align: middle;
+}
+.coupon-badge-used { color: #aaa; font-size: 11px; }
+.coupon-badge-unused { color: #2e7d32; font-size: 11px; font-weight: 600; }
+.btn-coupon-delete {
+  padding: 3px 10px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-coupon-delete:hover { background: #b71c1c; }
+.coupon-create-form { display: flex; flex-direction: column; gap: 10px; }
+.coupon-form-row { display: flex; align-items: center; gap: 10px; }
+.coupon-form-row label { min-width: 90px; font-size: 13px; color: #4a4a4a; font-weight: 600; }
+.coupon-form-row input,
+.coupon-form-row select {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.btn-coupon-issue {
+  margin-top: 4px;
+  padding: 8px 20px;
+  background: #6B5344;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.btn-coupon-issue:hover { background: #4e3a2c; }
 
-      .member-manage-row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
+/* ─── 회원 추가/삭제 UI ────────────────────────────── */
+.btn-member-add {
+  margin-left: 10px;
+  padding: 7px 14px;
+  background: #6B5344;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-member-add:hover { background: #4e3a2c; }
 
-      .btn-member-delete {
-        padding: 3px 10px;
-        background: #e53935;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        font-size: 11px;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .btn-member-delete:hover {
-        background: #b71c1c;
-      }
+.member-manage-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
-      #add-member-form.modal-body {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .add-member-form-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .add-member-form-row label {
-        min-width: 90px;
-        font-size: 13px;
-        color: #4a4a4a;
-        font-weight: 600;
-      }
-      .add-member-form-row input {
-        flex: 1;
-        padding: 7px 10px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 13px;
-      }
-      .btn-member-add-submit {
-        margin-top: 2px;
-        padding: 8px 20px;
-        background: #6b5344;
-        color: #fff;
-        border: none;
-        border-radius: 7px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        align-self: flex-start;
-      }
-      .btn-member-add-submit:hover {
-        background: #4e3a2c;
-      }
-    </style>
+.btn-member-delete {
+  padding: 3px 10px;
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-member-delete:hover { background: #b71c1c; }
 
-    <script>
-      let currentMemberId = null;
+#add-member-form.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.add-member-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.add-member-form-row label {
+  min-width: 90px;
+  font-size: 13px;
+  color: #4a4a4a;
+  font-weight: 600;
+}
+.add-member-form-row input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.btn-member-add-submit {
+  margin-top: 2px;
+  padding: 8px 20px;
+  background: #6B5344;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.btn-member-add-submit:hover { background: #4e3a2c; }
+</style>
 
-      function updateAddMemberPhoneValidity() {
-        const phone = document.getElementById("add-member-phone");
-        if (!phone) return;
-        const digits = phone.value.replace(/\D/g, "");
-        if (phone.value.trim() === "") {
-          phone.setCustomValidity("");
-        } else if (digits.length < 10 || digits.length > 11) {
-          phone.setCustomValidity("전화번호는 10~11자리 숫자로 입력해 주세요.");
-        } else {
-          phone.setCustomValidity("");
-        }
-      }
+<script>
+let currentMemberId = null;
 
-      (function initAddMemberPhoneValidation() {
-        const phone = document.getElementById("add-member-phone");
-        if (phone)
-          phone.addEventListener("input", updateAddMemberPhoneValidity);
-      })();
+function updateAddMemberPhoneValidity() {
+  const phone = document.getElementById('add-member-phone');
+  if (!phone) return;
+  const digits = phone.value.replace(/\D/g, '');
+  if (phone.value.trim() === '') {
+    phone.setCustomValidity('');
+  } else if (digits.length < 10 || digits.length > 11) {
+    phone.setCustomValidity('전화번호는 10~11자리 숫자로 입력해 주세요.');
+  } else {
+    phone.setCustomValidity('');
+  }
+}
 
-      function openCouponModal(btn) {
-        currentMemberId = btn.dataset.memberId;
-        const name = btn.dataset.memberName;
-        document.getElementById("coupon-modal-title").textContent =
-          name + " 님 — 쿠폰 관리";
-        document.getElementById("coupon-issue-form")?.reset();
-        document.getElementById("coupon-modal").classList.add("open");
-        loadCoupons();
-      }
+(function initAddMemberPhoneValidation() {
+  const phone = document.getElementById('add-member-phone');
+  if (phone) phone.addEventListener('input', updateAddMemberPhoneValidity);
+})();
 
-      function closeCouponModal() {
-        document.getElementById("coupon-modal")?.classList.remove("open");
-        currentMemberId = null;
-      }
+function openCouponModal(btn) {
+  currentMemberId = btn.dataset.memberId;
+  const name = btn.dataset.memberName;
+  document.getElementById('coupon-modal-title').textContent = name + ' 님 — 쿠폰 관리';
+  document.getElementById('coupon-issue-form')?.reset();
+  document.getElementById('coupon-modal').classList.add('open');
+  loadCoupons();
+}
 
-      async function loadCoupons() {
-        const wrap = document.getElementById("coupon-list-wrap");
-        wrap.innerHTML = '<div class="coupon-empty">불러오는 중...</div>';
-        try {
-          const res = await fetch(
-            "/admin/api/members/" + currentMemberId + "/coupons",
-          );
-          const data = await res.json();
-          if (!res.ok) {
-            wrap.innerHTML =
-              '<div class="coupon-empty">' +
-              (data.error || "오류 발생") +
-              "</div>";
-            return;
-          }
-          if (data.length === 0) {
-            wrap.innerHTML =
-              '<div class="coupon-empty">발급된 쿠폰이 없습니다.</div>';
-            return;
-          }
-          let html =
-            '<table class="coupon-list-table"><thead><tr><th>이름</th><th>코드</th><th>할인</th><th>상태</th><th>만료일</th><th></th></tr></thead><tbody>';
-          data.forEach((c) => {
-            const discount =
-              c.discountType === "FIXED"
-                ? c.discountValue.toLocaleString() + "원"
-                : c.discountValue + "%";
-            const expires = c.expiresAt ? c.expiresAt.substring(0, 10) : "-";
-            const statusBadge = c.used
-              ? '<span class="coupon-badge-used">사용됨</span>'
-              : '<span class="coupon-badge-unused">미사용</span>';
-            const deleteBtn =
-              '<button class="btn-coupon-delete" onclick="deleteCoupon(' +
-              c.id +
-              ')">삭제</button>';
-            html +=
-              "<tr><td>" +
-              c.name +
-              '</td><td style="font-family:monospace;font-size:12px">' +
-              c.code +
-              "</td><td>" +
-              discount +
-              "</td><td>" +
-              statusBadge +
-              "</td><td>" +
-              expires +
-              "</td><td>" +
-              deleteBtn +
-              "</td></tr>";
-          });
-          html += "</tbody></table>";
-          wrap.innerHTML = html;
-        } catch (e) {
-          wrap.innerHTML =
-            '<div class="coupon-empty">쿠폰 목록을 불러올 수 없습니다.</div>';
-        }
-      }
+function closeCouponModal() {
+  document.getElementById('coupon-modal')?.classList.remove('open');
+  currentMemberId = null;
+}
 
-      async function deleteCoupon(couponId) {
-        if (!confirm("이 쿠폰을 삭제하시겠습니까?")) return;
-        const res = await fetch("/admin/api/coupons/" + couponId, {
-          method: "DELETE",
-        });
-        const data = await res.json();
-        if (res.ok) {
-          loadCoupons();
-        } else {
-          alert(data.error || "삭제 중 오류가 발생했습니다.");
-        }
-      }
+async function loadCoupons() {
+  const wrap = document.getElementById('coupon-list-wrap');
+  wrap.innerHTML = '<div class="coupon-empty">불러오는 중...</div>';
+  try {
+    const res = await fetch('/admin/api/members/' + currentMemberId + '/coupons');
+    const data = await res.json();
+    if (!res.ok) { wrap.innerHTML = '<div class="coupon-empty">' + (data.error || '오류 발생') + '</div>'; return; }
+    if (data.length === 0) { wrap.innerHTML = '<div class="coupon-empty">발급된 쿠폰이 없습니다.</div>'; return; }
+    let html = '<table class="coupon-list-table"><thead><tr><th>이름</th><th>코드</th><th>할인</th><th>상태</th><th>만료일</th><th></th></tr></thead><tbody>';
+    data.forEach(c => {
+      const discount = c.discountType === 'FIXED' ? c.discountValue.toLocaleString() + '원' : c.discountValue + '%';
+      const expires = c.expiresAt ? c.expiresAt.substring(0, 10) : '-';
+      const statusBadge = c.used
+        ? '<span class="coupon-badge-used">사용됨</span>'
+        : '<span class="coupon-badge-unused">미사용</span>';
+      const deleteBtn = '<button class="btn-coupon-delete" onclick="deleteCoupon(' + c.id + ')">삭제</button>';
+      html += '<tr><td>' + c.name + '</td><td style="font-family:monospace;font-size:12px">' + c.code + '</td><td>' + discount + '</td><td>' + statusBadge + '</td><td>' + expires + '</td><td>' + deleteBtn + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = '<div class="coupon-empty">쿠폰 목록을 불러올 수 없습니다.</div>';
+  }
+}
 
-      async function issueCoupon(event) {
-        event.preventDefault();
-        const name = document.getElementById("new-coupon-name").value.trim();
-        const discountType = document.getElementById("new-coupon-type").value;
-        const discountValue = parseInt(
-          document.getElementById("new-coupon-value").value,
-          10,
-        );
-        const expiresRaw = document.getElementById("new-coupon-expires").value;
-        const expiresAt = expiresRaw
-          ? expiresRaw.replace("T", "T").padEnd(19, ":00").substring(0, 19)
-          : "";
+async function deleteCoupon(couponId) {
+  if (!confirm('이 쿠폰을 삭제하시겠습니까?')) return;
+  const res = await fetch('/admin/api/coupons/' + couponId, { method: 'DELETE' });
+  const data = await res.json();
+  if (res.ok) {
+    loadCoupons();
+  } else {
+    alert(data.error || '삭제 중 오류가 발생했습니다.');
+  }
+}
 
-        const body = { name, discountType, discountValue, expiresAt };
-        try {
-          const res = await fetch(
-            "/admin/api/members/" + currentMemberId + "/coupons",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body),
-            },
-          );
-          const data = await res.json().catch(() => ({}));
-          if (res.ok) {
-            showAdminToast("쿠폰이 발급되었습니다. 코드: " + (data.code || ""));
-            document.getElementById("coupon-issue-form").reset();
-            loadCoupons();
-          } else {
-            showAdminToast(
-              data.error || "발급 중 오류가 발생했습니다.",
-              "error",
-            );
-          }
-        } catch (e) {
-          showAdminToast("네트워크 오류가 발생했습니다.", "error");
-        }
-      }
-    </script>
+async function issueCoupon(event) {
+  event.preventDefault();
+  const name = document.getElementById('new-coupon-name').value.trim();
+  const discountType = document.getElementById('new-coupon-type').value;
+  const discountValue = parseInt(document.getElementById('new-coupon-value').value, 10);
+  const expiresRaw = document.getElementById('new-coupon-expires').value;
+  const expiresAt = expiresRaw ? expiresRaw.replace('T', 'T').padEnd(19, ':00').substring(0, 19) : '';
 
-    <script th:src="@{/js/admin.js}"></script>
-  </body>
+  const body = { name, discountType, discountValue, expiresAt };
+  try {
+    const res = await fetch('/admin/api/members/' + currentMemberId + '/coupons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      showAdminToast('쿠폰이 발급되었습니다. 코드: ' + (data.code || ''));
+      document.getElementById('coupon-issue-form').reset();
+      loadCoupons();
+    } else {
+      showAdminToast(data.error || '발급 중 오류가 발생했습니다.', 'error');
+    }
+  } catch (e) {
+    showAdminToast('네트워크 오류가 발생했습니다.', 'error');
+  }
+}
+</script>
+
+<script th:src="@{/js/admin.js}"></script>
+</body>
 </html>

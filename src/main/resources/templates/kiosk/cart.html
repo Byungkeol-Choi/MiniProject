@@ -11,24 +11,6 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
     <link rel="stylesheet" th:href="@{/css/kiosk.css}" />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/images/kiosk-favicon/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="96x96"
-      href="/images/kiosk-favicon/favicon-96x96.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/images/kiosk-favicon/favicon-16x16.png"
-    />
   </head>
   <body>
     <!--
@@ -254,25 +236,15 @@
             <div id="lookup-coupon-list"></div>
 
             <!-- 보유 포인트 표시 -->
-            <div class="lookup-result-row" style="margin-top: 8px">
+            <div class="lookup-result-row" style="margin-top:8px">
               <span class="lookup-result-label">보유 포인트</span>
-              <span class="lookup-result-value" id="lookup-points-value"
-                >0 P</span
-              >
+              <span class="lookup-result-value" id="lookup-points-value">0 P</span>
             </div>
             <!-- 포인트 사용 입력 -->
-            <div style="display: flex; gap: 8px; margin-top: 8px">
-              <input
-                type="number"
-                id="points-use-input"
-                class="form-input"
-                placeholder="사용할 포인트 입력"
-                min="0"
-                style="flex: 1"
-              />
-              <button class="btn-apply" onclick="applyUsePoints()">
-                포인트 사용
-              </button>
+            <div style="display:flex; gap:8px; margin-top:8px">
+              <input type="number" id="points-use-input" class="form-input"
+                     placeholder="사용할 포인트 입력" min="0" style="flex:1" />
+              <button class="btn-apply" onclick="applyUsePoints()">포인트 사용</button>
             </div>
           </div>
 
@@ -283,11 +255,7 @@
             style="margin-top: 8px"
           ></div>
           <!-- 포인트 사용 결과 -->
-          <div
-            class="discount-result"
-            id="points-result"
-            style="margin-top: 4px"
-          ></div>
+          <div class="discount-result" id="points-result" style="margin-top: 4px"></div>
         </div>
         <!-- /section-card -->
 
@@ -411,11 +379,11 @@
 
     <!-- 서버 세션 데이터를 JS 변수로 전달 (이전 버튼으로 돌아올 때 쿠폰 복원용) -->
     <script th:inline="javascript">
-      const SESSION_COUPON_CODE = /*[[${sessionCouponCode}]]*/ null;
+      const SESSION_COUPON_CODE     = /*[[${sessionCouponCode}]]*/ null;
       const SESSION_COUPON_DISCOUNT = /*[[${sessionCouponDiscount}]]*/ 0;
-      const SESSION_MEMBER_ID = /*[[${sessionMemberId}]]*/ null;
-      const SESSION_MEMBER_NAME = /*[[${sessionMemberName}]]*/ null;
-      const SESSION_USE_POINTS = /*[[${sessionUsePoints}]]*/ 0;
+      const SESSION_MEMBER_ID       = /*[[${sessionMemberId}]]*/ null;
+      const SESSION_MEMBER_NAME     = /*[[${sessionMemberName}]]*/ null;
+      const SESSION_USE_POINTS      = /*[[${sessionUsePoints}]]*/ 0;
     </script>
     <script th:src="@{/js/kiosk.js}"></script>
     <script>
@@ -546,62 +514,56 @@
         });
 
       // 이전으로 가기
-      window.goBack = async function (event) {
+      window.goBack = async function(event) {
         event.preventDefault();
-        const response = await fetch("/api/cart/session");
+        const response = await fetch('/api/cart/session');
         const items = await response.json();
-        const converted = items.map((item) => ({
+        const converted = items.map(item => ({
           id: Number(item.id),
           name: item.name,
           price: Number(item.price),
           quantity: Number(item.quantity),
-          imgUrl: item.imgUrl || "/images/menu/default-food.svg",
+          imgUrl: item.imgUrl || '/images/menu/default-food.svg'
         }));
-        sessionStorage.setItem("cafe_cart", JSON.stringify(converted));
-        window.location.href = "/";
+        sessionStorage.setItem('cafe_cart', JSON.stringify(converted));
+        window.location.href = '/';
       };
 
       // 이전 버튼으로 돌아왔을 때 쿠폰 상태 복원
-      document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener('DOMContentLoaded', function () {
         if (!SESSION_COUPON_CODE) return;
 
         // 1. 쿠폰 할인 UI 복원 (kiosk.js의 전역 함수 재사용)
-        updateDiscount(
-          SESSION_COUPON_DISCOUNT,
-          SESSION_COUPON_CODE + " 쿠폰 적용됨",
-        );
+        updateDiscount(SESSION_COUPON_DISCOUNT, SESSION_COUPON_CODE + ' 쿠폰 적용됨');
 
         // 2. 결제하기 폼 hidden 필드 복원
-        const hiddenCouponCode = document.getElementById("hidden-coupon-code");
-        const hiddenCouponDiscount = document.getElementById(
-          "hidden-coupon-discount",
-        );
-        const hiddenMemberId = document.getElementById("hidden-member-id");
-        const hiddenMemberName = document.getElementById("hidden-member-name");
+        const hiddenCouponCode     = document.getElementById('hidden-coupon-code');
+        const hiddenCouponDiscount = document.getElementById('hidden-coupon-discount');
+        const hiddenMemberId       = document.getElementById('hidden-member-id');
+        const hiddenMemberName     = document.getElementById('hidden-member-name');
 
-        if (hiddenCouponCode) hiddenCouponCode.value = SESSION_COUPON_CODE;
-        if (hiddenCouponDiscount)
-          hiddenCouponDiscount.value = SESSION_COUPON_DISCOUNT;
-        if (hiddenMemberId) hiddenMemberId.value = SESSION_MEMBER_ID ?? 0;
-        if (hiddenMemberName)
-          hiddenMemberName.value = SESSION_MEMBER_NAME ?? "";
+        if (hiddenCouponCode)     hiddenCouponCode.value     = SESSION_COUPON_CODE;
+        if (hiddenCouponDiscount) hiddenCouponDiscount.value = SESSION_COUPON_DISCOUNT;
+        if (hiddenMemberId)       hiddenMemberId.value       = SESSION_MEMBER_ID ?? 0;
+        if (hiddenMemberName)     hiddenMemberName.value     = SESSION_MEMBER_NAME ?? '';
 
         if (SESSION_USE_POINTS > 0) {
-          const discountEl = document.getElementById("points-discount-value");
+          const discountEl = document.getElementById('points-discount-value');
           if (discountEl) {
-            discountEl.textContent = `-${Number(SESSION_USE_POINTS).toLocaleString("ko-KR")}원`;
+            discountEl.textContent = `-${Number(SESSION_USE_POINTS).toLocaleString('ko-KR')}원`;
             discountEl.dataset.amount = SESSION_USE_POINTS;
           }
-          const resultEl = document.getElementById("points-result");
+          const resultEl = document.getElementById('points-result');
           if (resultEl) {
-            resultEl.textContent = `${Number(SESSION_USE_POINTS).toLocaleString("ko-KR")} P 사용`;
-            resultEl.className = "discount-result visible";
+            resultEl.textContent = `${Number(SESSION_USE_POINTS).toLocaleString('ko-KR')} P 사용`;
+            resultEl.className = 'discount-result visible';
           }
-          const hiddenPoints = document.getElementById("hidden-use-points");
+          const hiddenPoints = document.getElementById('hidden-use-points');
           if (hiddenPoints) hiddenPoints.value = SESSION_USE_POINTS;
           recalcTotal();
         }
       });
+
     </script>
   </body>
 </html>
