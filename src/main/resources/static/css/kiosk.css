@@ -237,7 +237,6 @@ body {
   box-shadow: 0 10px 32px rgba(92, 51, 23, 0.22);
 }
 .menu-card.soldout {
-  opacity: 0.5;
   cursor: not-allowed;
 }
 .menu-card.soldout:hover {
@@ -256,8 +255,8 @@ body {
 }
 .menu-card-img-wrap img,
 .menu-card-img {
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   object-fit: cover;
   display: block;
 }
@@ -281,7 +280,7 @@ body {
   font-size: 12px;
   color: var(--cafe-gray);
   line-height: 1.4;
-  height: 33px;
+  min-height: 33px;
   overflow: hidden;
   margin-bottom: 12px;
 }
@@ -332,10 +331,12 @@ body {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 20px;
 }
 .soldout-badge {
-  color: #f5f5f5;
-  font-size: 20px;
+  color: #5c3317;
+  font-size: 16px;
   font-weight: 500;
   padding: 5px 14px;
   border-radius: 20px;

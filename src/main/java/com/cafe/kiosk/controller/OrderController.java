@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
@@ -130,9 +131,14 @@ public class OrderController {
     }
 
     @PostMapping("/order/pay")
+    @ResponseBody
     public String pay(@RequestParam(required = false) String paymentMethod,
                       @RequestParam(defaultValue = "0") int finalAmount,
                       HttpSession session) {
+        if (finalAmount == 0) {
+            return "<script>alert('주문 내역이 없습니다! 확인 후 다시 결제해주세요 :)'); location.href='/';</script>";
+        }
+
         String couponCode = (String) session.getAttribute("couponCode");
         if (couponCode != null && !couponCode.isEmpty()) {
             couponService.redeemCouponByCode(couponCode); // db 쿠폰 사용됨이라고 바꿈.
@@ -147,6 +153,6 @@ public class OrderController {
         // session.setAttribute("finalAmount", finalAmount); // 쿠폰할인 적용된 최종 결제금액 세션에 저장.
         orderService.update(paymentMethod, finalAmount, session);
 
-        return "redirect:/order/complete";
+        return "<script>location.href='/order/complete';</script>";
     }
 }
