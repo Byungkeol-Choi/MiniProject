@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>브런치 카페 키오스크 웹 — 팀 발표</title>
+    <style>
+        :root {
+          --primary: #7c4a2d;
+          --primary-dark: #4a2c18;
+          --accent: #d4a574;
+          --accent2: #e8c9a8;
+          --bg: #1a1410;
+          --card-bg: #261e18;
+          --card-border: rgba(212, 165, 116, 0.28);
+          --text: #f5ebe0;
+          --muted: #b9a08c;
+          --code-bg: #120e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+          font-family: "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        #progress-bar {
+          position: fixed;
+          top: 0; left: 0;
+          height: 3px;
+          background: linear-gradient(90deg, var(--accent), var(--primary));
+          transition: width 0.35s ease;
+          z-index: 200;
+        }
+        #slides-container {
+          flex: 1;
+          position: relative;
+          overflow: hidden;
+        }
+        .slide {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2.2rem 2.8rem 5.2rem;
+          opacity: 0;
+          transform: translateX(48px);
+          transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          pointer-events: none;
+          overflow-y: auto;
+        }
+        .slide.active {
+          opacity: 1;
+          transform: translateX(0);
+          pointer-events: all;
+        }
+        .slide-content {
+          width: 100%;
+          max-width: 1080px;
+          max-height: 100%;
+        }
+        .slide-tag {
+          display: inline-block;
+          padding: 0.22rem 0.75rem;
+          background: var(--primary);
+          color: #fff;
+          border-radius: 20px;
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          margin-bottom: 0.75rem;
+        }
+        h1.slide-title { font-size: 2.65rem; font-weight: 800; color: var(--accent); line-height: 1.12; }
+        h2.slide-title { font-size: 1.85rem; font-weight: 700; color: var(--accent); margin-bottom: 1rem; }
+        .slide-subtitle { font-size: 1.05rem; color: var(--muted); margin-bottom: 1.2rem; line-height: 1.55; }
+
+        .card-grid { display: grid; gap: 0.85rem; }
+        .card-grid.c2 { grid-template-columns: 1fr 1fr; }
+        .card-grid.c3 { grid-template-columns: repeat(3, 1fr); }
+        .card-grid.c4 { grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 900px) {
+          .card-grid.c2, .card-grid.c3, .card-grid.c4 { grid-template-columns: 1fr; }
+        }
+        .card {
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          border-radius: 14px;
+          padding: 1.1rem 1.25rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .card::before {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, var(--accent), var(--primary));
+        }
+        .card h3 {
+          font-size: 0.92rem;
+          color: var(--accent2);
+          font-weight: 600;
+          margin-bottom: 0.45rem;
+        }
+        .card p, .card li { font-size: 0.82rem; color: var(--muted); line-height: 1.58; }
+        .card ul { padding-left: 1.05rem; margin: 0.35rem 0; }
+        .card strong { color: var(--text); }
+
+        table.data-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.78rem;
+        }
+        .data-table th {
+          background: var(--primary);
+          color: #fff;
+          padding: 0.5rem 0.65rem;
+          text-align: left;
+          font-weight: 600;
+        }
+        .data-table td {
+          padding: 0.45rem 0.65rem;
+          border-bottom: 1px solid var(--card-border);
+          color: var(--muted);
+        }
+        .data-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+        .pill {
+          display: inline-block;
+          padding: 0.12rem 0.45rem;
+          border-radius: 999px;
+          font-size: 0.68rem;
+          font-weight: 600;
+        }
+        .pill-pk { background: #3d2918; color: #ffb86c; }
+        .pill-fk { background: #1e2d24; color: #7bed9f; }
+        .pill-uq { background: #2a2438; color: #c4a7ff; }
+
+        pre.tree {
+          background: var(--code-bg);
+          border: 1px solid var(--card-border);
+          border-radius: 10px;
+          padding: 1rem 1.15rem;
+          font-family: Consolas, "D2Coding", monospace;
+          font-size: 0.74rem;
+          line-height: 1.55;
+          color: #d4c4a8;
+          overflow-x: auto;
+          white-space: pre;
+        }
+
+        .diagram-wrap {
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          border-radius: 14px;
+          padding: 1rem;
+          margin-top: 0.6rem;
+        }
+        .diagram-wrap svg { display: block; max-width: 100%; height: auto; }
+
+        /* 키오스크 미니 화면 (실제 UI 톤 + 정적 자산) */
+        .flow-screens {
+          display: flex;
+          align-items: stretch;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          justify-content: center;
+          margin-top: 0.75rem;
+        }
+        .mini-screen {
+          width: 148px;
+          border-radius: 12px;
+          border: 2px solid var(--card-border);
+          background: linear-gradient(180deg, #3d2e25 0%, #2a211c 100%);
+          overflow: hidden;
+          flex-shrink: 0;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        .mini-screen .bar {
+          height: 26px;
+          background: #5c3d2e;
+          display: flex;
+          align-items: center;
+          padding: 0 8px;
+          font-size: 0.58rem;
+          color: #f0e6d8;
+          font-weight: 700;
+          gap: 6px;
+        }
+        .mini-screen .bar img { width: 14px; height: 14px; object-fit: contain; }
+        .mini-body {
+          padding: 8px;
+          min-height: 118px;
+          font-size: 0.58rem;
+          color: var(--muted);
+          line-height: 1.35;
+        }
+        .mini-body .tabs {
+          display: flex;
+          gap: 4px;
+          margin-bottom: 6px;
+        }
+        .mini-body .tabs span {
+          flex: 1;
+          text-align: center;
+          padding: 3px 0;
+          border-radius: 4px;
+          background: rgba(212,165,116,0.2);
+          color: var(--accent2);
+          font-weight: 600;
+          font-size: 0.52rem;
+        }
+        .mini-body .tabs span.on { background: var(--accent); color: #3d2918; }
+        .mini-thumb {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 4px 0;
+        }
+        .mini-thumb img { max-width: 56px; max-height: 40px; }
+        .flow-arrow-lg {
+          align-self: center;
+          color: var(--accent);
+          font-size: 1.4rem;
+          font-weight: 700;
+          padding: 0 0.15rem;
+        }
+
+        .git-tree {
+          font-family: Consolas, monospace;
+          font-size: 0.8rem;
+          line-height: 1.65;
+          color: var(--accent2);
+          background: var(--code-bg);
+          border-radius: 12px;
+          padding: 1.2rem 1.4rem;
+          border: 1px solid var(--card-border);
+          white-space: pre;
+          overflow-x: auto;
+        }
+
+        .cover { text-align: center; }
+        .cover .emoji { font-size: 4rem; margin-bottom: 0.5rem; filter: drop-shadow(0 0 24px rgba(212,165,116,0.35)); }
+        .meta-row {
+          display: flex;
+          justify-content: center;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+          margin-top: 1.25rem;
+          font-size: 0.88rem;
+          color: var(--muted);
+        }
+
+        .aar-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-top: 0.75rem;
+        }
+        .aar-cell {
+          min-height: 120px;
+          border: 2px dashed var(--card-border);
+          border-radius: 12px;
+          padding: 0.85rem;
+          background: rgba(0,0,0,0.2);
+        }
+        .aar-cell h4 { color: var(--accent); font-size: 0.95rem; margin-bottom: 0.4rem; }
+
+        #nav {
+          position: fixed;
+          bottom: 0; left: 0; right: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1.25rem;
+          padding: 0.75rem 1.5rem;
+          background: rgba(38, 30, 24, 0.97);
+          border-top: 1px solid var(--card-border);
+          backdrop-filter: blur(10px);
+          z-index: 150;
+        }
+        .nav-btn {
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          color: var(--text);
+          padding: 0.48rem 1.35rem;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.88rem;
+          transition: background 0.2s, border-color 0.2s;
+        }
+        .nav-btn:hover:not(:disabled) {
+          background: var(--primary);
+          border-color: var(--accent);
+          color: #fff;
+        }
+        .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        #slide-counter { font-size: 0.85rem; color: var(--muted); min-width: 72px; text-align: center; }
+
+        .toc-num {
+          width: 28px; height: 28px;
+          border-radius: 50%;
+          background: var(--primary);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.78rem;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        .toc-row {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.65rem 0.85rem;
+          background: var(--card-bg);
+          border: 1px solid var(--card-border);
+          border-radius: 10px;
+        }
+        .toc-row .t1 { font-weight: 600; color: var(--text); font-size: 0.86rem; }
+        .toc-row .t2 { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+
+        a.link { color: #7ec8e3; font-weight: 600; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div id="slides-container">
+
+    <!-- 0 표지 -->
+    <div class="slide active" data-index="0">
+        <div class="slide-content cover">
+            <div class="emoji">☕</div>
+            <div class="slide-tag">Mini Project · Spring Boot 4.0.3 · Supabase</div>
+            <h1 class="slide-title">브런치 카페 키오스크 웹</h1>
+            <p class="slide-subtitle" style="font-size:1.15rem;">매장 주문·결제 키오스크 + 운영자 관리자 시스템</p>
+            <div class="card-grid c2" style="max-width:640px;margin:1.5rem auto;text-align:left;">
+                <div class="card"><h3>팀장</h3><p><strong>최병걸</strong></p></div>
+                <div class="card"><h3>팀원</h3><p><strong>유재혁</strong> · <strong>정소희</strong> · <strong>이기문</strong></p></div>
+            </div>
+            <div class="meta-row">
+                <span>Java 21</span><span>Thymeleaf · JS</span><span>Spring Security</span><span>PostgreSQL / Supabase</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1 목차 -->
+    <div class="slide" data-index="1">
+        <div class="slide-content">
+            <div class="slide-tag">Index</div>
+            <h2 class="slide-title">목차</h2>
+            <div class="card-grid c2">
+                <div class="toc-row"><span class="toc-num">1</span><div><div class="t1">프로젝트 개요</div><div class="t2">키오스크 맥락 · 브랜드 · 메뉴 구성 · 관리자 역할</div></div></div>
+                <div class="toc-row"><span class="toc-num">2</span><div><div class="t1">개발 환경</div><div class="t2">스택 · 빌드 · 저장소</div></div></div>
+                <div class="toc-row"><span class="toc-num">3</span><div><div class="t1">데이터베이스</div><div class="t2">테이블 · 컬럼 · 제약 조건</div></div></div>
+                <div class="toc-row"><span class="toc-num">4</span><div><div class="t1">파일 / 패키지 구조</div><div class="t2">백엔드 계층 · 템플릿 · 정적 리소스</div></div></div>
+                <div class="toc-row"><span class="toc-num">5</span><div><div class="t1">키오스크 화면</div><div class="t2">사이트맵 다이어그램 · 화면 흐름 미리보기</div></div></div>
+                <div class="toc-row"><span class="toc-num">6</span><div><div class="t1">관리자 화면</div><div class="t2">사이트맵 · 업무 흐름</div></div></div>
+                <div class="toc-row"><span class="toc-num">7</span><div><div class="t1">업무 분장</div><div class="t2">전략 요약 · 담당자별 상세 역할</div></div></div>
+                <div class="toc-row"><span class="toc-num">8</span><div><div class="t1">Git 브랜치</div><div class="t2">트리 구조 · 버전 범위 표기</div></div></div>
+                <div class="toc-row"><span class="toc-num">9</span><div><div class="t1">시연 · Issue</div><div class="t2">로컬 URL · GitHub 이슈</div></div></div>
+                <div class="toc-row"><span class="toc-num">10</span><div><div class="t1">AAR</div><div class="t2">회고 입력란 (4인)</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 개요 -->
+    <div class="slide" data-index="2">
+        <div class="slide-content">
+            <div class="slide-tag">Overview</div>
+            <h2 class="slide-title">프로젝트 개요 — 키오스크 중심</h2>
+            <div class="card-grid c2">
+                <div class="card">
+                    <h3>키오스크가 하는 일</h3>
+                    <ul>
+                        <li>매장 방문 고객이 <strong>터치 / 브라우저</strong>로 직접 메뉴를 고르고, 장바구니·쿠폰·결제까지 한 흐름으로 처리합니다.</li>
+                        <li>회원 전화번호·포인트·쿠폰과 연동해 <strong>할인 반영</strong>과 <strong>적립 안내</strong>(스탬프 화면)를 제공합니다.</li>
+                        <li>주문이 DB에 쌓이면 관리자 화면에서 <strong>조리·픽업 상태</strong>를 관리할 수 있습니다.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>브랜드 · 메인 화면 구성</h3>
+                    <ul>
+                        <li>헤더에 카페 브랜딩(예: <strong>버터벨 · BRUNCH &amp; COFFEE</strong>)과 시계가 표시됩니다. (<code>templates/kiosk/index.html</code> + <code>kiosk-header</code>)</li>
+                        <li><strong>주메뉴 탭</strong>: 「음식 메뉴」「음료 메뉴」 두 탭으로 나뉘며, 서버에서 카테고리 <code>FOOD</code> / <code>DRINK</code> 로 필터링합니다.</li>
+                        <li>메뉴 카드마다 가격·이미지·품절(<code>available</code>) 처리·담기 버튼이 있습니다.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>대표 메뉴 라인업 (DB 샘플 기준)</h3>
+                    <p><strong>브런치:</strong> 에그 베네딕트, 아보카도 토스트, 팬케이크, 샥슈카, 크로크 무슈, 어니언 수프 등</p>
+                    <p style="margin-top:0.4rem;"><strong>음료:</strong> 핫/아이스 아메리카노·라떼, 플랫 화이트, 카푸치노, 자몽 에이드, 딸기 스무디 등</p>
+                </div>
+                <div class="card">
+                    <h3>관리자 서브시스템</h3>
+                    <ul>
+                        <li><strong>대시보드</strong>: 최근 주문·매출 요약</li>
+                        <li><strong>메뉴 관리</strong>: 가격·설명·노출·이미지 경로</li>
+                        <li><strong>주문 관리</strong>: 상태 변경·상세(줄 항목·결제)</li>
+                        <li><strong>회원·쿠폰</strong>: 회원 조회 및 쿠폰 연계</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3 개발 환경 -->
+    <div class="slide" data-index="3">
+        <div class="slide-content">
+            <div class="slide-tag">Tech Stack</div>
+            <h2 class="slide-title">개발 환경</h2>
+            <div class="card-grid c4">
+                <div class="card"><h3>백엔드</h3><ul><li>Java 21</li><li>Spring Boot 4.0.3</li><li>Spring MVC / Data JPA</li><li>Gradle</li></ul></div>
+                <div class="card"><h3>보안</h3><ul><li>Spring Security</li><li>관리자 폼 로그인·세션</li><li>CSRF · 역할(<code>ROLE_ADMIN</code>)</li></ul></div>
+                <div class="card"><h3>프론트</h3><ul><li>Thymeleaf</li><li>Vanilla JavaScript</li><li>Bootstrap Icons (키오스크)</li><li><code>kiosk.css</code> / <code>admin.css</code></li></ul></div>
+                <div class="card"><h3>데이터</h3><ul><li>Supabase(PostgreSQL)</li><li><code>schema.sql</code> DDL</li><li>JPA 엔티티 매핑</li></ul></div>
+            </div>
+            <div class="card" style="margin-top:0.85rem;">
+                <h3>협업 · 실행</h3>
+                <p>Git / GitHub, 기능별 브랜치 병합 후 <code>dev</code>에서 통합. 로컬 실행 시 기본 포트 <strong>8080</strong> 기준으로 키오스크·관리자 URL을 시연에 사용합니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 DB -->
+    <div class="slide" data-index="4">
+        <div class="slide-content">
+            <div class="slide-tag">Database</div>
+            <h2 class="slide-title">DB 테이블 (Supabase / PostgreSQL)</h2>
+            <div class="card-grid c2">
+                <div class="card" style="padding:0.75rem;">
+                    <h3>member</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>phone</td><td>VARCHAR(20)</td><td><span class="pill pill-uq">UNIQUE</span> · NOT NULL</td></tr>
+                        <tr><td>name</td><td>VARCHAR(100)</td><td>이름</td></tr>
+                        <tr><td>points</td><td>INT</td><td>포인트, 기본 0</td></tr>
+                        <tr><td>created_at</td><td>TIMESTAMP</td><td>가입 시각</td></tr>
+                    </table>
+                </div>
+                <div class="card" style="padding:0.75rem;">
+                    <h3>menu</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>name</td><td>VARCHAR(100)</td><td>메뉴명 · NOT NULL</td></tr>
+                        <tr><td>price</td><td>INT</td><td>가격(원)</td></tr>
+                        <tr><td>category</td><td>VARCHAR(10)</td><td>CHECK: FOOD / DRINK</td></tr>
+                        <tr><td>image_url</td><td>VARCHAR(500)</td><td>이미지 경로</td></tr>
+                        <tr><td>description</td><td>VARCHAR(500)</td><td>설명</td></tr>
+                        <tr><td>available</td><td>BOOLEAN</td><td>판매 여부</td></tr>
+                        <tr><td>created_at</td><td>TIMESTAMP</td><td></td></tr>
+                    </table>
+                </div>
+                <div class="card" style="padding:0.75rem;">
+                    <h3>orders</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>member_id</td><td>BIGINT</td><td><span class="pill pill-fk">FK</span> → member</td></tr>
+                        <tr><td>total_amount</td><td>INT</td><td>결제 총액</td></tr>
+                        <tr><td>discount_amount</td><td>INT</td><td>할인액 기본 0</td></tr>
+                        <tr><td>payment_method</td><td>VARCHAR(20)</td><td>CARD 등</td></tr>
+                        <tr><td>status</td><td>VARCHAR(20)</td><td>RECEIVED / PREPARING / COMPLETED / CANCELLED</td></tr>
+                        <tr><td>created_at</td><td>TIMESTAMP</td><td></td></tr>
+                    </table>
+                </div>
+                <div class="card" style="padding:0.75rem;">
+                    <h3>order_item</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>order_id</td><td>BIGINT</td><td><span class="pill pill-fk">FK</span> → orders · CASCADE</td></tr>
+                        <tr><td>menu_id</td><td>BIGINT</td><td><span class="pill pill-fk">FK</span> → menu</td></tr>
+                        <tr><td>quantity</td><td>INT</td><td>수량</td></tr>
+                        <tr><td>unit_price</td><td>INT</td><td>단가 스냅샷</td></tr>
+                    </table>
+                    <p style="margin-top:0.5rem;">주문 삭제 시 줄 항목도 함께 삭제되어 데이터 정합성을 유지합니다.</p>
+                </div>
+                <div class="card" style="padding:0.75rem;">
+                    <h3>coupon</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>member_id</td><td>BIGINT</td><td><span class="pill pill-fk">FK</span> → member</td></tr>
+                        <tr><td>code</td><td>VARCHAR(50)</td><td><span class="pill pill-uq">UNIQUE</span></td></tr>
+                        <tr><td>discount_type</td><td>VARCHAR(10)</td><td>FIXED / PERCENT</td></tr>
+                        <tr><td>discount_value</td><td>INT</td><td>정액(원) 또는 정률(%)</td></tr>
+                        <tr><td>used</td><td>BOOLEAN</td><td>사용 여부</td></tr>
+                        <tr><td>expires_at</td><td>TIMESTAMP</td><td>만료</td></tr>
+                        <tr><td>created_at</td><td>TIMESTAMP</td><td></td></tr>
+                    </table>
+                </div>
+                <div class="card" style="padding:0.75rem;">
+                    <h3>admin</h3>
+                    <table class="data-table">
+                        <tr><th>컬럼</th><th>타입</th><th>설명</th></tr>
+                        <tr><td>id</td><td>BIGSERIAL</td><td><span class="pill pill-pk">PK</span></td></tr>
+                        <tr><td>username</td><td>VARCHAR(50)</td><td><span class="pill pill-uq">UNIQUE</span></td></tr>
+                        <tr><td>password</td><td>VARCHAR(255)</td><td>BCrypt 해시</td></tr>
+                        <tr><td>created_at</td><td>TIMESTAMP</td><td></td></tr>
+                    </table>
+                    <p style="margin-top:0.5rem;">ER 관점: 한 회원은 여러 주문·쿠폰을 가질 수 있고, 주문은 다수의 <code>order_item</code>으로 구성됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5 파일 구조 -->
+    <div class="slide" data-index="5">
+        <div class="slide-content">
+            <div class="slide-tag">Structure</div>
+            <h2 class="slide-title">파일 · 패키지 구조 (상세)</h2>
+            <pre class="tree">MiniProject/
+├── build.gradle                          ← Spring Boot 4.0.3, Java 21 툴체인
+├── doc/presentation.html                 ← 본 발표 자료
+├── src/main/java/com/cafe/kiosk/
+│   ├── CafeKioskApplication.java
+│   ├── config/
+│   │   ├── SecurityConfig.java           ← 보안 필터 체인, CSRF, 경로 권한
+│   │   └── DataInitializer.java          ← (옵션) 스키마 보정·시드, 저장소에 따라 주석 처리 가능
+│   ├── controller/
+│   │   ├── KioskController.java          ← GET /  키오스크 메인
+│   │   ├── OrderController.java          ← 장바구니·결제·완료 화면
+│   │   ├── OrderApiController.java       ← 세션 장바구니 API 등
+│   │   ├── MemberController.java         ← 스탬프 페이지
+│   │   ├── MemberApiController.java      ← /api/member 적립 정보
+│   │   ├── AdminController.java          ← 관리자 MVC (대시보드·CRUD 화면)
+│   │   └── AdminApiController.java       ← /admin/api JSON (주문 상세·쿠폰)
+│   ├── domain/                           ← JPA 엔티티 (Menu, Orders, Member, Coupon…)
+│   ├── dto/                              ← 화면·API 전용 객체
+│   ├── repository/                     ← Spring Data JPA 리포지토리
+│   ├── service/                          ← MenuService, OrderService, MemberService…
+│   └── security/
+│       └── AdminUserDetailsService.java
+├── src/main/resources/
+│   ├── application.yml                   ← DB URL, JPA, 로깅
+│   ├── schema.sql                        ← Supabase DDL·샘플
+│   ├── static/
+│   │   ├── css/kiosk.css, admin.css
+│   │   ├── js/kiosk.js, admin.js
+│   │   └── images/ (menu, payment, logo…)
+│   └── templates/
+│       ├── fragments/layout.html
+│       ├── kiosk/  (index, cart, payment, complete, stamp)
+│       └── admin/   (login, dashboard, menus, orders, members)</pre>
+        </div>
+    </div>
+
+    <!-- 6 키오스크 사이트맵 + 흐름 -->
+    <div class="slide" data-index="6">
+        <div class="slide-content">
+            <div class="slide-tag">Kiosk UI</div>
+            <h2 class="slide-title">키오스크 — 사이트맵 · 화면 흐름</h2>
+            <div class="diagram-wrap">
+                <svg viewBox="0 0 920 220" xmlns="http://www.w3.org/2000/svg" aria-label="키오스크 사이트맵">
+                    <defs>
+                        <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="#d4a574"/></marker>
+                    </defs>
+                    <rect x="20" y="70" width="120" height="56" rx="10" fill="#3d2e25" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="80" y="102" text-anchor="middle" fill="#f5ebe0" font-size="13" font-family="sans-serif">GET /</text>
+                    <text x="80" y="118" text-anchor="middle" fill="#b9a08c" font-size="10" font-family="sans-serif">index.html</text>
+                    <line x1="140" y1="98" x2="188" y2="98" stroke="#d4a574" stroke-width="2" marker-end="url(#arr)"/>
+                    <rect x="190" y="70" width="130" height="56" rx="10" fill="#3d2e25" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="255" y="102" text-anchor="middle" fill="#f5ebe0" font-size="13">/order/cart</text>
+                    <text x="255" y="118" text-anchor="middle" fill="#b9a08c" font-size="10">cart.html</text>
+                    <line x1="320" y1="98" x2="368" y2="98" stroke="#d4a574" stroke-width="2" marker-end="url(#arr)"/>
+                    <rect x="370" y="70" width="140" height="56" rx="10" fill="#3d2e25" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="440" y="102" text-anchor="middle" fill="#f5ebe0" font-size="13">/order/payment</text>
+                    <text x="440" y="118" text-anchor="middle" fill="#b9a08c" font-size="10">payment.html</text>
+                    <line x1="510" y1="98" x2="558" y2="98" stroke="#d4a574" stroke-width="2" marker-end="url(#arr)"/>
+                    <rect x="560" y="70" width="150" height="56" rx="10" fill="#3d2e25" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="635" y="102" text-anchor="middle" fill="#f5ebe0" font-size="13">/order/complete</text>
+                    <text x="635" y="118" text-anchor="middle" fill="#b9a08c" font-size="10">complete.html</text>
+                    <line x1="80" y1="126" x2="80" y2="158" stroke="#7c4a2d" stroke-width="1.5" stroke-dasharray="4"/>
+                    <line x1="80" y1="158" x2="255" y2="158" stroke="#7c4a2d" stroke-width="1.5" stroke-dasharray="4"/>
+                    <line x1="255" y1="158" x2="255" y2="126" stroke="#7c4a2d" stroke-width="1.5" stroke-dasharray="4"/>
+                    <text x="170" y="174" text-anchor="middle" fill="#d4a574" font-size="11">POST 장바구니·주문 API (kiosk.js / OrderController)</text>
+                    <rect x="740" y="36" width="160" height="52" rx="10" fill="#2a3d28" stroke="#7bed9f" stroke-width="1.2"/>
+                    <text x="820" y="66" text-anchor="middle" fill="#e8f5e0" font-size="12">/member/stamp</text>
+                    <text x="820" y="80" text-anchor="middle" fill="#a8cfa0" font-size="9">stamp.html · 적립 안내</text>
+                    <line x1="710" y1="98" x2="738" y2="62" stroke="#7bed9f" stroke-width="1.5" marker-end="url(#arr)"/>
+                    <text x="400" y="28" text-anchor="middle" fill="#e8c9a8" font-size="14" font-weight="bold">키오스크 주류(Main flow)</text>
+                </svg>
+            </div>
+            <p class="slide-subtitle" style="margin-top:0.75rem;margin-bottom:0;">아래 미리보기: 실제 템플릿·정적 자산과 동일한 색감·아이콘(로고·결제·완료 SVG)을 축소 배치했습니다.</p>
+            <div class="flow-screens">
+                <div class="mini-screen">
+                    <div class="bar"><img src="../src/main/resources/static/images/logo.svg" alt="" /> 메뉴</div>
+                    <div class="mini-body">
+                        <div class="tabs"><span class="on">음식</span><span>음료</span></div>
+                        <div class="mini-thumb"><img src="../src/main/resources/static/images/menu/default-food.svg" alt="" /></div>
+                        <div style="color:var(--accent2);font-weight:600;">브런치 카드 · 담기</div>
+                    </div>
+                </div>
+                <span class="flow-arrow-lg">→</span>
+                <div class="mini-screen">
+                    <div class="bar">주문 확인</div>
+                    <div class="mini-body">
+                        <div style="font-size:0.52rem;">선택 메뉴 · 수량</div>
+                        <div style="margin-top:6px;padding:4px;background:rgba(212,165,116,0.15);border-radius:6px;">쿠폰 코드 입력</div>
+                        <div style="margin-top:6px;font-weight:700;color:var(--accent2);">합계 · 할인</div>
+                    </div>
+                </div>
+                <span class="flow-arrow-lg">→</span>
+                <div class="mini-screen">
+                    <div class="bar">결제</div>
+                    <div class="mini-body">
+                        <div class="mini-thumb" style="gap:4px;flex-wrap:wrap;">
+                            <img src="../src/main/resources/static/images/payment/card.svg" alt="" style="max-width:28px;" />
+                            <img src="../src/main/resources/static/images/payment/kakao-pay.svg" alt="" style="max-width:28px;" />
+                            <img src="../src/main/resources/static/images/payment/naver-pay.svg" alt="" style="max-width:28px;" />
+                        </div>
+                        <div style="text-align:center;color:var(--muted);">수단 선택</div>
+                    </div>
+                </div>
+                <span class="flow-arrow-lg">→</span>
+                <div class="mini-screen">
+                    <div class="bar">완료</div>
+                    <div class="mini-body" style="text-align:center;">
+                        <img src="../src/main/resources/static/images/complete.svg" alt="" style="max-width:48px;margin:4px auto;" />
+                        <div style="font-weight:700;color:#7bed9f;">주문번호 · 적립</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7 관리자 -->
+    <div class="slide" data-index="7">
+        <div class="slide-content">
+            <div class="slide-tag">Admin</div>
+            <h2 class="slide-title">관리자 — 사이트맵 · 업무 흐름</h2>
+            <div class="diagram-wrap">
+                <svg viewBox="0 0 920 260" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arr2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><polygon points="0 0, 8 4, 0 8" fill="#d4a574"/></marker>
+                    </defs>
+                    <text x="460" y="22" text-anchor="middle" fill="#e8c9a8" font-size="14" font-weight="bold">관리자 (ROLE_ADMIN)</text>
+                    <rect x="360" y="40" width="200" height="44" rx="10" fill="#4a2c18" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="460" y="67" text-anchor="middle" fill="#fff" font-size="13">/admin/login</text>
+                    <line x1="460" y1="84" x2="460" y2="118" stroke="#d4a574" stroke-width="2" marker-end="url(#arr2)"/>
+                    <rect x="330" y="120" width="260" height="44" rx="10" fill="#3d2e25" stroke="#d4a574" stroke-width="1.5"/>
+                    <text x="460" y="147" text-anchor="middle" fill="#f5ebe0" font-size="13">/admin/dashboard</text>
+                    <line x1="380" y1="164" x2="220" y2="200" stroke="#b9a08c" stroke-width="1.5" marker-end="url(#arr2)"/>
+                    <line x1="460" y1="164" x2="460" y2="200" stroke="#b9a08c" stroke-width="1.5" marker-end="url(#arr2)"/>
+                    <line x1="540" y1="164" x2="700" y2="200" stroke="#b9a08c" stroke-width="1.5" marker-end="url(#arr2)"/>
+                    <rect x="140" y="200" width="160" height="48" rx="10" fill="#2a211c" stroke="#7ec8e3"/>
+                    <text x="220" y="222" text-anchor="middle" fill="#e0f4ff" font-size="12">/admin/menus</text>
+                    <text x="220" y="238" text-anchor="middle" fill="#8ab" font-size="9">목록·등록·수정</text>
+                    <rect x="380" y="200" width="160" height="48" rx="10" fill="#2a211c" stroke="#7ec8e3"/>
+                    <text x="460" y="222" text-anchor="middle" fill="#e0f4ff" font-size="12">/admin/orders</text>
+                    <text x="460" y="238" text-anchor="middle" fill="#8ab" font-size="10">상태·상세 모달</text>
+                    <rect x="620" y="200" width="160" height="48" rx="10" fill="#2a211c" stroke="#7ec8e3"/>
+                    <text x="700" y="222" text-anchor="middle" fill="#e0f4ff" font-size="12">/admin/members</text>
+                    <text x="700" y="238" text-anchor="middle" fill="#8ab" font-size="9">회원·쿠폰 조회</text>
+                    <rect x="40" y="118" width="150" height="36" rx="8" fill="#1e2538" stroke="#a0b4ff"/>
+                    <text x="115" y="140" text-anchor="middle" fill="#c4cbe8" font-size="10">/admin/api/* REST</text>
+                </svg>
+            </div>
+            <div class="card" style="margin-top:0.75rem;">
+                <h3>운영 흐름</h3>
+                <p>로그인 성공 후 대시보드에서 당일 주문·상태를 파악하고, 메뉴 가격을 조정하거나 품절 처리합니다. 주문 화면에서 <strong>접수→조리→완료</strong> 등 상태를 바꾸고, JSON API로 상세(메뉴 줄·할인·결제수단)를 확인합니다. 회원 화면에서는 포인트·쿠폰 발급 이력을 함께 봅니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8 업무 분장 전체 -->
+    <div class="slide" data-index="8">
+        <div class="slide-content">
+            <div class="slide-tag">Team</div>
+            <h2 class="slide-title">업무 분장 — 전체 짜임새</h2>
+            <div class="card-grid c2">
+                <div class="card">
+                    <h3>도메인 분리 전략</h3>
+                    <ul>
+                        <li><strong>메뉴</strong> — 카테고리·가격·이미지·노출: 키오스크 첫인상과 매출 직결</li>
+                        <li><strong>주문·결제</strong> — 장바구니 세션, 쿠폰·포인트 할인, PG 가정 결제 수단, 주문 상태 머신</li>
+                        <li><strong>회원·쿠폰</strong> — 전화·포인트·스탬프 UX, 할인 코드 유효성</li>
+                        <li><strong>인프라·관리자 공통</strong> — Security, DB, 통합 브랜치, 대시보드·주문 운영 화면</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>협업 방식</h3>
+                    <ul>
+                        <li>기능 브랜치 <code>menu*</code> · <code>order*</code> · <code>member*</code> · <code>admin*</code> 로 병렬 개발</li>
+                        <li>API·DTO·URL은 팀장과 조율해 <strong>충돌 최소화</strong></li>
+                        <li>Thymeleaf 조각(<code>fragments/layout</code>)·공통 CSS/JS는 담당자 간 동기화</li>
+                        <li>통합 단계에서 CSRF·권한·세션 정책을 한 번에 검증</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9 최병걸 -->
+    <div class="slide" data-index="9">
+        <div class="slide-content">
+            <div class="slide-tag">Role · Lead</div>
+            <h2 class="slide-title">최병걸 (팀장)</h2>
+            <div class="card-grid c2">
+                <div class="card"><h3>프로젝트 기반 · Git</h3><ul><li>Gradle·패키지·애플리케이션 부트스트랩</li><li>저장소 정책, PR·머트 플로우, 충돌 해소</li><li><code>dev</code> 기준 통합 스케줄 관리</li></ul></div>
+                <div class="card"><h3>DB · Supabase</h3><ul><li><code>schema.sql</code> 작성·배포 안내</li><li>JPA 매핑과 DDL 정합성 검증</li><li>샘플 메뉴·주문 데이터로 데모 가능 상태 유지</li></ul></div>
+                <div class="card"><h3>Spring Security</h3><ul><li>관리자 로그인·세션·<code>ROLE_ADMIN</code></li><li>경로별 permit/deny, CSRF 예외·토큰 처리 설계</li><li>키오스크 공개·관리자 보호 경로 분리</li></ul></div>
+                <div class="card"><h3>통합 · 관리자 화면</h3><ul><li>브랜치 머지 후 전체 빌드·스모크 테스트</li><li><strong>대시보드</strong>: 주문 요약·지표</li><li><strong>주문 관리</strong>: 목록 필터, 상태 변경 API, 상세 모달 연동(<code>AdminApiController</code>, <code>admin.js</code>)</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10 유재혁 -->
+    <div class="slide" data-index="10">
+        <div class="slide-content">
+            <div class="slide-tag">Role</div>
+            <h2 class="slide-title">유재혁</h2>
+            <div class="card-grid c2">
+                <div class="card"><h3>메뉴 도메인</h3><ul><li><code>Menu</code> 엔티티·리포지토리·서비스</li><li>FOOD/DRINK 조회, 품절 필드, 이미지 URL 처리</li><li>관리자에서 메뉴 CRUD·유효성</li></ul></div>
+                <div class="card"><h3>키오스크 메인 UI</h3><ul><li><code>templates/kiosk/index.html</code> 탭·그리드·카드</li><li><code>kiosk.js</code> 탭 전환, 장바구니 담기, 수량 조절 연동</li><li><code>kiosk.css</code> 반응형 터치 친화 레이아웃</li></ul></div>
+                <div class="card" style="grid-column:1/-1;"><h3>관리자 메뉴 관리</h3><ul><li><code>AdminController</code> 메뉴 목록·상세·저장 플로우</li><li><code>templates/admin/menus.html</code> 테이블·폼</li><li>신규 메뉴 등록 시 카테고리·가격·이미지 경로·노출 여부 반영</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11 정소희 -->
+    <div class="slide" data-index="11">
+        <div class="slide-content">
+            <div class="slide-tag">Role</div>
+            <h2 class="slide-title">정소희</h2>
+            <div class="card-grid c2">
+                <div class="card"><h3>주문·결제 도메인</h3><ul><li><code>Orders</code>, <code>OrderItem</code>, <code>OrderService</code></li><li>장바구니에서 주문 헤더·줄 생성, 합계·할인 반영</li><li>결제수단 ENUM/문자열 저장, 완료 후 상태 <code>RECEIVED</code> 등</li></ul></div>
+                <div class="card"><h3>주문 화면 흐름</h3><ul><li><code>cart.html</code> 쿠폰 입력·합계</li><li><code>payment.html</code> 카드·현금·간편결제 UI + 정적 아이콘</li><li><code>complete.html</code> 주문번호·적립 메시지</li><li><code>OrderController</code> GET/POST, 세션 연속성</li></ul></div>
+                <div class="card" style="grid-column:1/-1;"><h3>프론트엔드 총괄</h3><ul><li>키오스크·관리자 공통 톤앤매너, 조각 레이아웃 활용 방향 제안</li><li><code>admin.js</code> 이벤트 위임, fetch·CSRF 헤더 패턴 정리</li><li>백엔드 DTO와 필드명 맞춤으로 API·템플릿 불일치 방지</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12 이기문 -->
+    <div class="slide" data-index="12">
+        <div class="slide-content">
+            <div class="slide-tag">Role</div>
+            <h2 class="slide-title">이기문</h2>
+            <div class="card-grid c2">
+                <div class="card"><h3>회원 도메인</h3><ul><li><code>Member</code>, 전화번호 조회·포인트 필드</li><li>주문 시 회원 연계(선택), 적립 계산에 활용</li></ul></div>
+                <div class="card"><h3>쿠폰 도메인</h3><ul><li><code>Coupon</code>, 정액/정률·사용 여부·만료</li><li>장바구니 단계에서 코드 검증·할인 적용 로직 연동</li></ul></div>
+                <div class="card"><h3>적립(스탬프) 화면</h3><ul><li><code>MemberController</code> <code>/member/stamp</code></li><li><code>stamp.html</code> · <code>MemberApiController</code> 스탬프 API</li><li>결제 완료 후 사용자 안내 동선</li></ul></div>
+                <div class="card"><h3>관리자 회원 관리</h3><ul><li><code>members.html</code> 목록·검색</li><li>회원별 쿠폰 목록 모달/비동기 조회(<code>/admin/api/members/.../coupons</code>)</li><li>운영자가 발급·사용 상태를 확인할 수 있게 구성</li></ul></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13 Git 트리 -->
+    <div class="slide" data-index="13">
+        <div class="slide-content">
+            <div class="slide-tag">Git</div>
+            <h2 class="slide-title">Git 브랜치 전략 (트리)</h2>
+            <p class="slide-subtitle">버전은 <strong>2 ~ 4.1</strong> 구간으로 표기(세부 번호는 팀 내 스프린트·이터레이션용). 원격 <code>origin</code>에 동일 패턴이 있습니다.</p>
+            <div class="git-tree">main
+                └── dev  ◀── 기본 통합 브랜치 (origin/HEAD)
+
+                ├── menu<span style="color:#7bed9f">2 ~ menu4.1</span>      ← 메뉴·키오스크 메인
+                ├── order<span style="color:#7ec8e3">2 ~ order4.1</span>      ← 주문·결제·장바구니
+                ├── member<span style="color:#c4a7ff">2 ~ member4.1</span>   ← 회원·쿠폰·스탬프
+                └── admin<span style="color:#ffb86c">2 ~ admin4.1</span>    ← Security·대시보드·통합·주문 관리
+
+                예: 현재 작업 <code>admin4.1</code> 에서 관리자·통합 이슈를 마무리한 뒤 <code>dev</code> 로 머지하는 식으로 운영.</div>
+            <div class="card" style="margin-top:0.85rem;">
+                <h3>정책 요약</h3>
+                <p><code>main</code>은 안정 릴리즈, 일상 통합은 <code>dev</code>. 기능 줄기는 도메인 이름 + 버전 레일(2·3·3.1·3.2·4·4.1)로 구분해 동시 작업 시 브랜치명만으로 역할을 알 수 있게 했습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 14 시연 Issue -->
+    <div class="slide" data-index="14">
+        <div class="slide-content">
+            <div class="slide-tag">Demo</div>
+            <h2 class="slide-title">시연 · Issue 해결 사례</h2>
+            <div class="card-grid c2">
+                <div class="card">
+                    <h3>시연 URL</h3>
+                    <ul>
+                        <li>키오스크: <a class="link" href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a></li>
+                        <li>관리자 로그인: <a class="link" href="http://localhost:8080/admin/login" target="_blank" rel="noopener">http://localhost:8080/admin/login</a></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>GitHub Issues</h3>
+                    <p><a class="link" href="https://github.com/Byungkeol-Choi/MiniProject/issues" target="_blank" rel="noopener">https://github.com/Byungkeol-Choi/MiniProject/issues</a></p>
+                    <ul style="margin-top:0.5rem;">
+                        <li>키오스크 주문 <strong>POST 403</strong>: 로그에서 CSRF 불일치 확인 후, 키오스크 주문 경로에 맞게 Security 설정 조정</li>
+                        <li>관리자 <strong>주문 상세·상태 변경</strong>: REST DTO·PATCH 처리·<code>admin.js</code> 이벤트 위임으로 UI 반응 복구</li>
+                        <li>메뉴 삭제 시 <strong>FK 제약</strong>: 주문 이력이 있는 메뉴는 DB 단에서 삭제 제한 → 운영 정책·소프트 삭제 검토 이슈로 남김</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 15 AAR -->
+    <div class="slide" data-index="15">
+        <div class="slide-content">
+            <div class="slide-tag">AAR</div>
+            <h2 class="slide-title">After Action Review</h2>
+            <p class="slide-subtitle">잘한 점 / 아쉬운 점 / 다음에 적용할 점 — 발표 후 각자 기입</p>
+            <div class="aar-grid">
+                <div class="aar-cell"><h4>최병걸</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+                <div class="aar-cell"><h4>유재혁</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+                <div class="aar-cell"><h4>정소희</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+                <div class="aar-cell"><h4>이기문</h4><p style="color:var(--muted);font-size:0.82rem;">(수동 입력)</p></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<nav id="nav" aria-label="슬라이드 이동">
+    <button type="button" class="nav-btn" id="btn-prev">◀ 이전</button>
+    <span id="slide-counter">1 / 16</span>
+    <button type="button" class="nav-btn" id="btn-next">다음 ▶</button>
+</nav>
+
+<script>
+    (function(){
+      const slides = document.querySelectorAll('.slide');
+      const total = slides.length;
+      let current = 0;
+      const progressBar = document.getElementById('progress-bar');
+      const counter = document.getElementById('slide-counter');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+
+      function goTo(idx) {
+        if (idx < 0 || idx >= total) return;
+        slides[current].classList.remove('active');
+        current = idx;
+        slides[current].classList.add('active');
+        progressBar.style.width = ((current + 1) / total * 100) + '%';
+        counter.textContent = (current + 1) + ' / ' + total;
+        btnPrev.disabled = current === 0;
+        btnNext.disabled = current === total - 1;
+      }
+
+      btnPrev.addEventListener('click', function(){ goTo(current - 1); });
+      btnNext.addEventListener('click', function(){ goTo(current + 1); });
+
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          goTo(current + 1);
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          goTo(current - 1);
+        }
+        if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+        if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+      });
+
+      goTo(0);
+    })();
+</script>
+</body>
+</html>
