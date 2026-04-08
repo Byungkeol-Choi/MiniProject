@@ -600,6 +600,23 @@ document.addEventListener('DOMContentLoaded', () => {
     void openOrderDetail(orderId);
   });
 
+  ordersTable?.addEventListener('change', (e) => {
+    const sel = e.target;
+    if (!sel?.classList?.contains('status-select')) {
+      return;
+    }
+    const row = sel.closest('tr');
+    const rawId = row?.dataset?.orderId;
+    if (rawId == null || rawId === '') {
+      return;
+    }
+    const orderId = Number(rawId);
+    if (Number.isNaN(orderId)) {
+      return;
+    }
+    void updateOrderStatus(orderId, sel);
+  });
+
   const menusTable = document.getElementById('menus-table');
   menusTable?.addEventListener('change', (e) => {
     const sel = e.target;
