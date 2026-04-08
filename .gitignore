@@ -48,7 +48,7 @@ tools/
 /node_modules/
 /package.json
 /package-lock.json
-
+/presentation/
 ### Markdown (로컬 메모 등 기본 무시, 프로젝트 가이드만 추적) ###
 *.md
 !PROJECT_GUIDE.md
